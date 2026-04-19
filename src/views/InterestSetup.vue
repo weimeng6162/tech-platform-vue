@@ -543,12 +543,12 @@ const getTagColor = (tagId: string) => {
 }
 
 :global([data-theme="dark"]) .tag-group {
-  background: #020204;
+  background: #000000;
   border-color: rgba(129, 140, 248, 0.2);
 }
 
 :global([data-theme="dark"]) .selected-tags {
-  background: #020204;
+  background: #000000;
   border-color: rgba(129, 140, 248, 0.2);
 }
 

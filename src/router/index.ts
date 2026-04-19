@@ -26,6 +26,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Article',
         component: () => import('../views/ArticleDetail.vue'),
       },
+      {
+        path: 'demo',
+        name: 'AnimationDemo',
+        component: () => import('../views/AnimationDemo.vue'),
+        meta: { transition: 'bounce' }
+      },
     ],
   },
 ]

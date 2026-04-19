@@ -118,9 +118,10 @@ const formatNumber = (num: number) => {
   border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: fadeIn 0.5s ease-out forwards;
   opacity: 0;
+  position: relative;
 }
 
 /* 无模糊效果 */
@@ -136,21 +137,40 @@ const formatNumber = (num: number) => {
   }
 }
 
+.card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(99, 102, 241, 0.05) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card:hover::before {
+  opacity: 1;
+}
+
 .card:hover {
   border-color: var(--border-glow);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
-  transform: translateY(-6px);
+  transform: translateY(-8px) scale(1.02);
 }
 
 /* 深色模式卡片增强 */
 :global([data-theme="dark"]) .card {
-  background: #020204;
+  background: #000000;
   border-color: rgba(129, 140, 248, 0.2);
+}
+
+:global([data-theme="dark"]) .card::before {
+  background: linear-gradient(135deg, transparent 0%, rgba(129, 140, 248, 0.1) 100%);
 }
 
 :global([data-theme="dark"]) .card:hover {
   border-color: rgba(129, 140, 248, 0.5);
-  box-shadow: 
+  box-shadow:
     0 12px 40px rgba(0, 0, 0, 0.6),
     0 0 50px rgba(129, 140, 248, 0.3);
 }

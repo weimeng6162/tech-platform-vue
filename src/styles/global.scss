@@ -44,16 +44,13 @@ body::before {
   transition: background 0.4s ease, opacity 0.4s ease;
 }
 
-// 深色模式背景 - 纯净黑色，只有网格
+// 深色模式背景 - 纯净黑色，极淡网格
 [data-theme="dark"] body::before {
   background: 
-    // 主网格
-    linear-gradient(90deg, rgba(129, 140, 248, 0.06) 1px, transparent 1px),
-    linear-gradient(rgba(129, 140, 248, 0.06) 1px, transparent 1px),
-    // 次网格（更密集）
+    // 主网格 - 极淡
     linear-gradient(90deg, rgba(129, 140, 248, 0.02) 1px, transparent 1px),
     linear-gradient(rgba(129, 140, 248, 0.02) 1px, transparent 1px);
-  background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+  background-size: 100px 100px, 100px 100px;
 }
 
 // 浅色模式浮动光点效果

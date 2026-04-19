@@ -1,21 +1,13 @@
 <template>
-  <router-view v-slot="{ Component, route }">
-    <transition :name="getTransitionName(route)" mode="out-in">
-      <component :is="Component" :key="route.path" />
-    </transition>
-  </router-view>
+  <transition :name="name" mode="out-in">
+    <slot />
+  </transition>
 </template>
 
 <script setup lang="ts">
-const getTransitionName = (route: any) => {
-  // 根据路由meta或路径决定过渡效果
-  if (route.meta.transition) {
-    return route.meta.transition as string
-  }
-
-  // 默认使用滑动淡入效果
-  return 'slide-fade'
-}
+defineProps<{
+  name?: string
+}>()
 </script>
 
 <style>
@@ -65,6 +57,52 @@ const getTransitionName = (route: any) => {
   transform: scale(1.05);
 }
 
+/* 左右滑动 */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-right-enter-active,
+.slide-right-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: absolute;
+  width: 100%;
+}
+
+.slide-left-enter-from {
+  opacity: 0;
+  transform: translateX(100px);
+}
+
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-100px);
+}
+
+.slide-right-enter-from {
+  opacity: 0;
+  transform: translateX(-100px);
+}
+
+.slide-right-leave-to {
+  opacity: 0;
+  transform: translateX(100px);
+}
+
+/* 翻转效果 */
+.flip-enter-active,
+.flip-leave-active {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.flip-enter-from {
+  opacity: 0;
+  transform: rotateY(90deg);
+}
+
+.flip-leave-to {
+  opacity: 0;
+  transform: rotateY(-90deg);
+}
+
 /* 弹性缩放 */
 .bounce-enter-active {
   animation: bounce-in 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -86,5 +124,22 @@ const getTransitionName = (route: any) => {
     opacity: 1;
     transform: scale(1);
   }
+}
+
+/* 渐变展开 */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top center;
+}
+
+.expand-enter-from {
+  opacity: 0;
+  transform: scaleY(0);
+}
+
+.expand-leave-to {
+  opacity: 0;
+  transform: scaleY(0);
 }
 </style>

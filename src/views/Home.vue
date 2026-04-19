@@ -444,7 +444,7 @@ const currentArticles = computed(() => {
 }
 
 :global([data-theme="dark"]) .sidebar-card {
-  background: #020204;
+  background: #000000;
   border-color: rgba(129, 140, 248, 0.2);
 }
 
