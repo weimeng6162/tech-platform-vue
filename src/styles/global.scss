@@ -1,0 +1,250 @@
+@import './variables.scss';
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background 0.4s ease, color 0.4s ease;
+  position: relative;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+// 浅色模式背景 - 柔和渐变
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: 
+    // 网格背景
+    linear-gradient(90deg, var(--border-primary) 1px, transparent 1px),
+    linear-gradient(var(--border-primary) 1px, transparent 1px),
+    // 顶部渐变光晕
+    radial-gradient(ellipse 100% 60% at 50% -10%, rgba(99, 102, 241, 0.08), transparent),
+    // 右侧渐变
+    radial-gradient(ellipse 50% 50% at 100% 30%, rgba(139, 92, 246, 0.05), transparent),
+    // 左下角渐变
+    radial-gradient(ellipse 40% 40% at 0% 100%, rgba(59, 130, 246, 0.04), transparent);
+  background-size: 50px 50px, 50px 50px, 100% 100%, 100% 100%, 100% 100%;
+  transition: background 0.4s ease, opacity 0.4s ease;
+}
+
+// 深色模式背景 - 纯净黑色，只有网格
+[data-theme="dark"] body::before {
+  background: 
+    // 主网格
+    linear-gradient(90deg, rgba(129, 140, 248, 0.06) 1px, transparent 1px),
+    linear-gradient(rgba(129, 140, 248, 0.06) 1px, transparent 1px),
+    // 次网格（更密集）
+    linear-gradient(90deg, rgba(129, 140, 248, 0.02) 1px, transparent 1px),
+    linear-gradient(rgba(129, 140, 248, 0.02) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+}
+
+// 浅色模式浮动光点效果
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: 
+    radial-gradient(3px 3px at 10% 20%, var(--particle-color-1), transparent),
+    radial-gradient(2px 2px at 30% 60%, var(--particle-color-2), transparent),
+    radial-gradient(2px 2px at 50% 30%, var(--particle-color-3), transparent),
+    radial-gradient(3px 3px at 70% 70%, var(--particle-color-1), transparent),
+    radial-gradient(2px 2px at 90% 40%, var(--particle-color-2), transparent),
+    radial-gradient(2px 2px at 20% 80%, var(--particle-color-3), transparent),
+    radial-gradient(3px 3px at 60% 10%, var(--particle-color-1), transparent),
+    radial-gradient(2px 2px at 80% 90%, var(--particle-color-2), transparent);
+  background-size: 100% 100%;
+  animation: particleFloat 25s ease-in-out infinite;
+  opacity: 0.6;
+}
+
+// 深色模式移除浮动光点
+[data-theme="dark"] body::after {
+  display: none;
+}
+
+@keyframes particleFloat {
+  0%, 100% { 
+    transform: translateY(0) scale(1); 
+    opacity: 0.6;
+  }
+  25% { 
+    transform: translateY(-20px) scale(1.1); 
+    opacity: 0.8;
+  }
+  50% { 
+    transform: translateY(-10px) scale(0.95); 
+    opacity: 0.5;
+  }
+  75% { 
+    transform: translateY(-30px) scale(1.05); 
+    opacity: 0.7;
+  }
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-secondary);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-secondary);
+  
+  &:hover {
+    background: var(--text-tertiary);
+  }
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+// 文字选中
+::selection {
+  background: var(--accent-primary);
+  color: white;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--accent-primary);
+}
+
+// 通用动画类
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from { 
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from { 
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to { 
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px var(--accent-glow);
+  }
+  50% {
+    box-shadow: 0 0 40px var(--accent-glow-strong);
+  }
+}
+
+@keyframes borderGlow {
+  0%, 100% {
+    border-color: var(--border-secondary);
+  }
+  50% {
+    border-color: var(--accent-primary);
+  }
+}
+
+// 工具类
+.glass {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+}
+
+.glass-strong {
+  background: var(--bg-glass-strong);
+  border: 1px solid var(--border-secondary);
+}
+
+// 无模糊效果
+
+.glow-border {
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--accent-gradient);
+    -webkit-mask: 
+      linear-gradient(#fff 0 0) content-box, 
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+  }
+  
+  &:hover::before {
+    opacity: 1;
+  }
+}
+
+// 深色模式下的发光效果增强
+[data-theme="dark"] .glow-border::before {
+  opacity: 0.5;
+}
+
+[data-theme="dark"] .glow-border:hover::before {
+  opacity: 1;
+}
