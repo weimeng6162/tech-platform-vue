@@ -32,12 +32,36 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/AnimationDemo.vue'),
         meta: { transition: 'bounce' }
       },
+      {
+        path: 'test-ai',
+        name: 'TestAI',
+        component: () => import('../views/TestAI.vue'),
+        meta: { transition: 'scale-fade' }
+      },
+      {
+        path: 'article-ai',
+        name: 'ArticleDetailAI',
+        component: () => import('../views/ArticleDetailAI.vue'),
+        meta: { transition: 'scale-fade' }
+      },
+      {
+        path: 'footprint',
+        name: 'Footprint',
+        component: () => import('../views/Footprint.vue'),
+        meta: { transition: 'slide-fade' }
+      },
+      {
+        path: 'collection',
+        name: 'Collection',
+        component: () => import('../views/Collection.vue'),
+        meta: { transition: 'slide-fade' }
+      },
     ],
   },
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes,
 })
 

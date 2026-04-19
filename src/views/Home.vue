@@ -66,11 +66,11 @@
 
       <!-- 文章列表 -->
       <div class="article-grid">
-        <ArticleCard
-          v-for="(article, index) in currentArticles"
-          :key="article.id"
+        <ArticleCardAI
+          v-for="article in currentArticles"
+          :key="article.article_id"
           :article="article"
-          :index="index"
+          @click="handleArticleClick"
         />
       </div>
     </main>
@@ -117,10 +117,14 @@
 
 <script setup lang="ts">
 import { ref, computed, h } from 'vue'
+import { useRouter } from 'vue-router'
 import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users } from 'lucide-vue-next'
-import ArticleCard from '../components/ArticleCard.vue'
-import { articles, categories, techTags } from '../data/mockData'
+import ArticleCardAI from '../components/ArticleCardAI.vue'
+import { recommendArticlesData, categories, techTags } from '../data/mockData'
+import { processArticles } from '../utils/articleFilter'
+import type { ArticleItem } from '../types/api'
 
+const router = useRouter()
 const activeCategory = ref('all')
 const activeSection = ref<'featured' | 'recommend'>('featured')
 
@@ -134,9 +138,39 @@ const iconMap: Record<string, any> = {
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
 
+// 使用新的 AI 推荐数据并过滤劣质文章
+const allArticles = recommendArticlesData.data.article_list
+const filteredArticles = processArticles(allArticles)
+
+// 根据分类过滤文章
 const currentArticles = computed(() => {
-  return articles.filter(a => a.category === (activeSection.value === 'featured' ? '热门精选' : '猜你喜欢'))
+  let articles = filteredArticles
+
+  // 根据分类过滤
+  if (activeCategory.value !== 'all') {
+    // 这里可以根据分类进行过滤，暂时显示所有文章
+    articles = articles
+  }
+
+  // 根据热门精选/猜你喜欢过滤
+  if (activeSection.value === 'featured') {
+    // 显示前6篇作为热门精选
+    return articles.slice(0, 6)
+  } else {
+    // 显示后面的作为猜你喜欢
+    return articles.slice(6)
+  }
 })
+
+// 处理文章点击
+const handleArticleClick = (article: ArticleItem) => {
+  console.log('点击文章:', article)
+  // 跳转到文章详情页，传递文章 ID
+  router.push({
+    path: '/article-ai',
+    query: { id: article.article_id }
+  })
+}
 </script>
 
 <style scoped>

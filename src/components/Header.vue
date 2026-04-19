@@ -21,13 +21,15 @@
       <!-- 导航 -->
       <nav class="nav">
         <router-link to="/" class="nav-item" :class="{ active: route.path === '/' }">首页</router-link>
-        <router-link to="/article/1" class="nav-item" :class="{ active: route.path.startsWith('/article') }">文章</router-link>
+        <a class="nav-item" :class="{ active: route.path.startsWith('/article') }" @click="handleArticleClick">文章</a>
+        <router-link to="/footprint" class="nav-item" :class="{ active: route.path === '/footprint' }">足迹</router-link>
+        <router-link to="/collection" class="nav-item" :class="{ active: route.path === '/collection' }">收藏</router-link>
         <router-link to="/interest" class="nav-item" :class="{ active: route.path === '/interest' }">兴趣配置</router-link>
       </nav>
 
       <!-- 右侧操作 -->
       <div class="actions">
-        <button class="icon-btn" title="搜索">
+        <button class="icon-btn" title="搜索" @click="showSearch = true">
           <Search :size="20" />
         </button>
         <button class="icon-btn" title="通知">
@@ -50,16 +52,40 @@
         </button>
       </div>
     </div>
+
+    <!-- 搜索弹窗 -->
+    <SearchModal :visible="showSearch" @close="showSearch = false" />
   </header>
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import { ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { Search, Bell, Sun, Moon, User } from 'lucide-vue-next'
 import { useThemeStore } from '../stores/theme'
+import { getRecentArticle } from '../stores/recentArticles'
+import SearchModal from './SearchModal.vue'
 
 const route = useRoute()
+const router = useRouter()
 const themeStore = useThemeStore()
+const showSearch = ref(false)
+
+// 处理文章点击
+const handleArticleClick = () => {
+  const recentArticle = getRecentArticle()
+  
+  if (recentArticle) {
+    // 如果有最近阅读的文章，跳转到该文章
+    router.push({
+      path: '/article-ai',
+      query: { id: recentArticle.article_id }
+    })
+  } else {
+    // 如果没有最近阅读，跳转到首页
+    router.push('/')
+  }
+}
 </script>
 
 <style scoped>
