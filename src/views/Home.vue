@@ -65,10 +65,21 @@
       </div>
 
       <!-- 文章列表 -->
-      <div class="article-grid">
+      <div v-if="loading" class="loading-state">
+        <Loader :size="40" class="loading-icon" />
+        <p>加载中...</p>
+      </div>
+      <div v-else-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button @click="fetchArticles" class="retry-btn">重试</button>
+      </div>
+      <div v-else-if="currentArticles.length === 0" class="empty-state">
+        <p>暂无推荐文章</p>
+      </div>
+      <div v-else class="article-grid">
         <ArticleCard
           v-for="(article, index) in currentArticles"
-          :key="article.id"
+          :key="article.article_id"
           :article="article"
           :index="index"
         />
@@ -116,13 +127,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users } from 'lucide-vue-next'
+import { ref, computed, h, onMounted } from 'vue'
+import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users, Loader } from 'lucide-vue-next'
 import ArticleCard from '../components/ArticleCard.vue'
-import { articles, categories, techTags } from '../data/mockData'
+import { categories, techTags } from '../data/mockData'
+import { getRecommendArticles } from '../api/modules/article'
+import type { ArticleListItem } from '../api/types'
 
 const activeCategory = ref('all')
-const activeSection = ref<'featured' | 'recommend'>('featured')
+const activeSection = ref<'featured' | 'recommend'>('recommend')
+
+// 文章列表数据
+const articles = ref<ArticleListItem[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// 获取推荐文章
+const fetchArticles = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const data = await getRecommendArticles()
+    articles.value = data
+  } catch (err: any) {
+    error.value = err.message || '加载失败'
+    console.error('Failed to fetch articles:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchArticles()
+})
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -135,7 +173,7 @@ const iconMap: Record<string, any> = {
 }
 
 const currentArticles = computed(() => {
-  return articles.filter(a => a.category === (activeSection.value === 'featured' ? '热门精选' : '猜你喜欢'))
+  return articles.value
 })
 </script>
 
@@ -414,6 +452,51 @@ const currentArticles = computed(() => {
   .article-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 加载状态 */
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.loading-icon {
+  animation: spin 1s linear infinite;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.error-state p {
+  margin-bottom: 16px;
+  color: #EF4444;
+}
+
+.retry-btn {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  background: var(--accent-gradient);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
 }
 
 /* 侧边栏 */
