@@ -65,12 +65,23 @@
       </div>
 
       <!-- 文章列表 -->
-      <div class="article-grid">
-        <ArticleCardAI
-          v-for="article in currentArticles"
+      <div v-if="loading" class="loading-state">
+        <Loader :size="40" class="loading-icon" />
+        <p>加载中...</p>
+      </div>
+      <div v-else-if="error" class="error-state">
+        <p>{{ error }}</p>
+        <button @click="fetchArticles" class="retry-btn">重试</button>
+      </div>
+      <div v-else-if="currentArticles.length === 0" class="empty-state">
+        <p>暂无推荐文章</p>
+      </div>
+      <div v-else class="article-grid">
+        <ArticleCard
+          v-for="(article, index) in currentArticles"
           :key="article.article_id"
           :article="article"
-          @click="handleArticleClick"
+          :index="index"
         />
       </div>
     </main>
@@ -116,17 +127,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
-import { useRouter } from 'vue-router'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users } from 'lucide-vue-next'
-import ArticleCardAI from '../components/ArticleCardAI.vue'
-import { recommendArticlesData, categories, techTags } from '../data/mockData'
-import { processArticles } from '../utils/articleFilter'
-import type { ArticleItem } from '../types/api'
+import { ref, computed, h, onMounted } from 'vue'
+import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users, Loader } from 'lucide-vue-next'
+import ArticleCard from '../components/ArticleCard.vue'
+import { categories, techTags } from '../data/mockData'
+import { getRecommendArticles } from '../api/modules/article'
+import type { ArticleListItem } from '../api/types'
 
-const router = useRouter()
 const activeCategory = ref('all')
-const activeSection = ref<'featured' | 'recommend'>('featured')
+const activeSection = ref<'featured' | 'recommend'>('recommend')
+
+// 文章列表数据
+const articles = ref<ArticleListItem[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
+
+// 获取推荐文章
+const fetchArticles = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const data = await getRecommendArticles()
+    articles.value = data
+  } catch (err: any) {
+    error.value = err.message || '加载失败'
+    console.error('Failed to fetch articles:', err)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 组件挂载时获取数据
+onMounted(() => {
+  fetchArticles()
+})
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -138,39 +172,9 @@ const iconMap: Record<string, any> = {
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
 
-// 使用新的 AI 推荐数据并过滤劣质文章
-const allArticles = recommendArticlesData.data.article_list
-const filteredArticles = processArticles(allArticles)
-
-// 根据分类过滤文章
 const currentArticles = computed(() => {
-  let articles = filteredArticles
-
-  // 根据分类过滤
-  if (activeCategory.value !== 'all') {
-    // 这里可以根据分类进行过滤，暂时显示所有文章
-    articles = articles
-  }
-
-  // 根据热门精选/猜你喜欢过滤
-  if (activeSection.value === 'featured') {
-    // 显示前6篇作为热门精选
-    return articles.slice(0, 6)
-  } else {
-    // 显示后面的作为猜你喜欢
-    return articles.slice(6)
-  }
+  return articles.value
 })
-
-// 处理文章点击
-const handleArticleClick = (article: ArticleItem) => {
-  console.log('点击文章:', article)
-  // 跳转到文章详情页，传递文章 ID
-  router.push({
-    path: '/article-ai',
-    query: { id: article.article_id }
-  })
-}
 </script>
 
 <style scoped>
@@ -450,6 +454,51 @@ const handleArticleClick = (article: ArticleItem) => {
   }
 }
 
+/* 加载状态 */
+.loading-state,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--text-secondary);
+}
+
+.loading-icon {
+  animation: spin 1s linear infinite;
+  color: var(--accent-primary);
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.error-state p {
+  margin-bottom: 16px;
+  color: #EF4444;
+}
+
+.retry-btn {
+  padding: 8px 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  background: var(--accent-gradient);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
 /* 侧边栏 */
 .sidebar {
   display: flex;
@@ -478,7 +527,7 @@ const handleArticleClick = (article: ArticleItem) => {
 }
 
 :global([data-theme="dark"]) .sidebar-card {
-  background: #000000;
+  background: #020204;
   border-color: rgba(129, 140, 248, 0.2);
 }
 
