@@ -1,19 +1,5 @@
 <template>
-  <div class="article-card-ai" :class="{ 'has-warning': hasWarning }" @click="handleClick">
-    <!-- 商业推广警示标记 -->
-    <div v-if="hasWarning" class="warning-indicator">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-        <path
-          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-        <line x1="12" y1="9" x2="12" y2="13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-        <line x1="12" y1="17" x2="12.01" y2="17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-      </svg>
-    </div>
-
+  <div class="article-card-ai" @click="handleClick">
     <!-- 难度角标 -->
     <div class="difficulty-badge" :style="{ backgroundColor: difficultyColor }">
       {{ difficultyIcon }} {{ article.difficulty }}
@@ -98,7 +84,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ArticleItem } from '../types/api'
-import { hasCommercialContent } from '../types/api'
 
 const props = defineProps<{
   article: ArticleItem
@@ -108,10 +93,7 @@ const emit = defineEmits<{
   click: [article: ArticleItem]
 }>()
 
-// 检查是否包含商业推广
-const hasWarning = computed(() => hasCommercialContent(props.article.tags))
-
-// 过滤掉安全标签，只显示技术标签
+// 过滤掉安全标签，只显示技术标签，但保留"含商业推广"
 const displayTags = computed(() => {
   const securityTags = ['安全拦截', '提示词注入', '营销软文', '技术水文', '含商业推广']
   return props.article.tags.filter((tag) => !securityTags.includes(tag) || tag === '含商业推广')
@@ -192,46 +174,6 @@ const handleClick = () => {
   border-color: var(--primary-color);
 }
 
-/* 警示状态 - 橘红色边框 */
-.article-card-ai.has-warning {
-  border: 2px solid #f97316;
-  background: linear-gradient(135deg, var(--bg-secondary), rgba(251, 146, 60, 0.03));
-}
-
-.article-card-ai.has-warning:hover {
-  border-color: #f97316;
-  box-shadow: 0 12px 24px rgba(249, 115, 22, 0.2);
-}
-
-/* 警示指示器 */
-.warning-indicator {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f97316;
-  border-radius: 50%;
-  color: white;
-  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.4);
-  animation: warning-pulse 2s ease-in-out infinite;
-}
-
-@keyframes warning-pulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.1);
-    opacity: 0.8;
-  }
-}
-
 /* 难度角标 */
 .difficulty-badge {
   position: absolute;
@@ -252,11 +194,6 @@ const handleClick = () => {
   left: 1rem;
   color: #fbbf24;
   filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3));
-}
-
-/* 有警示时，收藏标记位置调整 */
-.has-warning .collected-mark {
-  left: 3.5rem;
 }
 
 .card-content {
@@ -374,10 +311,6 @@ const handleClick = () => {
 @media (prefers-color-scheme: dark) {
   .ai-summary {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
-  }
-
-  .article-card-ai.has-warning {
-    background: linear-gradient(135deg, var(--bg-secondary), rgba(251, 146, 60, 0.05));
   }
 }
 </style>
