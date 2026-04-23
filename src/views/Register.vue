@@ -1,5 +1,5 @@
 <template>
-  <div class="login-container">
+  <div class="register-container">
     <!-- 动态渐变背景 -->
     <div class="gradient-background">
       <div class="gradient-layer gradient-layer-1"></div>
@@ -21,8 +21,8 @@
     <!-- 网格背景 -->
     <div class="grid-overlay"></div>
 
-    <!-- 登录卡片 -->
-    <div class="login-card" :class="{ 'shake': isShaking }">
+    <!-- 注册卡片 -->
+    <div class="register-card" :class="{ 'shake': isShaking }">
       <!-- 卡片光效 -->
       <div class="card-glow"></div>
       <div class="card-border-glow"></div>
@@ -64,34 +64,58 @@
 
       <!-- 标题 -->
       <div class="header-section">
-        <h2>欢迎回来</h2>
-        <p>登录以继续探索技术世界</p>
+        <h2>创建账户</h2>
+        <p>加入我们，开启技术之旅</p>
       </div>
 
-      <!-- 登录表单 -->
-      <form class="login-form" @submit.prevent="handleLogin">
-        <!-- 账号输入 -->
-        <div class="form-group" :class="{ 'has-error': errors.account, 'is-focused': focusedField === 'account' }">
-          <label for="account">
+      <!-- 注册表单 -->
+      <form class="register-form" @submit.prevent="handleRegister">
+        <!-- 用户名输入 -->
+        <div class="form-group" :class="{ 'has-error': errors.username, 'is-focused': focusedField === 'username' }">
+          <label for="username">
             <User :size="16" />
-            <span>账号</span>
+            <span>用户名</span>
           </label>
           <div class="input-wrapper">
             <input
-              id="account"
-              v-model="form.account"
+              id="username"
+              v-model="form.username"
               type="text"
-              placeholder="请输入账号"
-              autocomplete="username"
-              @focus="focusedField = 'account'"
-              @blur="handleBlur('account')"
+              placeholder="请输入用户名"
+              @focus="focusedField = 'username'"
+              @blur="handleBlur('username')"
             />
             <div class="input-highlight"></div>
           </div>
           <transition name="error-fade">
-            <span v-if="errors.account" class="error-message">
+            <span v-if="errors.username" class="error-message">
               <AlertCircle :size="14" />
-              {{ errors.account }}
+              {{ errors.username }}
+            </span>
+          </transition>
+        </div>
+
+        <!-- 邮箱输入 -->
+        <div class="form-group" :class="{ 'has-error': errors.email, 'is-focused': focusedField === 'email' }">
+          <label for="email">
+            <Mail :size="16" />
+            <span>邮箱地址</span>
+          </label>
+          <div class="input-wrapper">
+            <input
+              id="email"
+              v-model="form.email"
+              type="email"
+              placeholder="请输入邮箱地址"
+              @focus="focusedField = 'email'"
+              @blur="handleBlur('email')"
+            />
+            <div class="input-highlight"></div>
+          </div>
+          <transition name="error-fade">
+            <span v-if="errors.email" class="error-message">
+              <AlertCircle :size="14" />
+              {{ errors.email }}
             </span>
           </transition>
         </div>
@@ -108,14 +132,13 @@
               v-model="form.password"
               :type="showPassword ? 'text' : 'password'"
               placeholder="请输入密码"
-              autocomplete="current-password"
               @focus="focusedField = 'password'"
               @blur="handleBlur('password')"
             />
             <button
               type="button"
               class="toggle-password"
-              @click="togglePassword"
+              @click="showPassword = !showPassword"
               :aria-label="showPassword ? '隐藏密码' : '显示密码'"
             >
               <transition name="icon-fade" mode="out-in">
@@ -131,141 +154,87 @@
               {{ errors.password }}
             </span>
           </transition>
+          <!-- 密码强度提示 -->
+          <div class="password-strength" v-if="form.password">
+            <div class="strength-bar">
+              <div 
+                class="strength-fill" 
+                :style="{ width: passwordStrength.percentage + '%' }"
+                :class="passwordStrength.level"
+              ></div>
+            </div>
+            <span class="strength-text" :class="passwordStrength.level">{{ passwordStrength.text }}</span>
+          </div>
         </div>
 
-        <!-- 登录按钮 -->
+        <!-- 确认密码输入 -->
+        <div class="form-group" :class="{ 'has-error': errors.confirmPassword, 'is-focused': focusedField === 'confirmPassword' }">
+          <label for="confirmPassword">
+            <Lock :size="16" />
+            <span>确认密码</span>
+          </label>
+          <div class="input-wrapper">
+            <input
+              id="confirmPassword"
+              v-model="form.confirmPassword"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              placeholder="请再次输入密码"
+              @focus="focusedField = 'confirmPassword'"
+              @blur="handleBlur('confirmPassword')"
+            />
+            <button
+              type="button"
+              class="toggle-password"
+              @click="showConfirmPassword = !showConfirmPassword"
+              :aria-label="showConfirmPassword ? '隐藏密码' : '显示密码'"
+            >
+              <transition name="icon-fade" mode="out-in">
+                <Eye v-if="!showConfirmPassword" :size="18" key="eye" />
+                <EyeOff v-else :size="18" key="eye-off" />
+              </transition>
+            </button>
+            <div class="input-highlight"></div>
+          </div>
+          <transition name="error-fade">
+            <span v-if="errors.confirmPassword" class="error-message">
+              <AlertCircle :size="14" />
+              {{ errors.confirmPassword }}
+            </span>
+          </transition>
+        </div>
+
+        <!-- 注册按钮 -->
         <button 
           type="submit" 
-          class="login-button"
+          class="register-button"
           :disabled="isSubmitting"
-          :class="{ 'is-loading': isSubmitting }"
         >
           <span class="button-content">
             <transition name="button-fade" mode="out-in">
               <template v-if="!isSubmitting">
                 <span key="normal" class="normal-state">
-                  <span>登录</span>
+                  <span>注册</span>
                   <ArrowRight :size="18" />
                 </span>
               </template>
               <template v-else>
                 <span key="loading" class="loading-state">
                   <Loader2 class="spinner" :size="18" />
-                  <span>登录中...</span>
+                  <span>注册中...</span>
                 </span>
               </template>
             </transition>
           </span>
           <div class="button-glow"></div>
-          <div class="button-particles">
-            <span v-for="i in 6" :key="i"></span>
-          </div>
         </button>
       </form>
 
-      <!-- 分割线 -->
-      <div class="divider">
-        <span>或</span>
-      </div>
-
-      <!-- 其他登录方式 -->
-      <div class="alternative-login">
-        <button type="button" class="alt-button">
-          <Github :size="20" />
-          <span>GitHub</span>
-        </button>
-        <button type="button" class="alt-button">
-          <Mail :size="20" />
-          <span>邮箱验证码</span>
-        </button>
-      </div>
-
       <!-- 底部链接 -->
       <div class="footer-links">
-        <a href="#" @click.prevent="showForgotPassword = true">忘记密码？</a>
-        <span class="separator">|</span>
-        <a href="#" @click.prevent="handleRegister">立即注册</a>
+        <span>已有账户？</span>
+        <a href="#" @click.prevent="handleLogin">立即登录</a>
       </div>
     </div>
-
-    <!-- 找回密码弹窗 -->
-    <transition name="modal-fade">
-      <div v-if="showForgotPassword" class="modal-overlay" @click="closeForgotPassword">
-        <div class="modal-container" @click.stop>
-          <div class="modal-card">
-            <!-- 关闭按钮 -->
-            <button class="modal-close" @click="closeForgotPassword">
-              <X :size="20" />
-            </button>
-
-            <!-- 标题 -->
-            <div class="modal-header">
-              <div class="modal-icon">
-                <KeyRound :size="32" />
-              </div>
-              <h3>找回密码</h3>
-              <p>请输入您的注册邮箱，我们将发送重置密码链接</p>
-            </div>
-
-            <!-- 表单 -->
-            <form class="forgot-form" @submit.prevent="handleForgotPassword">
-              <div class="form-group" :class="{ 'has-error': forgotErrors.email, 'is-focused': focusedField === 'forgot-email' }">
-                <label for="forgot-email">
-                  <Mail :size="16" />
-                  <span>邮箱地址</span>
-                </label>
-                <div class="input-wrapper">
-                  <input
-                    id="forgot-email"
-                    v-model="forgotForm.email"
-                    type="email"
-                    placeholder="请输入注册邮箱"
-                    @focus="focusedField = 'forgot-email'"
-                    @blur="handleForgotBlur"
-                  />
-                  <div class="input-highlight"></div>
-                </div>
-                <transition name="error-fade">
-                  <span v-if="forgotErrors.email" class="error-message">
-                    <AlertCircle :size="14" />
-                    {{ forgotErrors.email }}
-                  </span>
-                </transition>
-              </div>
-
-              <button 
-                type="submit" 
-                class="submit-button"
-                :disabled="isForgotSubmitting"
-              >
-                <transition name="button-fade" mode="out-in">
-                  <template v-if="!isForgotSubmitting">
-                    <span key="normal" class="normal-state">
-                      <span>发送重置链接</span>
-                      <Send :size="18" />
-                    </span>
-                  </template>
-                  <template v-else>
-                    <span key="loading" class="loading-state">
-                      <Loader2 class="spinner" :size="18" />
-                      <span>发送中...</span>
-                    </span>
-                  </template>
-                </transition>
-              </button>
-            </form>
-
-            <!-- 成功提示 -->
-            <transition name="success-fade">
-              <div v-if="forgotSuccess" class="success-message">
-                <CheckCircle :size="20" />
-                <span>重置链接已发送到您的邮箱，请查收</span>
-              </div>
-            </transition>
-          </div>
-        </div>
-      </div>
-    </transition>
 
     <!-- 装饰元素 -->
     <div class="decorations">
@@ -277,67 +246,99 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   Eye, EyeOff, Lock, User, ArrowRight, Loader2, 
-  AlertCircle, Github, Mail, X, KeyRound, Send, CheckCircle
+  AlertCircle, Mail
 } from 'lucide-vue-next'
-import { useUserStore } from '../stores/user'
+import { register } from '../api/modules/user'
 import { encryptPassword } from '../utils/crypto'
 
 const router = useRouter()
-const userStore = useUserStore()
 
 // 表单数据
 const form = reactive({
-  account: '',
-  password: ''
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
 })
 
 // 错误信息
 const errors = reactive({
-  account: '',
-  password: ''
+  username: '',
+  email: '',
+  password: '',
+  confirmPassword: ''
 })
 
 // 状态
 const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 const isSubmitting = ref(false)
 const focusedField = ref<string | null>(null)
 const isShaking = ref(false)
 
-// 找回密码相关
-const showForgotPassword = ref(false)
-const forgotForm = reactive({
-  email: ''
+// 密码强度计算
+const passwordStrength = computed(() => {
+  const password = form.password
+  let score = 0
+  
+  if (password.length >= 8) score += 20
+  if (password.length >= 12) score += 10
+  if (/[a-z]/.test(password)) score += 15
+  if (/[A-Z]/.test(password)) score += 15
+  if (/[0-9]/.test(password)) score += 20
+  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20
+  
+  if (score < 40) {
+    return { percentage: score, level: 'weak', text: '弱' }
+  } else if (score < 70) {
+    return { percentage: score, level: 'medium', text: '中等' }
+  } else {
+    return { percentage: score, level: 'strong', text: '强' }
+  }
 })
-const forgotErrors = reactive({
-  email: ''
-})
-const isForgotSubmitting = ref(false)
-const forgotSuccess = ref(false)
 
-// 切换密码显示
-const togglePassword = () => {
-  showPassword.value = !showPassword.value
-}
-
-// 验证账号
-const validateAccount = (): boolean => {
-  if (!form.account.trim()) {
-    errors.account = '账号不能为空'
+// 验证用户名
+const validateUsername = (): boolean => {
+  if (!form.username.trim()) {
+    errors.username = '用户名不能为空'
     return false
   }
-  if (form.account.trim().length < 3) {
-    errors.account = '账号长度至少为3个字符'
+  if (form.username.trim().length < 3) {
+    errors.username = '用户名长度至少为3个字符'
     return false
   }
-  errors.account = ''
+  if (form.username.trim().length > 20) {
+    errors.username = '用户名长度不能超过20个字符'
+    return false
+  }
+  if (!/^[a-zA-Z0-9_\u4e00-\u9fa5]+$/.test(form.username)) {
+    errors.username = '用户名只能包含字母、数字、下划线和中文'
+    return false
+  }
+  errors.username = ''
   return true
 }
 
-// 验证密码强度
+// 验证邮箱
+const validateEmail = (): boolean => {
+  if (!form.email.trim()) {
+    errors.email = '邮箱不能为空'
+    return false
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(form.email)) {
+    errors.email = '请输入有效的邮箱地址'
+    return false
+  }
+  errors.email = ''
+  return true
+}
+
+// 验证密码
 const validatePassword = (): boolean => {
   if (!form.password) {
     errors.password = '密码不能为空'
@@ -349,25 +350,21 @@ const validatePassword = (): boolean => {
     return false
   }
   
-  // 检查是否包含大写字母
   if (!/[A-Z]/.test(form.password)) {
     errors.password = '密码必须包含大写字母'
     return false
   }
   
-  // 检查是否包含小写字母
   if (!/[a-z]/.test(form.password)) {
     errors.password = '密码必须包含小写字母'
     return false
   }
   
-  // 检查是否包含数字
   if (!/[0-9]/.test(form.password)) {
     errors.password = '密码必须包含数字'
     return false
   }
   
-  // 检查是否包含特殊符号
   if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password)) {
     errors.password = '密码必须包含特殊符号（如 !@#$%^&*）'
     return false
@@ -377,21 +374,46 @@ const validatePassword = (): boolean => {
   return true
 }
 
+// 验证确认密码
+const validateConfirmPassword = (): boolean => {
+  if (!form.confirmPassword) {
+    errors.confirmPassword = '请确认密码'
+    return false
+  }
+  if (form.password !== form.confirmPassword) {
+    errors.confirmPassword = '两次输入的密码不一致'
+    return false
+  }
+  errors.confirmPassword = ''
+  return true
+}
+
 // 处理失焦
 const handleBlur = (field: string) => {
   focusedField.value = null
-  if (field === 'account') {
-    validateAccount()
-  } else if (field === 'password') {
-    validatePassword()
+  switch (field) {
+    case 'username':
+      validateUsername()
+      break
+    case 'email':
+      validateEmail()
+      break
+    case 'password':
+      validatePassword()
+      break
+    case 'confirmPassword':
+      validateConfirmPassword()
+      break
   }
 }
 
 // 表单验证
 const validateForm = (): boolean => {
-  const isAccountValid = validateAccount()
+  const isUsernameValid = validateUsername()
+  const isEmailValid = validateEmail()
   const isPasswordValid = validatePassword()
-  return isAccountValid && isPasswordValid
+  const isConfirmPasswordValid = validateConfirmPassword()
+  return isUsernameValid && isEmailValid && isPasswordValid && isConfirmPasswordValid
 }
 
 // 抖动效果
@@ -402,9 +424,8 @@ const shake = () => {
   }, 500)
 }
 
-// 处理登录
-const handleLogin = async () => {
-  // 验证表单
+// 处理注册
+const handleRegister = async () => {
   if (!validateForm()) {
     shake()
     return
@@ -416,94 +437,28 @@ const handleLogin = async () => {
     // 加密密码
     const encryptedPassword = await encryptPassword(form.password)
     
-    // 调用登录接口
-    const result = await userStore.login(form.account, encryptedPassword)
+    // 调用注册接口
+    await register({
+      username: form.username,
+      email: form.email,
+      password: encryptedPassword
+    })
     
-    if (result.success) {
-      // 登录成功，跳转到首页
-      router.push('/')
-    } else {
-      // 登录失败，显示错误
-      errors.password = result.message
-      shake()
-    }
+    // 注册成功，跳转到登录页
+    alert('注册成功！请登录')
+    router.push('/login')
   } catch (error: any) {
-    console.error('登录失败:', error)
-    errors.password = error.message || '登录失败，请重试'
+    console.error('注册失败:', error)
+    errors.email = error.message || '注册失败，请重试'
     shake()
   } finally {
     isSubmitting.value = false
   }
 }
 
-// 处理忘记密码
-const handleForgotPassword = async () => {
-  // 验证邮箱
-  if (!forgotForm.email.trim()) {
-    forgotErrors.email = '邮箱不能为空'
-    return
-  }
-  
-  // 验证邮箱格式
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(forgotForm.email)) {
-    forgotErrors.email = '请输入有效的邮箱地址'
-    return
-  }
-  
-  forgotErrors.email = ''
-  isForgotSubmitting.value = true
-  forgotSuccess.value = false
-  
-  try {
-    // 调用找回密码接口
-    // TODO: 替换为实际的 API 调用
-    // await forgotPasswordApi({ email: forgotForm.email })
-    
-    // 模拟 API 调用
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // 显示成功消息
-    forgotSuccess.value = true
-    
-    // 3秒后关闭弹窗
-    setTimeout(() => {
-      closeForgotPassword()
-    }, 3000)
-  } catch (error: any) {
-    console.error('发送重置链接失败:', error)
-    forgotErrors.email = error.message || '发送失败，请重试'
-  } finally {
-    isForgotSubmitting.value = false
-  }
-}
-
-// 关闭找回密码弹窗
-const closeForgotPassword = () => {
-  showForgotPassword.value = false
-  forgotForm.email = ''
-  forgotErrors.email = ''
-  forgotSuccess.value = false
-}
-
-// 处理找回密码表单失焦
-const handleForgotBlur = () => {
-  focusedField.value = null
-  if (!forgotForm.email.trim()) {
-    forgotErrors.email = '邮箱不能为空'
-  } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(forgotForm.email)) {
-      forgotErrors.email = '请输入有效的邮箱地址'
-    } else {
-      forgotErrors.email = ''
-    }
-  }
-}
-
-// 处理注册
-const handleRegister = () => {
-  router.push('/register')
+// 跳转到登录页
+const handleLogin = () => {
+  router.push('/login')
 }
 
 // 粒子样式生成
@@ -523,21 +478,11 @@ const getParticleStyle = (index: number) => {
     animationDelay: `${delay}s`
   }
 }
-
-// 键盘快捷键
-onMounted(() => {
-  const handleKeyPress = (e: KeyboardEvent) => {
-    if (e.key === 'Enter' && !isSubmitting.value) {
-      handleLogin()
-    }
-  }
-  window.addEventListener('keypress', handleKeyPress)
-  return () => window.removeEventListener('keypress', handleKeyPress)
-})
 </script>
 
 <style scoped>
-.login-container {
+/* 复用登录页面的样式，只修改类名 */
+.register-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -547,7 +492,7 @@ onMounted(() => {
   background: #0a0a0f;
 }
 
-/* 动态渐变背景 */
+/* 背景和装饰效果 - 与登录页面相同 */
 .gradient-background {
   position: absolute;
   inset: 0;
@@ -618,7 +563,6 @@ onMounted(() => {
   100% { transform: rotate(360deg); }
 }
 
-/* 浮动粒子 */
 .particles {
   position: absolute;
   inset: 0;
@@ -650,7 +594,6 @@ onMounted(() => {
   }
 }
 
-/* 网格背景 */
 .grid-overlay {
   position: absolute;
   inset: 0;
@@ -662,13 +605,13 @@ onMounted(() => {
   mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
 }
 
-/* 登录卡片 */
-.login-card {
+/* 注册卡片 */
+.register-card {
   position: relative;
   z-index: 10;
   width: 100%;
   max-width: 440px;
-  padding: 3rem 2.5rem;
+  padding: 2.5rem 2.5rem;
   background: rgba(15, 15, 25, 0.8);
   border: 1px solid rgba(99, 102, 241, 0.2);
   border-radius: 24px;
@@ -691,7 +634,7 @@ onMounted(() => {
   }
 }
 
-.login-card.shake {
+.register-card.shake {
   animation: cardShake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 }
 
@@ -701,7 +644,6 @@ onMounted(() => {
   20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
-/* 卡片光效 */
 .card-glow {
   position: absolute;
   top: -50%;
@@ -737,7 +679,7 @@ onMounted(() => {
   z-index: -1;
 }
 
-.login-card:hover .card-border-glow {
+.register-card:hover .card-border-glow {
   opacity: 0.3;
 }
 
@@ -747,7 +689,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .logo-icon {
@@ -780,7 +722,7 @@ onMounted(() => {
 /* 标题区域 */
 .header-section {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .header-section h2 {
@@ -798,10 +740,10 @@ onMounted(() => {
 }
 
 /* 表单 */
-.login-form {
+.register-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
 .form-group {
@@ -830,7 +772,7 @@ onMounted(() => {
 
 .input-wrapper input {
   width: 100%;
-  padding: 1rem 1.25rem;
+  padding: 0.875rem 1.25rem;
   font-size: 0.95rem;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -857,7 +799,6 @@ onMounted(() => {
   box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
 }
 
-/* 输入框高亮效果 */
 .input-highlight {
   position: absolute;
   inset: 0;
@@ -876,7 +817,6 @@ onMounted(() => {
   opacity: 1;
 }
 
-/* 密码切换按钮 */
 .toggle-password {
   position: absolute;
   right: 1rem;
@@ -898,7 +838,6 @@ onMounted(() => {
   transform: translateY(-50%) scale(1.1);
 }
 
-/* 错误消息 */
 .error-message {
   display: flex;
   align-items: center;
@@ -919,8 +858,60 @@ onMounted(() => {
   transform: translateY(-5px);
 }
 
-/* 登录按钮 */
-.login-button {
+/* 密码强度指示器 */
+.password-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  transition: all 0.3s;
+  border-radius: 2px;
+}
+
+.strength-fill.weak {
+  background: #ef4444;
+}
+
+.strength-fill.medium {
+  background: #f59e0b;
+}
+
+.strength-fill.strong {
+  background: #10b981;
+}
+
+.strength-text {
+  font-size: 0.85rem;
+  font-weight: 500;
+  min-width: 40px;
+}
+
+.strength-text.weak {
+  color: #ef4444;
+}
+
+.strength-text.medium {
+  color: #f59e0b;
+}
+
+.strength-text.strong {
+  color: #10b981;
+}
+
+/* 注册按钮 */
+.register-button {
   position: relative;
   display: flex;
   align-items: center;
@@ -939,7 +930,7 @@ onMounted(() => {
   margin-top: 0.5rem;
 }
 
-.login-button::before {
+.register-button::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -948,22 +939,22 @@ onMounted(() => {
   transition: opacity 0.3s;
 }
 
-.login-button:hover:not(:disabled)::before {
+.register-button:hover:not(:disabled)::before {
   opacity: 1;
 }
 
-.login-button:hover:not(:disabled) {
+.register-button:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 
     0 10px 30px rgba(99, 102, 241, 0.4),
     0 0 40px rgba(99, 102, 241, 0.3);
 }
 
-.login-button:active:not(:disabled) {
+.register-button:active:not(:disabled) {
   transform: translateY(0);
 }
 
-.login-button:disabled {
+.register-button:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
@@ -1003,7 +994,6 @@ onMounted(() => {
   transform: scale(0.9);
 }
 
-/* 按钮光效 */
 .button-glow {
   position: absolute;
   inset: -50%;
@@ -1017,103 +1007,8 @@ onMounted(() => {
   pointer-events: none;
 }
 
-.login-button:hover .button-glow {
+.register-button:hover .button-glow {
   opacity: 1;
-}
-
-/* 按钮粒子效果 */
-.button-particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-
-.button-particles span {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.8);
-  border-radius: 50%;
-  opacity: 0;
-}
-
-.login-button:hover .button-particles span {
-  animation: buttonParticle 0.6s ease-out forwards;
-}
-
-.button-particles span:nth-child(1) { left: 20%; top: 20%; animation-delay: 0s; }
-.button-particles span:nth-child(2) { left: 40%; top: 30%; animation-delay: 0.1s; }
-.button-particles span:nth-child(3) { left: 60%; top: 20%; animation-delay: 0.2s; }
-.button-particles span:nth-child(4) { left: 30%; top: 70%; animation-delay: 0.15s; }
-.button-particles span:nth-child(5) { left: 50%; top: 80%; animation-delay: 0.25s; }
-.button-particles span:nth-child(6) { left: 70%; top: 70%; animation-delay: 0.05s; }
-
-@keyframes buttonParticle {
-  0% {
-    opacity: 1;
-    transform: scale(1) translate(0, 0);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(0) translate(var(--tx, 20px), var(--ty, -20px));
-  }
-}
-
-/* 分割线 */
-.divider {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin: 2rem 0;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.1),
-    transparent
-  );
-}
-
-.divider span {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.4);
-  white-space: nowrap;
-}
-
-/* 其他登录方式 */
-.alternative-login {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.alt-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.875rem 1rem;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.alt-button:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(99, 102, 241, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 /* 底部链接 */
@@ -1122,8 +1017,12 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  margin-top: 2rem;
+  margin-top: 1.5rem;
   font-size: 0.9rem;
+}
+
+.footer-links span {
+  color: rgba(255, 255, 255, 0.6);
 }
 
 .footer-links a {
@@ -1135,10 +1034,6 @@ onMounted(() => {
 .footer-links a:hover {
   color: #a78bfa;
   text-decoration: underline;
-}
-
-.footer-links .separator {
-  color: rgba(255, 255, 255, 0.3);
 }
 
 /* 装饰元素 */
@@ -1212,11 +1107,11 @@ onMounted(() => {
 
 /* 响应式设计 */
 @media (max-width: 480px) {
-  .login-container {
+  .register-container {
     padding: 1rem;
   }
 
-  .login-card {
+  .register-card {
     padding: 2rem 1.5rem;
     border-radius: 20px;
   }
@@ -1235,206 +1130,15 @@ onMounted(() => {
   }
 
   .input-wrapper input {
-    font-size: 16px; /* 防止 iOS 自动缩放 */
+    font-size: 16px;
     padding: 0.875rem 1rem;
-  }
-
-  .alternative-login {
-    grid-template-columns: 1fr;
   }
 }
 
 @media (min-width: 768px) {
-  .login-card {
+  .register-card {
     max-width: 460px;
-    padding: 3.5rem 3rem;
+    padding: 3rem 3rem;
   }
-}
-
-/* 深色模式适配 */
-:global([data-theme="dark"]) .login-container {
-  background: #000000;
-}
-
-/* 找回密码弹窗 */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-}
-
-.modal-container {
-  width: 100%;
-  max-width: 480px;
-  padding: 1rem;
-}
-
-.modal-card {
-  position: relative;
-  padding: 2.5rem;
-  background: rgba(15, 15, 25, 0.95);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 100px rgba(99, 102, 241, 0.1);
-}
-
-.modal-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-  border-radius: 8px;
-}
-
-.modal-close:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.modal-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.modal-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
-  border-radius: 16px;
-  color: #818cf8;
-  animation: modalIconPulse 2s ease-in-out infinite;
-}
-
-@keyframes modalIconPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.modal-header h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  color: #ffffff;
-}
-
-.modal-header p {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-}
-
-.forgot-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.submit-button {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.submit-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.submit-button:hover:not(:disabled)::before {
-  opacity: 1;
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 10px 30px rgba(99, 102, 241, 0.4),
-    0 0 40px rgba(99, 102, 241, 0.3);
-}
-
-.submit-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.success-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 12px;
-  color: #34d399;
-  font-size: 0.9rem;
-}
-
-.success-fade-enter-active,
-.success-fade-leave-active {
-  transition: all 0.3s;
-}
-
-.success-fade-enter-from,
-.success-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-/* 弹窗过渡动画 */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: all 0.3s;
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-.modal-fade-enter-from .modal-card,
-.modal-fade-leave-to .modal-card {
-  transform: scale(0.95) translateY(20px);
-}
-
-.modal-fade-enter-active .modal-card,
-.modal-fade-leave-active .modal-card {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 </style>
