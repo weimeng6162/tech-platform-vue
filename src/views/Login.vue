@@ -133,6 +133,7 @@ const handleSubmit = () => {
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
 }
 
 .gradient-orb-1 {
@@ -197,18 +198,18 @@ const handleSubmit = () => {
 }
 
 @keyframes orbFloat1 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(50px, 30px) scale(1.1); }
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(50px, 30px); }
 }
 
 @keyframes orbFloat2 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-40px, -30px) scale(1.05); }
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-40px, -30px); }
 }
 
 @keyframes orbFloat3 {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-30px, 20px) scale(1.08); }
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 20px); }
 }
 
 .card {
@@ -229,11 +230,11 @@ const handleSubmit = () => {
 @keyframes cardFadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 

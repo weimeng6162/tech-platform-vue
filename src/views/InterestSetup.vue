@@ -213,6 +213,7 @@ const getTagColor = (tagId: string) => {
   position: absolute;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
 }
 
 .gradient-orb-1 {

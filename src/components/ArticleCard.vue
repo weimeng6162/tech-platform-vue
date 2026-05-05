@@ -155,7 +155,7 @@ const formatNumber = (num: number) => {
 .card:hover {
   border-color: var(--border-glow);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-8px);
 }
 
 /* 深色模式卡片增强 */
@@ -302,7 +302,6 @@ const formatNumber = (num: number) => {
 
 .tag:hover {
   background: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 20%, transparent);
-  transform: scale(1.05);
 }
 
 :global([data-theme="dark"]) .tag {

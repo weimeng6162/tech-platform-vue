@@ -49,12 +49,12 @@ defineProps<{
 
 .scale-fade-enter-from {
   opacity: 0;
-  transform: scale(0.95);
+  transform: translateY(15px);
 }
 
 .scale-fade-leave-to {
   opacity: 0;
-  transform: scale(1.05);
+  transform: translateY(-15px);
 }
 
 /* 左右滑动 */
@@ -115,14 +115,14 @@ defineProps<{
 @keyframes bounce-in {
   0% {
     opacity: 0;
-    transform: scale(0.3);
+    transform: translateY(30px);
   }
   50% {
-    transform: scale(1.05);
+    transform: translateY(-5px);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 

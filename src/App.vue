@@ -95,12 +95,12 @@ body.page-transitioning {
 
 .scale-fade-enter-from {
   opacity: 0;
-  transform: scale(0.96);
+  transform: translateY(15px);
 }
 
 .scale-fade-leave-to {
   opacity: 0;
-  transform: scale(1.02);
+  transform: translateY(-15px);
 }
 
 /* 弹性缩放 - 更有活力 */
@@ -115,26 +115,26 @@ body.page-transitioning {
 @keyframes bounce-in {
   0% {
     opacity: 0;
-    transform: scale(0.92);
+    transform: translateY(20px);
   }
   60% {
     opacity: 1;
-    transform: scale(1.02);
+    transform: translateY(-5px);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
 @keyframes bounce-out {
   0% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
   100% {
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(20px);
   }
 }
 

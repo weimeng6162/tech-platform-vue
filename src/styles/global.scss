@@ -6,6 +6,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 html {
   font-size: 16px;
   scroll-behavior: smooth;
@@ -22,13 +27,17 @@ body {
   position: relative;
   min-height: 100vh;
   overflow-x: hidden;
+  max-width: 100%;
 }
 
 // 浅色模式背景 - 柔和渐变
 body::before {
   content: '';
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: -2;
   background: 
     // 网格背景
@@ -42,15 +51,26 @@ body::before {
     radial-gradient(ellipse 40% 40% at 0% 100%, rgba(59, 130, 246, 0.04), transparent);
   background-size: 50px 50px, 50px 50px, 100% 100%, 100% 100%, 100% 100%;
   transition: background 0.4s ease, opacity 0.4s ease;
+  pointer-events: none;
 }
 
-// 深色模式背景 - 纯净黑色，极淡网格
+// 深色模式背景 - 深邃午夜蓝径向渐变
 [data-theme="dark"] body::before {
   background: 
-    // 主网格 - 极淡
-    linear-gradient(90deg, rgba(129, 140, 248, 0.02) 1px, transparent 1px),
-    linear-gradient(rgba(129, 140, 248, 0.02) 1px, transparent 1px);
-  background-size: 100px 100px, 100px 100px;
+    // 中心亮径向渐变 - 聚焦视线
+    radial-gradient(ellipse 80% 60% at 50% 30%, rgba(0, 242, 255, 0.03) 0%, transparent 50%),
+    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(112, 0, 255, 0.025) 0%, transparent 50%),
+    radial-gradient(ellipse 50% 40% at 30% 70%, rgba(168, 85, 247, 0.02) 0%, transparent 50%),
+    // 极淡网格
+    linear-gradient(90deg, rgba(0, 242, 255, 0.015) 1px, transparent 1px),
+    linear-gradient(rgba(0, 242, 255, 0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 80px 80px, 80px 80px;
+  animation: backgroundPulse 20s ease-in-out infinite;
+}
+
+@keyframes backgroundPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
 }
 
 // 浅色模式浮动光点效果
@@ -79,21 +99,27 @@ body::after {
   display: none;
 }
 
+// 深色模式防溢出
+[data-theme="dark"] body,
+[data-theme="dark"] html {
+  overflow-x: hidden;
+}
+
 @keyframes particleFloat {
   0%, 100% { 
-    transform: translateY(0) scale(1); 
+    transform: translateY(0);
     opacity: 0.6;
   }
   25% { 
-    transform: translateY(-20px) scale(1.1); 
+    transform: translateY(-20px);
     opacity: 0.8;
   }
   50% { 
-    transform: translateY(-10px) scale(0.95); 
+    transform: translateY(-10px);
     opacity: 0.5;
   }
   75% { 
-    transform: translateY(-30px) scale(1.05); 
+    transform: translateY(-30px);
     opacity: 0.7;
   }
 }
@@ -174,11 +200,11 @@ a:hover {
 @keyframes scaleIn {
   from { 
     opacity: 0;
-    transform: scale(0.95);
+    transform: translateY(10px);
   }
   to { 
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 

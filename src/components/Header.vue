@@ -1,42 +1,14 @@
 <template>
   <header class="header">
     <div class="container">
-      <!-- Logo -->
-      <router-link to="/" class="logo">
-        <div class="logo-icon">
-          <svg viewBox="0 0 32 32" fill="none">
-            <path d="M16 2L2 9V23L16 30L30 23V9L16 2Z" stroke="url(#logoGradient)" stroke-width="2" fill="none" />
-            <path d="M16 10L10 13.5V20.5L16 24L22 20.5V13.5L16 10Z" fill="url(#logoGradient)" />
-            <defs>
-              <linearGradient id="logoGradient" x1="2" y1="2" x2="30" y2="30">
-                <stop stop-color="#6366f1" />
-                <stop offset="1" stop-color="#a855f7" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
-        <span class="logo-text">TechFlow</span>
-      </router-link>
-
-      <!-- 导航 -->
-      <nav class="nav">
-        <router-link to="/" class="nav-item" :class="{ active: route.path === '/' }">首页</router-link>
-        <a class="nav-item" :class="{ active: route.path.startsWith('/article') }" @click="handleArticleClick">文章</a>
-        <router-link to="/footprint" class="nav-item" :class="{ active: route.path === '/footprint' }">足迹</router-link>
-        <router-link to="/collection" class="nav-item" :class="{ active: route.path === '/collection' }">收藏</router-link>
-        <router-link to="/interest" class="nav-item" :class="{ active: route.path === '/interest' }">兴趣配置</router-link>
-      </nav>
+      <!-- 搜索框 -->
+      <div class="search-box" @click="showSearch = true">
+        <Search :size="18" />
+        <span class="search-placeholder">搜索文章...</span>
+      </div>
 
       <!-- 右侧操作 -->
       <div class="actions">
-        <button class="icon-btn" title="搜索" @click="showSearch = true">
-          <Search :size="20" />
-        </button>
-        <button class="icon-btn" title="通知">
-          <Bell :size="20" />
-          <span class="badge">3</span>
-        </button>
-        
         <!-- 主题切换按钮 -->
         <button class="theme-toggle" @click="themeStore.toggleTheme()" :title="themeStore.theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'">
           <div class="toggle-track">
@@ -60,32 +32,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { Search, Bell, Sun, Moon, User } from 'lucide-vue-next'
+import { Search, Sun, Moon, User } from 'lucide-vue-next'
 import { useThemeStore } from '../stores/theme'
-import { getRecentArticle } from '../stores/recentArticles'
 import SearchModal from './SearchModal.vue'
 
-const route = useRoute()
-const router = useRouter()
 const themeStore = useThemeStore()
 const showSearch = ref(false)
-
-// 处理文章点击
-const handleArticleClick = () => {
-  const recentArticle = getRecentArticle()
-  
-  if (recentArticle) {
-    // 如果有最近阅读的文章，跳转到该文章
-    router.push({
-      path: '/article-ai',
-      query: { id: recentArticle.article_id }
-    })
-  } else {
-    // 如果没有最近阅读，跳转到首页
-    router.push('/')
-  }
-}
 </script>
 
 <style scoped>
@@ -94,148 +46,62 @@ const handleArticleClick = () => {
   top: 0;
   z-index: 100;
   background: var(--bg-glass);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border-primary);
   transition: all 0.3s ease;
-}
-
-/* 无模糊效果 */
-
-/* 深色模式头部增强 */
-:global([data-theme="dark"]) .header {
-  background: #000000;
-  border-bottom: 1px solid rgba(129, 140, 248, 0.2);
-  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.8);
 }
 
 .container {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  max-width: 1200px;
+  justify-content: flex-end;
+  max-width: 100%;
   margin: 0 auto;
   padding: var(--space-md) var(--space-lg);
   gap: var(--space-lg);
 }
 
-.logo {
+/* 搜索框 */
+.search-box {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  flex-shrink: 0;
-}
-
-.logo-icon {
-  width: 36px;
-  height: 36px;
-  filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
-  transition: filter 0.3s ease;
-}
-
-.logo:hover .logo-icon {
-  filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.5));
-}
-
-:global([data-theme="dark"]) .logo-icon {
-  filter: drop-shadow(0 0 12px rgba(129, 140, 248, 0.5));
-}
-
-:global([data-theme="dark"]) .logo:hover .logo-icon {
-  filter: drop-shadow(0 0 20px rgba(129, 140, 248, 0.7));
-}
-
-.logo-icon svg {
-  width: 100%;
-  height: 100%;
-}
-
-.logo-text {
-  font-size: 1.35rem;
-  font-weight: 700;
-  background: var(--accent-gradient);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  letter-spacing: -0.02em;
-}
-
-.nav {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-}
-
-.nav-item {
-  padding: var(--space-sm) var(--space-md);
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  border-radius: var(--radius-md);
-  transition: all var(--transition-fast);
-  position: relative;
-}
-
-.nav-item:hover {
-  color: var(--text-primary);
+  padding: var(--space-sm) var(--space-lg);
   background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
 }
 
-.nav-item.active {
-  color: var(--accent-primary);
-  background: var(--accent-glow);
+.search-box:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-secondary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
-:global([data-theme="dark"]) .nav-item.active {
-  background: rgba(129, 140, 248, 0.15);
-  box-shadow: 0 0 20px rgba(129, 140, 248, 0.1);
+:global([data-theme="dark"]) .search-box {
+  background: var(--bg-tertiary);
+  border-color: var(--border-secondary);
+}
+
+:global([data-theme="dark"]) .search-box:hover {
+  background: var(--bg-elevated);
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 242, 255, 0.1);
+}
+
+.search-placeholder {
+  font-size: 0.9rem;
+  color: var(--text-tertiary);
 }
 
 .actions {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-}
-
-.icon-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  color: var(--text-secondary);
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.icon-btn:hover {
-  color: var(--text-primary);
-  background: var(--bg-tertiary);
-}
-
-:global([data-theme="dark"]) .icon-btn:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary);
-}
-
-.badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  min-width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: white;
-  background: var(--error);
-  border-radius: var(--radius-full);
-  padding: 0 5px;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
 }
 
 /* 主题切换按钮 */
@@ -260,8 +126,9 @@ const handleArticleClick = () => {
 }
 
 :global([data-theme="dark"]) .toggle-track {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(99, 102, 241, 0.3);
+  background: var(--accent-glow);
+  border-color: var(--border-secondary);
+  box-shadow: 0 0 20px var(--accent-glow);
 }
 
 .toggle-thumb {
@@ -279,7 +146,7 @@ const handleArticleClick = () => {
 
 .toggle-thumb.dark {
   transform: translateX(24px);
-  box-shadow: 0 2px 12px rgba(129, 140, 248, 0.6);
+  box-shadow: 0 2px 16px rgba(0, 242, 255, 0.7), 0 0 24px rgba(112, 0, 255, 0.5);
 }
 
 .avatar-btn {
@@ -303,10 +170,11 @@ const handleArticleClick = () => {
 }
 
 :global([data-theme="dark"]) .avatar-btn {
-  box-shadow: 0 2px 16px rgba(129, 140, 248, 0.5);
+  box-shadow: 0 2px 20px rgba(0, 242, 255, 0.5), 0 0 30px rgba(112, 0, 255, 0.3);
 }
 
 :global([data-theme="dark"]) .avatar-btn:hover {
-  box-shadow: 0 4px 24px rgba(129, 140, 248, 0.7);
+  box-shadow: 0 4px 28px rgba(0, 242, 255, 0.7), 0 0 40px rgba(112, 0, 255, 0.5);
+  transform: scale(1.05);
 }
 </style>

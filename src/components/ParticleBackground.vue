@@ -103,18 +103,6 @@ const reinitializeParticles = () => {
   const particleDensity = screenArea / (1920 * 1080)
   const dynamicParticleCount = Math.floor(baseParticleCount * Math.sqrt(particleDensity) * 1.2)
 
-  for (let i = 0; i < dynamicParticleCount; i++) {
-    const particle = createParticle()
-    // 初始时粒子从屏幕外缓慢飞入
-    const angle = Math.random() * Math.PI * 2
-    const distance = 200 + Math.random() * 300
-    particle.x = canvas.width / 2 + Math.cos(angle) * distance
-    particle.y = canvas.height / 2 + Math.sin(angle) * distance
-    particle.vx = -Math.cos(angle) * (0.5 + Math.random() * 0.5)
-    particle.vy = -Math.sin(angle) * (0.5 + Math.random() * 0.5)
-    particles.push(particle)
-  }
-
   // 重新选择方程
   const equationTypes: Array<'lissajous' | 'spiral' | 'rose' | 'wave' | 'parametric' | 'butterfly' | 'heart' | 'star' | 'hypocycloid' | 'epicycloid' | 'deltoid' | 'nephroid'> =
     ['lissajous', 'spiral', 'rose', 'wave', 'parametric', 'butterfly', 'heart', 'star', 'hypocycloid', 'epicycloid', 'deltoid', 'nephroid']
@@ -134,6 +122,53 @@ const reinitializeParticles = () => {
     }
   }
   updateOutlineProgress()
+
+  // 单个飘入粒子 - 延迟生成
+  let spawnedCount = 0
+  const spawnParticle = () => {
+    if (spawnedCount >= dynamicParticleCount) return
+
+    const particle = createParticle()
+    // 粒子从屏幕边缘缓慢飘入
+    const side = Math.floor(Math.random() * 4) // 0:上, 1:右, 2:下, 3:左
+
+    switch (side) {
+      case 0: // 从上方
+        particle.x = Math.random() * canvas.width
+        particle.y = -20
+        particle.vx = (Math.random() - 0.5) * 0.3
+        particle.vy = 0.2 + Math.random() * 0.3
+        break
+      case 1: // 从右方
+        particle.x = canvas.width + 20
+        particle.y = Math.random() * canvas.height
+        particle.vx = -(0.2 + Math.random() * 0.3)
+        particle.vy = (Math.random() - 0.5) * 0.3
+        break
+      case 2: // 从下方
+        particle.x = Math.random() * canvas.width
+        particle.y = canvas.height + 20
+        particle.vx = (Math.random() - 0.5) * 0.3
+        particle.vy = -(0.2 + Math.random() * 0.3)
+        break
+      case 3: // 从左方
+        particle.x = -20
+        particle.y = Math.random() * canvas.height
+        particle.vx = 0.2 + Math.random() * 0.3
+        particle.vy = (Math.random() - 0.5) * 0.3
+        break
+    }
+    particles.push(particle)
+    spawnedCount++
+
+    // 每隔150ms生成一个新粒子,让飘入更加缓慢
+    if (spawnedCount < dynamicParticleCount) {
+      setTimeout(spawnParticle, 150)
+    }
+  }
+
+  // 开始生成第一个粒子
+  setTimeout(spawnParticle, 150)
 }
 
 // 监听路由变化,重新初始化粒子
@@ -155,8 +190,8 @@ const createParticle = (x?: number, y?: number, isClick = false): Particle => {
   const equationType = selectedEquation
 
   return {
-    x: x ?? Math.random() * (canvas?.width || window.innerWidth),
-    y: y ?? Math.random() * (canvas?.height || window.innerHeight),
+    x: x ?? Math.random() * (canvas?.width || document.documentElement.clientWidth),
+    y: y ?? Math.random() * (canvas?.height || document.documentElement.clientHeight),
     vx: (Math.random() - 0.5) * (isClick ? 5 : 1.5),
     vy: (Math.random() - 0.5) * (isClick ? 5 : 1.5),
     size: baseSize + Math.random() * (isDark ? 3 : 2),
@@ -293,8 +328,8 @@ onMounted(() => {
   if (!ctx) return
 
   const resize = () => {
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    canvas.width = document.documentElement.clientWidth
+    canvas.height = document.documentElement.clientHeight
   }
   resize()
   window.addEventListener('resize', resize)
@@ -306,18 +341,52 @@ onMounted(() => {
   const particleDensity = screenArea / (1920 * 1080) // 相对于1080p的密度
   const dynamicParticleCount = Math.floor(baseParticleCount * Math.sqrt(particleDensity) * 1.2) // 增加20%
 
-  for (let i = 0; i < dynamicParticleCount; i++) {
+  // 单个飘入粒子 - 延迟生成
+  let spawnedCount = 0
+  const spawnParticle = () => {
+    if (spawnedCount >= dynamicParticleCount) return
+
     const particle = createParticle()
-    // 初始时粒子从屏幕外缓慢飞入
-    const angle = Math.random() * Math.PI * 2
-    const distance = 200 + Math.random() * 300 // 从屏幕外200-500像素处飞入
-    particle.x = canvas.width / 2 + Math.cos(angle) * distance
-    particle.y = canvas.height / 2 + Math.sin(angle) * distance
-    // 向中心缓慢飞入的速度
-    particle.vx = -Math.cos(angle) * (0.5 + Math.random() * 0.5)
-    particle.vy = -Math.sin(angle) * (0.5 + Math.random() * 0.5)
+    // 粒子从屏幕边缘缓慢飘入
+    const side = Math.floor(Math.random() * 4) // 0:上, 1:右, 2:下, 3:左
+
+    switch (side) {
+      case 0: // 从上方
+        particle.x = Math.random() * canvas.width
+        particle.y = -20
+        particle.vx = (Math.random() - 0.5) * 0.3
+        particle.vy = 0.2 + Math.random() * 0.3
+        break
+      case 1: // 从右方
+        particle.x = canvas.width + 20
+        particle.y = Math.random() * canvas.height
+        particle.vx = -(0.2 + Math.random() * 0.3)
+        particle.vy = (Math.random() - 0.5) * 0.3
+        break
+      case 2: // 从下方
+        particle.x = Math.random() * canvas.width
+        particle.y = canvas.height + 20
+        particle.vx = (Math.random() - 0.5) * 0.3
+        particle.vy = -(0.2 + Math.random() * 0.3)
+        break
+      case 3: // 从左方
+        particle.x = -20
+        particle.y = Math.random() * canvas.height
+        particle.vx = 0.2 + Math.random() * 0.3
+        particle.vy = (Math.random() - 0.5) * 0.3
+        break
+    }
     particles.push(particle)
+    spawnedCount++
+
+    // 每隔150ms生成一个新粒子,让飘入更加缓慢
+    if (spawnedCount < dynamicParticleCount) {
+      setTimeout(spawnParticle, 150)
+    }
   }
+
+  // 开始生成第一个粒子
+  setTimeout(spawnParticle, 150)
 
   // 随机选择一个方程进行轮廓绘制
   const equationTypes: Array<'lissajous' | 'spiral' | 'rose' | 'wave' | 'parametric' | 'butterfly' | 'heart' | 'star' | 'hypocycloid' | 'epicycloid' | 'deltoid' | 'nephroid'> =
@@ -471,12 +540,14 @@ onMounted(() => {
         // 粒子死亡,移除并生成新粒子
         if (p.age >= p.maxAge) {
           particles.splice(i, 1)
-          // 生成新粒子飘入
-          const newParticle = createParticle()
-          newParticle.x = Math.random() * canvas.width
-          newParticle.y = -50 // 从屏幕上方飘入
-          newParticle.vy = 0.3 + Math.random() * 0.5 // 向下缓慢飘入(从1-3降低到0.3-0.8)
-          particles.push(newParticle)
+          // 延迟生成新粒子飘入
+          setTimeout(() => {
+            const newParticle = createParticle()
+            newParticle.x = Math.random() * canvas.width
+            newParticle.y = -50 // 从屏幕上方飘入
+            newParticle.vy = 0.3 + Math.random() * 0.5 // 向下缓慢飘入(从1-3降低到0.3-0.8)
+            particles.push(newParticle)
+          }, 100) // 延迟100ms生成
           continue
         }
       }
@@ -519,8 +590,8 @@ onMounted(() => {
       }
       // 吸附阶段 - 粒子缓慢向中心移动
       else if (cyclePhase === 'attracting' && p.life === Infinity) {
-        const centerX = (canvas?.width || window.innerWidth) / 2
-        const centerY = (canvas?.height || window.innerHeight) / 2
+        const centerX = (canvas?.width || document.documentElement.clientWidth) / 2
+        const centerY = (canvas?.height || document.documentElement.clientHeight) / 2
         const dx = centerX - p.x
         const dy = centerY - p.y
         const dist = Math.sqrt(dx * dx + dy * dy)

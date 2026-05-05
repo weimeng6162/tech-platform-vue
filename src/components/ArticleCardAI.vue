@@ -163,15 +163,78 @@ const handleClick = () => {
   border-radius: 12px;
   padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   border: 1px solid var(--border-color);
   overflow: hidden;
+}
+
+.article-card-ai::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00F2FF, #7000FF, #A855F7);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.article-card-ai::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
 }
 
 .article-card-ai:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
   border-color: var(--primary-color);
+}
+
+.article-card-ai:hover::before {
+  opacity: 1;
+}
+
+.article-card-ai:hover::after {
+  left: 100%;
+}
+
+/* 深色模式 - 全息玻璃卡片 */
+:global([data-theme="dark"]) .article-card-ai {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+:global([data-theme="dark"]) .article-card-ai::before {
+  opacity: 0.5;
+  background: linear-gradient(90deg, #00F2FF, #7000FF, #A855F7);
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+}
+
+:global([data-theme="dark"]) .article-card-ai::after {
+  background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.08), transparent);
+}
+
+:global([data-theme="dark"]) .article-card-ai:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 242, 255, 0.3);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.8),
+    0 0 60px rgba(0, 242, 255, 0.15),
+    0 0 100px rgba(112, 0, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .article-card-ai:hover::before {
+  opacity: 1;
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.8);
 }
 
 /* 难度角标 */
@@ -262,7 +325,7 @@ const handleClick = () => {
 }
 
 .tag:hover {
-  transform: scale(1.05);
+  transform: translateY(-2px);
 }
 
 /* 警示标签 - 特殊样式 */
