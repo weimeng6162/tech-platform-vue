@@ -70,15 +70,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Eye, Clock, Heart, MessageCircle, Bookmark, Share2 } from 'lucide-vue-next'
 import { techTags, articleContent } from '../data/mockData'
+import { useBrowsingHistory } from '../stores/browsingHistory'
+import type { ArticleItem } from '../types/api'
 
 const router = useRouter()
+const route = useRoute()
+const { addToBrowsingHistory } = useBrowsingHistory()
+
+// 从路由参数获取文章ID
+const articleId = route.params.id as string
 
 const article = {
-  id: '1',
+  id: articleId,
+  article_id: articleId,
   title: '深入理解 Vue 3 的响应式原理',
   tags: ['vue', 'typescript', 'javascript'],
   author: { name: '张三', avatar: '', bio: '前端架构师，Vue 核心贡献者' },
@@ -87,7 +95,31 @@ const article = {
   commentCount: 156,
   createdAt: '2024-01-15',
   readTime: '12 分钟',
+  // ArticleItem 需要的字段
+  publish_time: '2024-01-15',
+  category: '前端开发',
+  ai_summary: '本文深入探讨了 Vue 3 的响应式系统原理，包括 Proxy 的使用、依赖收集和触发更新的机制。',
+  difficulty: '中级' as const,
+  view_count: 12580,
+  is_collected: false,
 }
+
+// 组件挂载时记录到浏览历史
+onMounted(() => {
+  const browsingArticle: ArticleItem = {
+    article_id: article.article_id,
+    title: article.title,
+    author: article.author.name,
+    publish_time: article.publish_time,
+    category: article.category,
+    ai_summary: article.ai_summary,
+    tags: article.tags,
+    difficulty: article.difficulty,
+    view_count: article.view_count,
+    is_collected: article.is_collected,
+  }
+  addToBrowsingHistory(browsingArticle)
+})
 
 const getTagName = (tagId: string) => {
   return techTags.find(t => t.id === tagId)?.name || tagId

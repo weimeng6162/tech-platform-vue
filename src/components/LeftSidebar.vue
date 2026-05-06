@@ -128,11 +128,6 @@ const handleArticleClick = () => {
   transition: all 0.3s ease;
 }
 
-:global([data-theme="dark"]) .left-sidebar {
-  background: rgba(5, 10, 20, 0.9);
-  border-right: 1px solid rgba(0, 242, 255, 0.08);
-}
-
 .sidebar-content {
   display: flex;
   flex-direction: column;

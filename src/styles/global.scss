@@ -64,8 +64,10 @@ body::before {
     // 极淡网格
     linear-gradient(90deg, rgba(0, 242, 255, 0.015) 1px, transparent 1px),
     linear-gradient(rgba(0, 242, 255, 0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 80px 80px, 80px 80px;
-  animation: backgroundPulse 20s ease-in-out infinite;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 70px 70px, 70px 70px;
+  background-attachment: fixed;
+  /* 移除深色模式的背景动画以避免视觉干扰 */
+  animation: none;
 }
 
 @keyframes backgroundPulse {
@@ -92,11 +94,14 @@ body::after {
   background-size: 100% 100%;
   animation: particleFloat 25s ease-in-out infinite;
   opacity: 0.6;
+  background-attachment: fixed;
 }
 
 // 深色模式移除浮动光点
 [data-theme="dark"] body::after {
   display: none;
+  animation: none !important;
+  transform: none !important;
 }
 
 // 深色模式防溢出
