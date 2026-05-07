@@ -77,13 +77,51 @@
         </div>
       </main>
     </div>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar">
+      <!-- 热门标签 -->
+      <div class="sidebar-card">
+        <h3>
+          <Hash :size="18" />
+          热门标签
+        </h3>
+        <div class="tag-cloud">
+          <span
+            v-for="tag in techTags.slice(0, 15)"
+            :key="tag.id"
+            class="cloud-tag"
+            :style="{ '--tag-color': tag.color }"
+          >
+            {{ tag.name }}
+          </span>
+        </div>
+      </div>
+
+      <!-- 活跃作者 -->
+      <div class="sidebar-card">
+        <h3>
+          <Users :size="18" />
+          活跃作者
+        </h3>
+        <div class="authors">
+          <div v-for="author in authors" :key="author.name" class="author">
+            <div class="author-avatar">{{ author.name[0] }}</div>
+            <div class="author-info">
+              <span class="author-name">{{ author.name }}</span>
+              <span class="author-bio">{{ author.bio }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, h } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles } from 'lucide-vue-next'
+import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { recommendArticlesData, categories, techTags } from '../data/mockData'
 import { processArticles } from '../utils/articleFilter'
@@ -103,6 +141,12 @@ const iconMap: Record<string, any> = {
   TrendingUp: (props: any) => h(TrendingUp, props),
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
+
+const authors = [
+  { name: '张三', bio: '前端工程师' },
+  { name: '李四', bio: '后端开发者' },
+  { name: '王五', bio: '全栈工程师' },
+]
 
 // 使用新的 AI 推荐数据并过滤劣质文章
 const allArticles = recommendArticlesData.data.article_list
@@ -453,7 +497,8 @@ const handleArticleClick = (article: ArticleItem) => {
   flex-direction: column;
   gap: var(--space-lg);
   position: sticky;
-  top: 20px;
+  top: 120px;
+  margin-top: 480px;
 }
 
 @media (max-width: 1024px) {
