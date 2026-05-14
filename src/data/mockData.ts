@@ -53,17 +53,17 @@ export const techTags = [
   { id: 'react', name: 'React', color: '#61dafb', category: 'frontend' },
   { id: 'vue', name: 'Vue', color: '#42b883', category: 'frontend' },
   { id: 'angular', name: 'Angular', color: '#dd0031', category: 'frontend' },
-  { id: 'nextjs', name: 'Next.js', color: '#000000', category: 'frontend' },
+  { id: 'nextjs', name: 'Next.js', color: '#737373', category: 'frontend' },
   { id: 'nuxt', name: 'Nuxt', color: '#00dc82', category: 'frontend' },
   { id: 'svelte', name: 'Svelte', color: '#ff3e00', category: 'frontend' },
   { id: 'tailwind', name: 'Tailwind', color: '#06b6d4', category: 'frontend' },
   
   // 后端框架
   { id: 'nodejs', name: 'Node.js', color: '#339933', category: 'backend' },
-  { id: 'django', name: 'Django', color: '#092e20', category: 'backend' },
+  { id: 'django', name: 'Django', color: '#44B78B', category: 'backend' },
   { id: 'spring', name: 'Spring', color: '#6db33f', category: 'backend' },
-  { id: 'flask', name: 'Flask', color: '#000000', category: 'backend' },
-  { id: 'express', name: 'Express', color: '#000000', category: 'backend' },
+  { id: 'flask', name: 'Flask', color: '#C4C4C4', category: 'backend' },
+  { id: 'express', name: 'Express', color: '#68A063', category: 'backend' },
   { id: 'fastapi', name: 'FastAPI', color: '#009688', category: 'backend' },
   
   // 数据库
@@ -293,7 +293,7 @@ export const recommendArticlesData = {
         category: '后端',
         ai_summary:
           '文章详细分析了Go语言的GMP调度模型，阐述协程G、线程M、逻辑处理器P的交互关系，并通过源码剖析了任务窃取机制。',
-        tags: ['Go', '并发编程', 'Goroutine', '底层原理'],
+        tags: ['go', 'backend', 'algorithm'],
         difficulty: '深度' as const,
         view_count: 1205,
         is_collected: false,
@@ -306,7 +306,7 @@ export const recommendArticlesData = {
         category: '前端',
         ai_summary:
           '带你从零编写 Dockerfile，配置 Nginx 反向代理，利用多阶段构建把 Vue3 产物打包成极小体积的镜像文件。',
-        tags: ['Docker', 'Vue3', 'Nginx', 'CI/CD'],
+        tags: ['docker', 'vue', 'frontend'],
         difficulty: '中级' as const,
         view_count: 890,
         is_collected: true,
@@ -319,7 +319,7 @@ export const recommendArticlesData = {
         category: '后端',
         ai_summary:
           '详解 K8s 多集群部署方案，涵盖 etcd 集群配置、控制平面高可用、Pod 反亲和策略及自动故障转移机制。',
-        tags: ['Kubernetes', '高可用', '云原生', '架构设计'],
+        tags: ['kubernetes', 'devops', 'cloud'],
         difficulty: '深度' as const,
         view_count: 1567,
         is_collected: false,
@@ -332,7 +332,7 @@ export const recommendArticlesData = {
         category: '前端',
         ai_summary:
           '从泛型、条件类型到模板字面量类型，通过实战案例带你掌握 TS 类型系统的终极奥义。',
-        tags: ['TypeScript', '类型系统', '前端进阶'],
+        tags: ['typescript', 'frontend', 'javascript'],
         difficulty: '中级' as const,
         view_count: 2341,
         is_collected: true,
@@ -345,7 +345,7 @@ export const recommendArticlesData = {
         publish_time: '2026-04-15T10:00:00Z',
         category: '其他',
         ai_summary: '这是一篇营销软文，已被 AI 识别并自动过滤。',
-        tags: ['Python', '营销软文', '广告'],
+        tags: ['python', '营销软文', '广告'],
         difficulty: '初级' as const,
         view_count: 100,
         is_collected: false,
@@ -357,7 +357,7 @@ export const recommendArticlesData = {
         publish_time: '2026-04-14T10:00:00Z',
         category: '其他',
         ai_summary: '这是一篇技术水文，内容空洞无物，已被 AI 识别并自动过滤。',
-        tags: ['技术水文', '编程'],
+        tags: ['技术水文', 'javascript'],
         difficulty: '初级' as const,
         view_count: 50,
         is_collected: false,
@@ -370,7 +370,7 @@ export const recommendArticlesData = {
         category: '前端',
         ai_summary:
           '全面剖析 React Hooks 的工作原理，包括闭包陷阱、性能优化技巧，文末有相关课程推荐。',
-        tags: ['React', 'Hooks', '前端', '含商业推广'],
+        tags: ['react', 'frontend', '含商业推广'],
         difficulty: '深度' as const,
         view_count: 3456,
         is_collected: false,
@@ -383,7 +383,7 @@ export const recommendArticlesData = {
         category: '后端',
         ai_summary:
           '详解 Prometheus + Grafana 监控方案，包含完整的告警规则配置，文末有培训课程信息。',
-        tags: ['Kubernetes', 'Prometheus', '监控', '含商业推广'],
+        tags: ['kubernetes', 'devops', '含商业推广'],
         difficulty: '中级' as const,
         view_count: 2890,
         is_collected: true,
@@ -398,7 +398,7 @@ export const recommendArticlesData = {
         category: '后端',
         ai_summary:
           '深入分析 Redis SETNX、RedLock、Redisson 等分布式锁实现方案，对比优缺点及适用场景。',
-        tags: ['Redis', '分布式', '并发编程', '数据库'],
+        tags: ['redis', 'backend', 'database'],
         difficulty: '深度' as const,
         view_count: 4521,
         is_collected: false,
@@ -411,7 +411,7 @@ export const recommendArticlesData = {
         category: '前端',
         ai_summary:
           '从 setup 函数到响应式 API，全面掌握 Vue 3 组合式 API 的使用技巧和设计模式。',
-        tags: ['Vue3', 'Composition API', '前端'],
+        tags: ['vue', 'frontend', 'javascript'],
         difficulty: '中级' as const,
         view_count: 3892,
         is_collected: true,
@@ -424,7 +424,7 @@ export const recommendArticlesData = {
         category: '数据库',
         ai_summary:
           '详解 B+ 树索引原理、联合索引最左匹配、索引下推优化，配合真实案例分析。',
-        tags: ['MySQL', '索引优化', '数据库', '性能优化'],
+        tags: ['mysql', 'database', 'algorithm'],
         difficulty: '深度' as const,
         view_count: 5678,
         is_collected: false,
@@ -438,7 +438,7 @@ export const recommendArticlesData = {
         category: '后端',
         ai_summary:
           '从单体到微服务的演进之路，涵盖服务拆分、配置中心、链路追踪等核心组件，文末有架构课程推荐。',
-        tags: ['Spring Boot', '微服务', 'Java', '含商业推广'],
+        tags: ['spring', 'microservice', 'java', '含商业推广'],
         difficulty: '深度' as const,
         view_count: 6234,
         is_collected: true,
@@ -451,7 +451,7 @@ export const recommendArticlesData = {
         category: '前端',
         ai_summary:
           '涵盖首屏加载、代码分割、懒加载、缓存策略等全方位优化方案，文末有性能优化训练营信息。',
-        tags: ['性能优化', '前端', 'Webpack', '含商业推广'],
+        tags: ['frontend', 'webpack', '含商业推广'],
         difficulty: '中级' as const,
         view_count: 4123,
         is_collected: false,
@@ -464,7 +464,7 @@ export const recommendArticlesData = {
         publish_time: '2026-04-06T10:00:00Z',
         category: '其他',
         ai_summary: '这是一篇标题党文章，内容空洞，已被 AI 识别为营销软文并自动过滤。',
-        tags: ['Python', '营销软文'],
+        tags: ['python', '营销软文'],
         difficulty: '初级' as const,
         view_count: 234,
         is_collected: false,
@@ -476,7 +476,7 @@ export const recommendArticlesData = {
         publish_time: '2026-04-05T16:30:00Z',
         category: '其他',
         ai_summary: '这是一篇技术水文，内容毫无价值，已被 AI 识别并自动过滤。',
-        tags: ['技术水文', '编程'],
+        tags: ['技术水文', 'javascript'],
         difficulty: '初级' as const,
         view_count: 156,
         is_collected: false,
@@ -502,7 +502,7 @@ export const recommendArticlesData = {
         category: '工具',
         ai_summary:
           '整理了最常用的 Git 命令，包括分支管理、提交历史、远程仓库操作等，适合新手快速上手。',
-        tags: ['Git', '版本控制', '工具'],
+        tags: ['git', 'devops'],
         difficulty: '初级' as const,
         view_count: 8956,
         is_collected: true,
@@ -515,7 +515,7 @@ export const recommendArticlesData = {
         category: '运维',
         ai_summary:
           '手把手教你安装 Docker，创建第一个容器，理解镜像和容器的基本概念。',
-        tags: ['Docker', '容器', '入门教程'],
+        tags: ['docker', 'devops'],
         difficulty: '初级' as const,
         view_count: 7234,
         is_collected: false,

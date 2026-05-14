@@ -17,7 +17,7 @@
         </router-view>
       </main>
     </div>
-    <BackToTop :threshold="300" />
+    <BackToTop :threshold="300" :show-refresh="showRefreshButton" @refresh="handleRefresh" />
   </div>
 </template>
 
@@ -29,11 +29,24 @@ import ProgressBar from '../components/ProgressBar.vue'
 import BackToTop from '../components/BackToTop.vue'
 import { useThemeStore } from '../stores/theme'
 import { useScrollProgress } from '../composables/useScrollAnimation'
+import { useRefresh } from '../composables/useRefresh'
 
 const route = useRoute()
 const themeStore = useThemeStore()
 const scrollProgress = useScrollProgress()
 const isScrolled = ref(false)
+
+const { triggerRefresh } = useRefresh()
+
+const showRefreshButton = computed(() => {
+  return !route.path.includes('/article-ai') && 
+         !route.path.includes('/article/') && 
+         !route.path.includes('/footprint')
+})
+
+const handleRefresh = () => {
+  triggerRefresh()
+}
 
 const getChildTransition = (childRoute: any) => {
   if (childRoute.path.startsWith('/article/')) {

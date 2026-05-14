@@ -15,16 +15,6 @@
             <span class="gradient-text">无限可能</span>
           </h1>
           <p>汇聚前沿技术文章，助力开发者成长</p>
-          <div class="hero-tags">
-            <span
-              v-for="tag in techTags.slice(0, 8)"
-              :key="tag.id"
-              class="hero-tag"
-              :style="{ '--tag-color': tag.color }"
-            >
-              {{ tag.name }}
-            </span>
-          </div>
         </div>
       </section>
 
@@ -42,6 +32,47 @@
             <span>{{ cat.name }}</span>
           </button>
         </div>
+      </section>
+
+      <!-- 热门标签 -->
+      <section class="hero-tags-section">
+        <div class="hero-tags">
+          <span
+            v-for="tag in techTags.slice(0, 7)"
+            :key="tag.id"
+            class="hero-tag"
+            :class="{ active: activeTags.includes(tag.id) }"
+            :style="{ '--tag-color': tag.color }"
+            @click="handleTagClick(tag.id)"
+          >
+            {{ tag.name }}
+          </span>
+          <span
+            class="hero-tag more-tag"
+            :class="{ active: showMoreTags }"
+            @click="showMoreTags = !showMoreTags"
+          >
+            更多
+          </span>
+        </div>
+
+        <!-- 更多标签面板 -->
+        <transition name="expand">
+          <div v-if="showMoreTags" class="more-tags-panel">
+            <div class="more-tags-grid">
+              <span
+                v-for="tag in techTags.slice(7)"
+                :key="tag.id"
+                class="hero-tag"
+                :class="{ active: activeTags.includes(tag.id) }"
+                :style="{ '--tag-color': tag.color }"
+                @click="handleTagClick(tag.id)"
+              >
+                {{ tag.name }}
+              </span>
+            </div>
+          </div>
+        </transition>
       </section>
 
       <!-- 内容区域 -->
@@ -119,18 +150,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
+import { ref, computed, h, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { recommendArticlesData, categories, techTags } from '../data/mockData'
 import { processArticles } from '../utils/articleFilter'
 import type { ArticleItem } from '../types/api'
+import { useRefresh } from '../composables/useRefresh'
 
 const router = useRouter()
 const route = useRoute()
 const activeCategory = ref('all')
 const activeSection = ref<'featured' | 'recommend'>('featured')
+const activeTags = ref<string[]>([])
+const showMoreTags = ref(false)
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -148,39 +182,65 @@ const authors = [
   { name: '王五', bio: '全栈工程师' },
 ]
 
-// 使用新的 AI 推荐数据并过滤劣质文章
 const allArticles = recommendArticlesData.data.article_list
 const filteredArticles = processArticles(allArticles)
 
-// 根据分类过滤文章
-const currentArticles = computed(() => {
-  let articles = filteredArticles
+const shuffledArticles = ref<ArticleItem[]>([...filteredArticles])
 
-  // 根据分类过滤
+const shuffleArticles = () => {
+  const array = [...filteredArticles]
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]]
+  }
+  shuffledArticles.value = array
+}
+
+const { refreshTrigger } = useRefresh()
+watch(refreshTrigger, () => {
+  shuffleArticles()
+})
+
+const currentArticles = computed(() => {
+  let articles = shuffledArticles.value
+
   if (activeCategory.value !== 'all') {
-    // 这里可以根据分类进行过滤，暂时显示所有文章
     articles = articles
   }
 
-  // 根据热门精选/猜你喜欢过滤
+  if (activeTags.value.length > 0) {
+    articles = articles.filter(article => 
+      activeTags.value.some(tag => article.tags.includes(tag))
+    )
+  }
+
   if (activeSection.value === 'featured') {
-    // 显示前6篇作为热门精选
     return articles.slice(0, 6)
   } else {
-    // 显示后面的作为猜你喜欢
     return articles.slice(6)
   }
 })
 
-// 处理文章点击
+const handleTagClick = (tagId: string) => {
+  const index = activeTags.value.indexOf(tagId)
+  if (index > -1) {
+    activeTags.value.splice(index, 1)
+  } else {
+    activeTags.value.push(tagId)
+  }
+}
+
 const handleArticleClick = (article: ArticleItem) => {
   console.log('点击文章:', article)
-  // 跳转到文章详情页，传递文章 ID
   router.push({
     path: '/article-ai',
     query: { id: article.article_id }
   })
 }
+
+defineExpose({
+  shuffleArticles
+})
 </script>
 
 <style scoped>
@@ -203,7 +263,7 @@ const handleArticleClick = (article: ArticleItem) => {
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
+  gap: var(--space-lg);
 }
 
 /* Hero 区域 */
@@ -338,6 +398,11 @@ const handleArticleClick = (article: ArticleItem) => {
   margin-bottom: var(--space-lg);
 }
 
+/* 热门标签区域 */
+.hero-tags-section {
+  margin-bottom: var(--space-md);
+}
+
 .hero-tags {
   display: flex;
   flex-wrap: wrap;
@@ -363,6 +428,14 @@ const handleArticleClick = (article: ArticleItem) => {
   box-shadow: 0 4px 12px color-mix(in srgb, var(--tag-color, var(--accent-primary)) 30%, transparent);
 }
 
+.hero-tag.active {
+  background: var(--tag-color, var(--accent-primary));
+  color: white;
+  border-color: var(--tag-color, var(--accent-primary));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--tag-color, var(--accent-primary)) 40%, transparent);
+  transform: translateY(-2px);
+}
+
 :global([data-theme="dark"]) .hero-tag {
   background: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 15%, transparent);
   border-color: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 30%, transparent);
@@ -373,10 +446,77 @@ const handleArticleClick = (article: ArticleItem) => {
   box-shadow: 0 4px 20px color-mix(in srgb, var(--tag-color, var(--accent-primary)) 40%, transparent);
 }
 
+:global([data-theme="dark"]) .hero-tag.active {
+  background: var(--tag-color, var(--accent-primary));
+  color: white;
+  border-color: var(--tag-color, var(--accent-primary));
+  box-shadow: 0 4px 20px color-mix(in srgb, var(--tag-color, var(--accent-primary)) 50%, transparent), 0 0 30px color-mix(in srgb, var(--tag-color, var(--accent-primary)) 30%, transparent);
+}
+
+/* 更多标签样式 */
+.more-tag {
+  --tag-color: var(--accent-primary);
+  background: transparent;
+  border: 1px dashed var(--border-secondary);
+  color: var(--text-secondary);
+}
+
+.more-tag:hover {
+  background: var(--bg-tertiary);
+  border-style: solid;
+}
+
+.more-tag.active {
+  background: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+  border-style: solid;
+}
+
+.more-tags-panel {
+  margin-top: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.more-tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+:global([data-theme="dark"]) .more-tags-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* 展开动画 */
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease;
+}
+
+.expand-enter-from,
+.expand-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+  max-height: 0;
+}
+
+.expand-enter-to,
+.expand-leave-from {
+  max-height: 500px;
+}
+
 /* 分类导航 */
 .categories {
   grid-column: 1 / -1;
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-md);
 }
 
 .categories-wrapper {
