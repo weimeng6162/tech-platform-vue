@@ -1,31 +1,37 @@
 <template>
   <div class="layout">
-    <ParticleBackground v-if="showParticleBackground" :particle-count="35" />
+    <MathParticleBackground v-if="showParticleBackground" :particle-count="55" />
     <TechDecoration v-if="themeStore.theme === 'dark' && showParticleBackground" />
     <ProgressBar :progress="scrollProgress" />
-    <Header />
-    <main class="main">
-      <router-view v-slot="{ Component, route: childRoute }">
-        <transition
-          :name="getChildTransition(childRoute)"
-          mode="out-in"
-          appear
-        >
-          <div :key="childRoute.path" class="page-wrapper">
-            <component :is="Component" />
-          </div>
-        </transition>
-      </router-view>
-    </main>
+    <div class="content-wrapper">
+      <LeftSidebar />
+      <div class="right-content">
+        <Header />
+        <main class="main">
+          <router-view v-slot="{ Component, route: childRoute }">
+            <transition
+              :name="getChildTransition(childRoute)"
+              mode="out-in"
+              appear
+            >
+              <div :key="childRoute.path" class="page-wrapper">
+                <component :is="Component" />
+              </div>
+            </transition>
+          </router-view>
+        </main>
+      </div>
+    </div>
     <BackToTop :threshold="300" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '../components/Header.vue'
-import ParticleBackground from '../components/ParticleBackground.vue'
+import LeftSidebar from '../components/LeftSidebar.vue'
+import MathParticleBackground from '../components/MathParticleBackground.vue'
 import TechDecoration from '../components/TechDecoration.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import BackToTop from '../components/BackToTop.vue'
@@ -35,32 +41,39 @@ import { useScrollProgress } from '../composables/useScrollAnimation'
 const route = useRoute()
 const themeStore = useThemeStore()
 const scrollProgress = useScrollProgress()
+const isScrolled = ref(false)
 
-// 只在首页显示粒子背景,文章详情页使用简约风格
 const showParticleBackground = computed(() => {
   return route.path === '/' || route.path === '/interest' || route.path === '/login'
 })
 
-// 子路由过渡效果
 const getChildTransition = (childRoute: any) => {
-  // 文章详情页使用特殊的缩放淡入效果
   if (childRoute.path.startsWith('/article/')) {
     return 'page-scale'
   }
-
-  // 默认使用内容淡入效果
   return 'page-content'
 }
 
-// 页面加载时的优化
+const handleScroll = () => {
+  isScrolled.value = window.scrollY > 50
+  if (isScrolled.value) {
+    document.body.classList.add('header-scrolled')
+  } else {
+    document.body.classList.remove('header-scrolled')
+  }
+}
+
 onMounted(() => {
-  // 预热动画性能
+  window.addEventListener('scroll', handleScroll)
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
-      // 在空闲时预热 CSS 动画
       document.body.style.setProperty('--animation-ready', '1')
     })
   }
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
 
@@ -69,12 +82,27 @@ onMounted(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.content-wrapper {
+  display: flex;
+  flex: 1;
+  position: relative;
+}
+
+.right-content {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
 }
 
 .main {
   flex: 1;
   padding-top: var(--space-lg);
   position: relative;
+  z-index: 2;
 }
 
 .page-wrapper {
@@ -125,22 +153,22 @@ onMounted(() => {
 @keyframes page-scale-in {
   0% {
     opacity: 0;
-    transform: scale(0.97);
+    transform: translateY(15px);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
 }
 
 @keyframes page-scale-out {
   0% {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0);
   }
   100% {
     opacity: 0;
-    transform: scale(1.01);
+    transform: translateY(-15px);
   }
 }
 </style>

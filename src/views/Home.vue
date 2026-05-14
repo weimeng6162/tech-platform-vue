@@ -1,166 +1,98 @@
 <template>
   <div class="container">
-    <!-- Hero 区域 -->
-    <section class="hero">
-      <div class="hero-background">
-        <div class="hero-orb-1" />
-        <div class="hero-orb-2" />
-        <div class="hero-orb-3" />
-      </div>
-      <div class="hero-content">
-        <h1>
-          探索技术的
-          <span class="gradient-text">无限可能</span>
-        </h1>
-        <p>汇聚前沿技术文章，助力开发者成长</p>
-        <div class="hero-tags">
-          <span
-            v-for="tag in techTags.slice(0, 8)"
-            :key="tag.id"
-            class="hero-tag"
-            :style="{ '--tag-color': tag.color }"
-          >
-            {{ tag.name }}
-          </span>
+    <!-- 主内容区域 -->
+    <div class="main-content">
+      <!-- Hero 区域 -->
+      <section class="hero">
+        <div class="hero-background">
+          <div class="hero-orb-1" />
+          <div class="hero-orb-2" />
+          <div class="hero-orb-3" />
         </div>
-      </div>
-    </section>
-
-    <!-- 分类导航 -->
-    <section class="categories">
-      <div class="categories-wrapper">
-        <button
-          v-for="cat in categories"
-          :key="cat.id"
-          class="category-btn"
-          :class="{ active: activeCategory === cat.id }"
-          @click="activeCategory = cat.id"
-        >
-          <component :is="iconMap[cat.icon]" :size="18" />
-          <span>{{ cat.name }}</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- 内容区域 -->
-    <main class="main">
-      <!-- 热门精选 / 猜你喜欢 切换 -->
-      <div class="section-tabs">
-        <button
-          class="section-tab"
-          :class="{ active: activeSection === 'featured' }"
-          @click="activeSection = 'featured'"
-        >
-          <TrendingUp :size="18" />
-          <span>热门精选</span>
-        </button>
-        <button
-          class="section-tab"
-          :class="{ active: activeSection === 'recommend' }"
-          @click="activeSection = 'recommend'"
-        >
-          <Sparkles :size="18" />
-          <span>猜你喜欢</span>
-        </button>
-      </div>
-
-      <!-- 文章列表 -->
-      <div v-if="loading" class="loading-state">
-        <Loader :size="40" class="loading-icon" />
-        <p>加载中...</p>
-      </div>
-      <div v-else-if="error" class="error-state">
-        <p>{{ error }}</p>
-        <button @click="fetchArticles" class="retry-btn">重试</button>
-      </div>
-      <div v-else-if="currentArticles.length === 0" class="empty-state">
-        <p>暂无推荐文章</p>
-      </div>
-      <div v-else class="article-grid">
-        <ArticleCard
-          v-for="(article, index) in currentArticles"
-          :key="article.article_id"
-          :article="article"
-          :index="index"
-        />
-      </div>
-    </main>
-
-    <!-- 侧边栏 -->
-    <aside class="sidebar">
-      <!-- 热门标签 -->
-      <div class="sidebar-card">
-        <h3>
-          <Hash :size="16" />
-          热门标签
-        </h3>
-        <div class="tag-cloud">
-          <span
-            v-for="tag in techTags.slice(0, 15)"
-            :key="tag.id"
-            class="cloud-tag"
-            :style="{ '--tag-color': tag.color }"
-          >
-            {{ tag.name }}
-          </span>
-        </div>
-      </div>
-
-      <!-- 活跃作者 -->
-      <div class="sidebar-card">
-        <h3>
-          <Users :size="16" />
-          活跃作者
-        </h3>
-        <div class="authors">
-          <div v-for="name in ['张三', '李四', '王五', '赵六']" :key="name" class="author">
-            <div class="author-avatar">{{ name[0] }}</div>
-            <div class="author-info">
-              <span class="author-name">{{ name }}</span>
-              <span class="author-stats">{{ Math.floor(Math.random() * 100) }} 篇文章</span>
-            </div>
+        <div class="hero-content">
+          <h1>
+            探索技术的
+            <span class="gradient-text">无限可能</span>
+          </h1>
+          <p>汇聚前沿技术文章，助力开发者成长</p>
+          <div class="hero-tags">
+            <span
+              v-for="tag in techTags.slice(0, 8)"
+              :key="tag.id"
+              class="hero-tag"
+              :style="{ '--tag-color': tag.color }"
+            >
+              {{ tag.name }}
+            </span>
           </div>
         </div>
-      </div>
-    </aside>
+      </section>
+
+      <!-- 分类导航 -->
+      <section class="categories">
+        <div class="categories-wrapper">
+          <button
+            v-for="cat in categories"
+            :key="cat.id"
+            class="category-btn"
+            :class="{ active: activeCategory === cat.id }"
+            @click="activeCategory = cat.id"
+          >
+            <component :is="iconMap[cat.icon]" :size="18" />
+            <span>{{ cat.name }}</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 内容区域 -->
+      <main class="main">
+        <!-- 热门精选 / 猜你喜欢 切换 -->
+        <div class="section-tabs">
+          <button
+            class="section-tab"
+            :class="{ active: activeSection === 'featured' }"
+            @click="activeSection = 'featured'"
+          >
+            <TrendingUp :size="18" />
+            <span>热门精选</span>
+          </button>
+          <button
+            class="section-tab"
+            :class="{ active: activeSection === 'recommend' }"
+            @click="activeSection = 'recommend'"
+          >
+            <Sparkles :size="18" />
+            <span>猜你喜欢</span>
+          </button>
+        </div>
+
+        <!-- 文章列表 -->
+        <div class="article-grid">
+          <ArticleCardAI
+            v-for="article in currentArticles"
+            :key="article.article_id"
+            :article="article"
+            @click="handleArticleClick"
+          />
+        </div>
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, onMounted } from 'vue'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users, Loader } from 'lucide-vue-next'
-import ArticleCard from '../components/ArticleCard.vue'
-import { categories, techTags } from '../data/mockData'
-import { getRecommendArticles } from '../api/modules/article'
-import type { ArticleListItem } from '../api/types'
+import { ref, computed, h } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles } from 'lucide-vue-next'
+import ArticleCardAI from '../components/ArticleCardAI.vue'
+import { recommendArticlesData, categories, techTags } from '../data/mockData'
+import { processArticles } from '../utils/articleFilter'
+import type { ArticleItem } from '../types/api'
 
+const router = useRouter()
+const route = useRoute()
 const activeCategory = ref('all')
-const activeSection = ref<'featured' | 'recommend'>('recommend')
-
-// 文章列表数据
-const articles = ref<ArticleListItem[]>([])
-const loading = ref(false)
-const error = ref<string | null>(null)
-
-// 获取推荐文章
-const fetchArticles = async () => {
-  loading.value = true
-  error.value = null
-  try {
-    const data = await getRecommendArticles()
-    articles.value = data
-  } catch (err: any) {
-    error.value = err.message || '加载失败'
-    console.error('Failed to fetch articles:', err)
-  } finally {
-    loading.value = false
-  }
-}
-
-// 组件挂载时获取数据
-onMounted(() => {
-  fetchArticles()
-})
+const activeSection = ref<'featured' | 'recommend'>('featured')
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -172,9 +104,39 @@ const iconMap: Record<string, any> = {
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
 
+// 使用新的 AI 推荐数据并过滤劣质文章
+const allArticles = recommendArticlesData.data.article_list
+const filteredArticles = processArticles(allArticles)
+
+// 根据分类过滤文章
 const currentArticles = computed(() => {
-  return articles.value
+  let articles = filteredArticles
+
+  // 根据分类过滤
+  if (activeCategory.value !== 'all') {
+    // 这里可以根据分类进行过滤，暂时显示所有文章
+    articles = articles
+  }
+
+  // 根据热门精选/猜你喜欢过滤
+  if (activeSection.value === 'featured') {
+    // 显示前6篇作为热门精选
+    return articles.slice(0, 6)
+  } else {
+    // 显示后面的作为猜你喜欢
+    return articles.slice(6)
+  }
 })
+
+// 处理文章点击
+const handleArticleClick = (article: ArticleItem) => {
+  console.log('点击文章:', article)
+  // 跳转到文章详情页，传递文章 ID
+  router.push({
+    path: '/article-ai',
+    query: { id: article.article_id }
+  })
+}
 </script>
 
 <style scoped>
@@ -182,9 +144,9 @@ const currentArticles = computed(() => {
   display: grid;
   grid-template-columns: 1fr 300px;
   gap: var(--space-xl);
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 var(--space-lg);
+  padding: 0 var(--space-xl);
 }
 
 @media (max-width: 1024px) {
@@ -193,19 +155,28 @@ const currentArticles = computed(() => {
   }
 }
 
+/* 主内容区域 */
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
 /* Hero 区域 */
 .hero {
   grid-column: 1 / -1;
   position: relative;
-  padding: var(--space-3xl) 0;
+  padding: var(--space-2xl) 0;
   text-align: center;
   overflow: hidden;
+  min-height: 380px;
 }
 
 .hero-background {
   position: absolute;
   inset: 0;
   pointer-events: none;
+  overflow: hidden;
 }
 
 .hero-orb-1 {
@@ -213,8 +184,9 @@ const currentArticles = computed(() => {
   top: -50%;
   left: 50%;
   transform: translateX(-50%);
-  width: 700px;
-  height: 700px;
+  width: 600px;
+  height: 600px;
+  max-width: 100%;
   background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
   animation: orbFloat1 8s ease-in-out infinite;
 }
@@ -225,6 +197,7 @@ const currentArticles = computed(() => {
   left: 20%;
   width: 500px;
   height: 500px;
+  max-width: 100%;
   background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
   animation: orbFloat2 10s ease-in-out infinite;
 }
@@ -235,36 +208,43 @@ const currentArticles = computed(() => {
   right: 10%;
   width: 400px;
   height: 400px;
+  max-width: 100%;
   background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
   animation: orbFloat3 12s ease-in-out infinite;
 }
 
-/* 深色模式增强 */
+/* 深色模式 - 增强光晕 */
 :global([data-theme="dark"]) .hero-orb-1 {
-  background: radial-gradient(circle, rgba(129, 140, 248, 0.25) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(0, 242, 255, 0.3) 0%, rgba(112, 0, 255, 0.15) 40%, transparent 70%);
+  animation: orbFloat1 8s ease-in-out infinite, orbPulse 4s ease-in-out infinite;
 }
 
 :global([data-theme="dark"]) .hero-orb-2 {
-  background: radial-gradient(circle, rgba(167, 139, 250, 0.2) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(112, 0, 255, 0.25) 0%, rgba(168, 85, 247, 0.1) 40%, transparent 70%);
 }
 
 :global([data-theme="dark"]) .hero-orb-3 {
-  background: radial-gradient(circle, rgba(96, 165, 250, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(0, 242, 255, 0.08) 40%, transparent 70%);
+}
+
+@keyframes orbPulse {
+  0%, 100% { opacity: 1; transform: translateX(-50%); }
+  50% { opacity: 0.7; transform: translateX(-50%); }
 }
 
 @keyframes orbFloat1 {
-  0%, 100% { transform: translateX(-50%) translateY(0) scale(1); opacity: 1; }
-  50% { transform: translateX(-50%) translateY(-40px) scale(1.1); opacity: 0.8; }
+  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
+  50% { transform: translateX(-50%) translateY(-40px); opacity: 0.8; }
 }
 
 @keyframes orbFloat2 {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 1; }
-  50% { transform: translate(30px, -30px) scale(1.05); opacity: 0.7; }
+  0%, 100% { transform: translate(0, 0); opacity: 1; }
+  50% { transform: translate(30px, -30px); opacity: 0.7; }
 }
 
 @keyframes orbFloat3 {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
-  50% { transform: translate(-20px, 20px) scale(1.1); opacity: 1; }
+  0%, 100% { transform: translate(0, 0); opacity: 0.8; }
+  50% { transform: translate(-20px, 20px); opacity: 1; }
 }
 
 .hero-content {
@@ -273,32 +253,45 @@ const currentArticles = computed(() => {
 }
 
 .hero-content h1 {
-  font-size: 3rem;
+  font-size: 3.5rem;
   font-weight: 800;
-  line-height: 1.2;
-  margin-bottom: var(--space-md);
+  line-height: 1.1;
+  margin-bottom: var(--space-sm);
   color: var(--text-primary);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
 @media (max-width: 768px) {
   .hero-content h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
 }
 
 .gradient-text {
   display: block;
-  background: var(--accent-gradient);
+  background: linear-gradient(135deg, #00F2FF 0%, #7000FF 40%, #A855F7 70%, #00F2FF 100%);
+  background-size: 300% 100%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  animation: textShine 4s linear infinite;
+  position: relative;
+}
+
+:global([data-theme="dark"]) .gradient-text {
+  text-shadow: 0 0 40px rgba(0, 242, 255, 0.4), 0 0 80px rgba(112, 0, 255, 0.2);
+  filter: brightness(1.1);
+}
+
+@keyframes textShine {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
 }
 
 .hero-content p {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: var(--text-secondary);
-  margin-bottom: var(--space-xl);
+  margin-bottom: var(--space-lg);
 }
 
 .hero-tags {
@@ -445,7 +438,7 @@ const currentArticles = computed(() => {
 .article-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-lg);
+  gap: var(--space-xl);
 }
 
 @media (max-width: 768px) {
@@ -454,56 +447,13 @@ const currentArticles = computed(() => {
   }
 }
 
-/* 加载状态 */
-.loading-state,
-.error-state,
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 80px 20px;
-  color: var(--text-secondary);
-}
-
-.loading-icon {
-  animation: spin 1s linear infinite;
-  color: var(--accent-primary);
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.error-state p {
-  margin-bottom: 16px;
-  color: #EF4444;
-}
-
-.retry-btn {
-  padding: 8px 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: white;
-  background: var(--accent-gradient);
-  border: none;
-  border-radius: var(--radius-md);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.retry-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}
-
 /* 侧边栏 */
 .sidebar {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+  position: sticky;
+  top: 20px;
 }
 
 @media (max-width: 1024px) {
@@ -517,23 +467,52 @@ const currentArticles = computed(() => {
   background: var(--bg-glass);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
-  transition: all 0.3s ease;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
 }
 
-/* 无模糊效果 */
+.sidebar-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent-primary), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
 
 .sidebar-card:hover {
   border-color: var(--border-secondary);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
+.sidebar-card:hover::before {
+  opacity: 1;
+}
+
+/* 深色模式 - 全息玻璃侧边栏 */
 :global([data-theme="dark"]) .sidebar-card {
-  background: #020204;
-  border-color: rgba(129, 140, 248, 0.2);
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+:global([data-theme="dark"]) .sidebar-card::before {
+  background: linear-gradient(90deg, transparent, #00F2FF, #7000FF, transparent);
+  opacity: 0.5;
 }
 
 :global([data-theme="dark"]) .sidebar-card:hover {
-  border-color: rgba(129, 140, 248, 0.35);
-  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
+  border-color: rgba(0, 242, 255, 0.2);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8), 0 0 60px rgba(0, 242, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .sidebar-card:hover::before {
+  opacity: 1;
 }
 
 .sidebar-card h3 {
@@ -564,7 +543,6 @@ const currentArticles = computed(() => {
 
 .cloud-tag:hover {
   background: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 20%, transparent);
-  transform: scale(1.05);
 }
 
 :global([data-theme="dark"]) .cloud-tag {
@@ -585,6 +563,7 @@ const currentArticles = computed(() => {
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
+  justify-content: space-between;
 }
 
 .author:hover {
@@ -610,7 +589,17 @@ const currentArticles = computed(() => {
 }
 
 :global([data-theme="dark"]) .author-avatar {
-  box-shadow: 0 2px 16px rgba(129, 140, 248, 0.5);
+  box-shadow: 0 2px 20px rgba(0, 242, 255, 0.5), 0 0 30px rgba(112, 0, 255, 0.3);
+  animation: avatarGlow 3s ease-in-out infinite;
+}
+
+@keyframes avatarGlow {
+  0%, 100% {
+    box-shadow: 0 2px 20px rgba(0, 242, 255, 0.5), 0 0 30px rgba(112, 0, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 28px rgba(0, 242, 255, 0.7), 0 0 40px rgba(112, 0, 255, 0.5);
+  }
 }
 
 .author-info {
@@ -624,8 +613,45 @@ const currentArticles = computed(() => {
   color: var(--text-primary);
 }
 
+.author-bio {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
 .author-stats {
   font-size: 0.75rem;
   color: var(--text-tertiary);
+}
+
+.follow-btn {
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--accent-primary);
+  background: transparent;
+  border: 1px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.follow-btn:hover {
+  background: var(--accent-primary);
+  color: white;
+}
+
+:global([data-theme="dark"]) .follow-btn {
+  border-color: rgba(0, 242, 255, 0.6);
+  color: #00F2FF;
+  text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:global([data-theme="dark"]) .follow-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 242, 255, 0.2), rgba(112, 0, 255, 0.2));
+  border-color: #00F2FF;
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.5), inset 0 0 10px rgba(0, 242, 255, 0.1);
+  color: white;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
 }
 </style>

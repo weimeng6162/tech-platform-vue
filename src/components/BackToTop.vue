@@ -46,7 +46,7 @@ onUnmounted(() => {
 .back-to-top {
   position: fixed;
   bottom: 2rem;
-  right: 2rem;
+  right: calc(2rem + 260px);
   width: 48px;
   height: 48px;
   display: flex;
@@ -63,12 +63,12 @@ onUnmounted(() => {
 }
 
 .back-to-top:hover {
-  transform: translateY(-4px) scale(1.1);
+  transform: translateY(-4px);
   box-shadow: 0 8px 24px rgba(99, 102, 241, 0.6);
 }
 
 .back-to-top:active {
-  transform: translateY(-2px) scale(1.05);
+  transform: translateY(-2px);
 }
 
 /* Fade transition */
@@ -80,7 +80,7 @@ onUnmounted(() => {
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
-  transform: translateY(20px) scale(0.8);
+  transform: translateY(20px);
 }
 
 /* Dark mode */

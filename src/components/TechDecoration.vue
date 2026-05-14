@@ -31,6 +31,7 @@
   pointer-events: none;
   z-index: 1;
   overflow: hidden;
+  max-width: 100%;
 }
 
 /* 扫描线效果 */
@@ -168,8 +169,8 @@
 }
 
 @keyframes streamPulse {
-  0%, 100% { opacity: 0; transform: scaleY(0.5); }
-  50% { opacity: 0.6; transform: scaleY(1); }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.6; }
 }
 
 /* 脉冲圆环 */
@@ -202,8 +203,8 @@
     border-color: rgba(129, 140, 248, 0.6);
   }
   100% {
-    width: 600px;
-    height: 600px;
+    width: 300px;
+    height: 300px;
     opacity: 0;
     border-color: rgba(129, 140, 248, 0);
   }

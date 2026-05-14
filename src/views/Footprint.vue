@@ -72,7 +72,6 @@ const handleClear = () => {
 .footprint-page {
   min-height: 100vh;
   padding: 2rem 0;
-  background: var(--bg-primary);
 }
 
 .container {

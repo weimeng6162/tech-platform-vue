@@ -178,7 +178,7 @@ const handleClick = () => {
 .card:hover {
   border-color: var(--border-glow);
   box-shadow: var(--shadow-lg), var(--shadow-glow);
-  transform: translateY(-8px) scale(1.02);
+  transform: translateY(-8px);
 }
 
 :global([data-theme="dark"]) .card {
@@ -337,7 +337,6 @@ const handleClick = () => {
 
 .tag:hover {
   background: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 20%, transparent);
-  transform: scale(1.05);
 }
 
 :global([data-theme="dark"]) .tag {
