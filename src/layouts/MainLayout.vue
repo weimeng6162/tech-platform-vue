@@ -1,28 +1,23 @@
 <template>
   <div class="layout">
-    <MathParticleBackground v-if="showParticleBackground" :particle-count="55" />
-    <TechDecoration v-if="themeStore.theme === 'dark' && showParticleBackground" />
     <ProgressBar :progress="scrollProgress" />
     <div class="content-wrapper">
-      <LeftSidebar />
-      <div class="right-content">
-        <Header />
-        <main class="main">
-          <router-view v-slot="{ Component, route: childRoute }">
-            <transition
-              :name="getChildTransition(childRoute)"
-              mode="out-in"
-              appear
-            >
-              <div :key="childRoute.path" class="page-wrapper">
-                <component :is="Component" />
-              </div>
-            </transition>
-          </router-view>
-        </main>
-      </div>
+      <Header />
+      <main class="main">
+        <router-view v-slot="{ Component, route: childRoute }">
+          <transition
+            :name="getChildTransition(childRoute)"
+            mode="out-in"
+            appear
+          >
+            <div :key="childRoute.path" class="page-wrapper">
+              <component :is="Component" />
+            </div>
+          </transition>
+        </router-view>
+      </main>
     </div>
-    <BackToTop :threshold="300" />
+    <BackToTop :threshold="300" :show-refresh="showRefreshButton" @refresh="handleRefresh" />
   </div>
 </template>
 
@@ -30,22 +25,28 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '../components/Header.vue'
-import LeftSidebar from '../components/LeftSidebar.vue'
-import MathParticleBackground from '../components/MathParticleBackground.vue'
-import TechDecoration from '../components/TechDecoration.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import BackToTop from '../components/BackToTop.vue'
 import { useThemeStore } from '../stores/theme'
 import { useScrollProgress } from '../composables/useScrollAnimation'
+import { useRefresh } from '../composables/useRefresh'
 
 const route = useRoute()
 const themeStore = useThemeStore()
 const scrollProgress = useScrollProgress()
 const isScrolled = ref(false)
 
-const showParticleBackground = computed(() => {
-  return route.path === '/' || route.path === '/interest' || route.path === '/login'
+const { triggerRefresh } = useRefresh()
+
+const showRefreshButton = computed(() => {
+  return !route.path.includes('/article-ai') && 
+         !route.path.includes('/article/') && 
+         !route.path.includes('/footprint')
 })
+
+const handleRefresh = () => {
+  triggerRefresh()
+}
 
 const getChildTransition = (childRoute: any) => {
   if (childRoute.path.startsWith('/article/')) {
@@ -87,15 +88,9 @@ onUnmounted(() => {
 
 .content-wrapper {
   display: flex;
+  flex-direction: column;
   flex: 1;
   position: relative;
-}
-
-.right-content {
-  flex: 1;
-  margin-left: 260px;
-  display: flex;
-  flex-direction: column;
 }
 
 .main {

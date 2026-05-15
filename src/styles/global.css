@@ -138,10 +138,7 @@ body::after {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: radial-gradient(3px 3px at 10% 20%, var(--particle-color-1), transparent), radial-gradient(2px 2px at 30% 60%, var(--particle-color-2), transparent), radial-gradient(2px 2px at 50% 30%, var(--particle-color-3), transparent), radial-gradient(3px 3px at 70% 70%, var(--particle-color-1), transparent), radial-gradient(2px 2px at 90% 40%, var(--particle-color-2), transparent), radial-gradient(2px 2px at 20% 80%, var(--particle-color-3), transparent), radial-gradient(3px 3px at 60% 10%, var(--particle-color-1), transparent), radial-gradient(2px 2px at 80% 90%, var(--particle-color-2), transparent);
-  background-size: 100% 100%;
-  animation: particleFloat 25s ease-in-out infinite;
-  opacity: 0.6;
+  display: none;
 }
 
 [data-theme=dark] body::after {

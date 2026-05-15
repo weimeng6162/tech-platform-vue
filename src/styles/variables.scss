@@ -80,57 +80,57 @@
   --particle-color-3: rgba(59, 130, 246, 0.4);
 }
 
-// Dark Theme - 流动的数据星河主题
+// Dark Theme - 深紫色主题（更暗）
 [data-theme="dark"] {
-  // 背景色 - 深邃午夜蓝径向渐变
-  --bg-primary: #050A14;
-  --bg-secondary: #0A1020;
-  --bg-tertiary: #0F172A;
-  --bg-elevated: #0F172A;
-  --bg-glass: rgba(5, 10, 20, 0.85);
-  --bg-glass-strong: rgba(15, 23, 42, 0.95);
+  // 背景色 - 更深的紫色调
+  --bg-primary: #0d0518;
+  --bg-secondary: #150d24;
+  --bg-tertiary: #1f1430;
+  --bg-elevated: #150d24;
+  --bg-glass: rgba(13, 5, 24, 0.92);
+  --bg-glass-strong: rgba(21, 13, 36, 0.95);
   
-  // 文字色 - 纯白与灰蓝
-  --text-primary: #ffffff;
-  --text-secondary: #e2e8f0;
+  // 文字色 - 清晰的层次
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
   --text-tertiary: #94a3b8;
   --text-muted: #64748b;
   
-  // 边框 - 全息玻璃边缘
-  --border-primary: rgba(0, 242, 255, 0.08);
-  --border-secondary: rgba(112, 0, 255, 0.15);
-  --border-glow: rgba(0, 242, 255, 0.5);
-  --border-color: rgba(0, 242, 255, 0.08);
+  // 边框 - 简单的边框色
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --border-secondary: rgba(255, 255, 255, 0.12);
+  --border-glow: rgba(139, 92, 246, 0.4);
+  --border-color: rgba(255, 255, 255, 0.08);
   
-  // 强调色 - 赛博青和电光紫
-  --accent-primary: #00F2FF;
-  --accent-secondary: #7000FF;
-  --accent-tertiary: #A855F7;
-  --accent-gradient: linear-gradient(135deg, #00F2FF 0%, #7000FF 50%, #A855F7 100%);
-  --accent-glow: rgba(0, 242, 255, 0.2);
-  --accent-glow-strong: rgba(112, 0, 255, 0.35);
-  --primary-color: #00F2FF;
+  // 强调色 - 紫色系
+  --accent-primary: #a78bfa;
+  --accent-secondary: #c084fc;
+  --accent-tertiary: #d8b4fe;
+  --accent-gradient: linear-gradient(135deg, #a78bfa 0%, #c084fc 50%, #d8b4fe 100%);
+  --accent-glow: rgba(167, 139, 250, 0.12);
+  --accent-glow-strong: rgba(167, 139, 250, 0.2);
+  --primary-color: #a78bfa;
   
-  // 状态色 - 发光版本
-  --success: #00FF88;
-  --success-light: rgba(0, 255, 136, 0.15);
-  --warning: #FFB800;
-  --warning-light: rgba(255, 184, 0, 0.15);
-  --error: #FF3366;
-  --error-light: rgba(255, 51, 102, 0.15);
-  --info: #00F2FF;
-  --info-light: rgba(0, 242, 255, 0.15);
+  // 状态色 - 适当的亮度
+  --success: #10b981;
+  --success-light: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;
+  --warning-light: rgba(245, 158, 11, 0.15);
+  --error: #ef4444;
+  --error-light: rgba(239, 68, 68, 0.15);
+  --info: #8b5cf6;
+  --info-light: rgba(139, 92, 246, 0.15);
   
-  // 阴影 - 深空阴影配合辉光
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.8);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.85);
-  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.9);
-  --shadow-xl: 0 24px 72px rgba(0, 0, 0, 0.95);
-  --shadow-glow: 0 0 120px rgba(0, 242, 255, 0.3), 0 0 60px rgba(112, 0, 255, 0.2);
-  --shadow-colored: 0 8px 48px rgba(0, 242, 255, 0.4), 0 4px 24px rgba(112, 0, 255, 0.3);
+  // 阴影 - 更深的阴影
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.8);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.85);
+  --shadow-glow: 0 0 40px rgba(167, 139, 250, 0.15);
+  --shadow-colored: 0 4px 20px rgba(167, 139, 250, 0.25);
   
-  // 粒子颜色 - 赛博青和电光紫 (半透明)
-  --particle-color-1: rgba(0, 242, 255, 0.6);
-  --particle-color-2: rgba(112, 0, 255, 0.5);
-  --particle-color-3: rgba(168, 85, 247, 0.4);
+  // 粒子颜色 - 紫色系
+  --particle-color-1: rgba(167, 139, 250, 0.5);
+  --particle-color-2: rgba(192, 132, 252, 0.4);
+  --particle-color-3: rgba(216, 180, 254, 0.3);
 }

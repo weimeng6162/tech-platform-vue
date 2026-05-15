@@ -155,26 +155,6 @@
             <span>分享</span>
           </button>
         </div>
-
-        <!-- 阅读原文 -->
-        <a :href="article.original_url" target="_blank" rel="noopener noreferrer" class="original-link">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path
-              d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <polyline
-              points="15 3 21 3 21 9"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-            <line x1="10" y1="14" x2="21" y2="3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-          阅读原文
-        </a>
       </footer>
     </div>
   </div>
@@ -221,7 +201,6 @@ const article = computed(() => {
       is_liked: false,
       is_collected: isArticleCollected(articleId.value),
     },
-    original_url: 'https://mp.weixin.qq.com/s/xxxxxx',
   }
 })
 
@@ -545,25 +524,6 @@ const handleShare = () => {
   background: var(--primary-color);
   border-color: var(--primary-color);
   color: white;
-}
-
-.original-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
-  text-decoration: none;
-  border-radius: 24px;
-  font-weight: 600;
-  transition: all 0.3s;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-}
-
-.original-link:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
 }
 
 /* 响应式 */

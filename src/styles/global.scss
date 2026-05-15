@@ -54,19 +54,44 @@ body::before {
   pointer-events: none;
 }
 
-// 深色模式背景 - 深邃午夜蓝径向渐变
+// 深色模式背景 - 深紫色背景 + 简单线条（更暗版本）
 [data-theme="dark"] body::before {
   background: 
-    // 中心亮径向渐变 - 聚焦视线
-    radial-gradient(ellipse 80% 60% at 50% 30%, rgba(0, 242, 255, 0.03) 0%, transparent 50%),
-    radial-gradient(ellipse 60% 50% at 70% 60%, rgba(112, 0, 255, 0.025) 0%, transparent 50%),
-    radial-gradient(ellipse 50% 40% at 30% 70%, rgba(168, 85, 247, 0.02) 0%, transparent 50%),
-    // 极淡网格
-    linear-gradient(90deg, rgba(0, 242, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(rgba(0, 242, 255, 0.015) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 70px 70px, 70px 70px;
+    // 简单的斜线条图案
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 100px,
+      rgba(139, 92, 246, 0.02) 100px,
+      rgba(139, 92, 246, 0.02) 101px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 100px,
+      rgba(139, 92, 246, 0.02) 100px,
+      rgba(139, 92, 246, 0.02) 101px
+    ),
+    // 水平线条
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 80px,
+      rgba(167, 139, 250, 0.03) 80px,
+      rgba(167, 139, 250, 0.03) 81px
+    ),
+    // 垂直线条
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 80px,
+      rgba(167, 139, 250, 0.03) 80px,
+      rgba(167, 139, 250, 0.03) 81px
+    ),
+    // 更深的紫色渐变背景
+    linear-gradient(180deg, #0d0518 0%, #150d24 100%);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
-  /* 移除深色模式的背景动画以避免视觉干扰 */
   animation: none;
 }
 
@@ -75,26 +100,14 @@ body::before {
   50% { opacity: 0.85; }
 }
 
-// 浅色模式浮动光点效果
+// 浅色模式浮动光点效果已禁用
 body::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: 
-    radial-gradient(3px 3px at 10% 20%, var(--particle-color-1), transparent),
-    radial-gradient(2px 2px at 30% 60%, var(--particle-color-2), transparent),
-    radial-gradient(2px 2px at 50% 30%, var(--particle-color-3), transparent),
-    radial-gradient(3px 3px at 70% 70%, var(--particle-color-1), transparent),
-    radial-gradient(2px 2px at 90% 40%, var(--particle-color-2), transparent),
-    radial-gradient(2px 2px at 20% 80%, var(--particle-color-3), transparent),
-    radial-gradient(3px 3px at 60% 10%, var(--particle-color-1), transparent),
-    radial-gradient(2px 2px at 80% 90%, var(--particle-color-2), transparent);
-  background-size: 100% 100%;
-  animation: particleFloat 25s ease-in-out infinite;
-  opacity: 0.6;
-  background-attachment: fixed;
+  display: none;
 }
 
 // 深色模式移除浮动光点
