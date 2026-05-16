@@ -292,7 +292,7 @@ import {
   AlertCircle, Mail
 } from 'lucide-vue-next'
 import { register } from '../api/modules/user'
-import { encryptPassword } from '../utils/crypto'
+import { aesEncrypt } from '../utils/aes'
 import { useUserStore } from '../stores/user'
 
 const router = useRouter()
@@ -493,17 +493,14 @@ const handleRegister = async () => {
   isSubmitting.value = true
 
   try {
-    // 加密密码
-    const encryptedPassword = await encryptPassword(form.password)
+    const encryptedPassword = aesEncrypt(form.password)
     
-    // 调用注册接口
     const result = await register({
       username: form.username,
       email: form.email,
       password: encryptedPassword
     })
     
-    // 注册成功，自动登录
     const userStore = useUserStore()
     await userStore.login(form.email, encryptedPassword)
     

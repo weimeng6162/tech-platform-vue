@@ -378,7 +378,7 @@ import {
   AlertCircle, Github, Mail, X, KeyRound, Send, CheckCircle
 } from 'lucide-vue-next'
 import { useUserStore } from '../stores/user'
-import { encryptPassword } from '../utils/crypto'
+import { aesEncrypt } from '../utils/aes'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -561,8 +561,7 @@ const handleLogin = async () => {
       return
     }
 
-    // 加密密码
-    const encryptedPassword = await encryptPassword(form.password)
+    const encryptedPassword = aesEncrypt(form.password)
     
     // 调用登录接口
     const result = await userStore.login(form.account, encryptedPassword)
