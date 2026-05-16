@@ -5,8 +5,8 @@
 
 import CryptoJS from 'crypto-js'
 
-const AES_KEY = 'TechFlow8DevSec'
-const AES_IV = 'TechFlowVec7Pro'
+const AES_KEY = 'TechFlow8DevSecX'
+const AES_IV = 'TechFlowVec7ProX'
 
 /**
  * AES加密（CBC模式 + PKCS5Padding + Base64）
