@@ -21,7 +21,7 @@ export interface ApiConfig {
 export const USE_REAL_BACKEND_FOR_AUTH = true;
 
 // 真实后端地址（用于登录/注册）
-export const REAL_BACKEND_URL = import.meta.env.DEV ? '' : 'http://8.156.93.58:8080';
+export const REAL_BACKEND_URL = 'http://8.156.93.58:8080';
 
 // Mock服务器地址（用于其他功能）
 export const MOCK_SERVER_URL = 'http://localhost:3000';
