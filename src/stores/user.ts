@@ -16,10 +16,10 @@ export const useUserStore = defineStore('user', () => {
   /**
    * 登录
    */
-  async function login(account: string, encryptedPassword: string) {
+  async function login(username: string, encryptedPassword: string) {
     try {
       const response = await loginApi({
-        account,
+        username,
         password: encryptedPassword,
         timestamp: Date.now()
       })

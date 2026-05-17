@@ -17,9 +17,9 @@ export function getUserProfile(): Promise<UserProfile> {
  * 登录请求参数
  */
 export interface LoginRequest {
-  account: string;      // 账号
+  username: string;     // 用户名（后端要求）
   password: string;     // 加密后的密码
-  timestamp: number;    // 时间戳（用于防重放攻击）
+  timestamp?: number;   // 时间戳（可选）
 }
 
 /**
