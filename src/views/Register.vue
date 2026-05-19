@@ -501,14 +501,31 @@ const handleRegister = async () => {
       password: encryptedPassword
     })
     
-    const userStore = useUserStore()
-    await userStore.login(form.email, encryptedPassword)
-    
-    // 登录成功，跳转到兴趣配置页
-    router.push('/interest')
+    // 注册成功，保存token并跳转
+    if (result.token) {
+      const userStore = useUserStore()
+      userStore.setToken(result.token)
+      router.push('/interest')
+    } else {
+      // 兼容Mock服务器，需要手动登录
+      const userStore = useUserStore()
+      await userStore.login(form.username, encryptedPassword)
+      router.push('/interest')
+    }
   } catch (error: any) {
     console.error('注册失败:', error)
-    errors.email = error.message || '注册失败，请重试'
+    
+    // 友好的错误提示
+    const errorMsg = error.message || '注册失败，请重试'
+    
+    if (errorMsg.includes('Duplicate entry') || errorMsg.includes('重复')) {
+      errors.username = '用户名已被使用'
+    } else if (errorMsg.includes('email') || errorMsg.includes('邮箱')) {
+      errors.email = '该邮箱已被注册'
+    } else {
+      errors.email = errorMsg
+    }
+    
     shake()
   } finally {
     isSubmitting.value = false
