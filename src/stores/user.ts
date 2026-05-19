@@ -18,19 +18,27 @@ export const useUserStore = defineStore('user', () => {
    */
   async function login(username: string, encryptedPassword: string) {
     try {
+      console.log('[登录] 发送请求:', { username, password: encryptedPassword })
+      
       const response = await loginApi({
         username,
         password: encryptedPassword,
         timestamp: Date.now()
       })
 
+      console.log('[登录] 响应数据:', response)
+      console.log('[登录] token:', response.token)
+
       // 保存 token 和用户信息
       token.value = response.token
       userInfo.value = response.user
       localStorage.setItem('token', response.token)
 
+      console.log('[登录] token已保存:', localStorage.getItem('token'))
+
       return { success: true, message: '登录成功' }
     } catch (error: any) {
+      console.error('[登录] 错误:', error)
       return { 
         success: false, 
         message: error.message || '登录失败，请重试' 

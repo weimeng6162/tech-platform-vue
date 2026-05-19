@@ -51,18 +51,25 @@ request.interceptors.request.use(
 
 // 响应拦截器
 request.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
+  (response: AxiosResponse) => {
     const { data } = response;
 
-    // 记录响应日志
     console.log(`[API Response] ${response.config.url}`, data);
 
-    // 判断业务状态码
+    // 兼容真实后端直接返回数据的格式（如 {token: "Bearer xxx"}）
+    if (data.token || data.user_id || data.error) {
+      // 真实后端格式
+      if (data.error) {
+        handleError(400, data.error);
+        return Promise.reject(new Error(data.error));
+      }
+      return data;
+    }
+
+    // Mock服务器格式 {code: 200, data: {...}}
     if (data.code === 200) {
-      // 成功：返回data字段
       return data.data;
     } else {
-      // 业务错误
       handleError(data.code, data.msg);
       return Promise.reject(new Error(data.msg));
     }
