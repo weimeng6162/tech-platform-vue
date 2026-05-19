@@ -404,8 +404,8 @@ const validatePassword = (): boolean => {
     return false
   }
   
-  if (form.password.length < 8) {
-    errors.password = '密码长度至少为8个字符'
+  if (form.password.length < 6) {
+    errors.password = '密码长度至少为6个字符'
     return false
   }
   
