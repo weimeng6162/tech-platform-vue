@@ -48,19 +48,9 @@
           <span>文章</span>
         </a>
         
-        <router-link to="/collection" class="nav-item" :class="{ active: route.path === '/collection' }">
-          <Bookmark :size="16" />
-          <span>收藏</span>
-        </router-link>
-        
-        <router-link to="/footprint" class="nav-item" :class="{ active: route.path === '/footprint' }">
-          <Footprints :size="16" />
-          <span>足迹</span>
-        </router-link>
-
-        <router-link to="/interest" class="nav-item" :class="{ active: route.path === '/interest' }">
-          <Settings :size="16" />
-          <span>兴趣配置</span>
+        <router-link to="/category" class="nav-item" :class="{ active: route.path === '/category' }">
+          <Grid :size="16" />
+          <span>分类</span>
         </router-link>
       </nav>
 
@@ -73,16 +63,6 @@
         </div>
 
         <div class="actions">
-          <!-- 主题切换按钮 -->
-          <button class="theme-toggle" @click="themeStore.toggleTheme()" :title="themeStore.theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'">
-            <div class="toggle-track">
-              <div class="toggle-thumb" :class="{ dark: themeStore.theme === 'dark' }">
-                <Sun v-if="themeStore.theme === 'light'" :size="14" />
-                <Moon v-else :size="14" />
-              </div>
-            </div>
-          </button>
-
           <button class="avatar-btn">
             <User :size="18" />
           </button>
@@ -98,15 +78,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search, Sun, Moon, User, Home, FileText, Bookmark, Footprints, Settings } from 'lucide-vue-next'
-import { useThemeStore } from '../stores/theme'
+import { Search, User, Home, FileText, Grid } from 'lucide-vue-next'
 import { useBrowsingHistory } from '../stores/browsingHistory'
 import { getRecentArticle } from '../stores/recentArticles'
 import SearchModal from './SearchModal.vue'
 
 const router = useRouter()
 const route = useRoute()
-const themeStore = useThemeStore()
 const { browsingHistory } = useBrowsingHistory()
 const showSearch = ref(false)
 
@@ -460,49 +438,6 @@ const handleArticleClick = () => {
   }
 }
 
-/* 主题切换按钮 */
-.theme-toggle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-}
-
-.toggle-track {
-  width: 48px;
-  height: 24px;
-  background: var(--bg-tertiary);
-  border-radius: var(--radius-full);
-  padding: 3px;
-  transition: background 0.3s ease;
-  border: 1px solid var(--border-primary);
-}
-
-:global([data-theme="dark"]) .toggle-track {
-  background: var(--accent-glow);
-  border-color: var(--border-secondary);
-}
-
-.toggle-thumb {
-  width: 18px;
-  height: 18px;
-  background: var(--accent-gradient);
-  border-radius: var(--radius-full);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
-}
-
-.toggle-thumb.dark {
-  transform: translateX(24px);
-}
-
 .avatar-btn {
   display: flex;
   align-items: center;
@@ -521,13 +456,5 @@ const handleArticleClick = () => {
 .avatar-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
-}
-
-:global([data-theme="dark"]) .avatar-btn {
-  box-shadow: 0 2px 12px rgba(167, 139, 250, 0.4);
-}
-
-:global([data-theme="dark"]) .avatar-btn:hover {
-  box-shadow: 0 4px 20px rgba(167, 139, 250, 0.5);
 }
 </style>

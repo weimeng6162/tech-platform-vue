@@ -1,158 +1,125 @@
 <template>
-  <div class="container">
-    <!-- 主内容区域 -->
-    <div class="main-content">
-      <!-- Hero 区域 -->
-      <section class="hero">
-        <div class="hero-background">
-          <div class="hero-orb-1" />
-          <div class="hero-orb-2" />
-          <div class="hero-orb-3" />
+  <div class="home-wrapper">
+    <div class="home-inner">
+      <!-- 左侧栏 - 热门标签（固定显示） -->
+      <aside class="left-sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-header">
+            <Hash :size="18" />
+            <h3>热门标签</h3>
+          </div>
+          <div class="tag-cloud">
+            <span
+              v-for="tag in hotTags"
+              :key="tag.id"
+              class="cloud-tag"
+              :class="{ active: activeTags.includes(tag.id) }"
+              :style="{ '--tag-color': tag.color }"
+              @click="handleTagClick(tag.id)"
+            >
+              {{ tag.name }}
+            </span>
+          </div>
         </div>
-        <div class="hero-content">
-          <h1>
-            探索技术的
-            <span class="gradient-text">无限可能</span>
-          </h1>
-          <p>汇聚前沿技术文章，助力开发者成长</p>
-        </div>
-      </section>
+      </aside>
 
-      <!-- 分类导航 -->
-      <section class="categories">
-        <div class="categories-wrapper">
-          <button
-            v-for="cat in categories"
-            :key="cat.id"
-            class="category-btn"
-            :class="{ active: activeCategory === cat.id }"
-            @click="activeCategory = cat.id"
-          >
-            <component :is="iconMap[cat.icon]" :size="18" />
-            <span>{{ cat.name }}</span>
-          </button>
-        </div>
-      </section>
+      <!-- 主内容区域 -->
+      <div class="main-content">
+        <!-- Hero 区域 -->
+        <section class="hero">
+          <div class="hero-content">
+            <h1>
+              探索技术的
+              <span class="gradient-text">无限可能</span>
+            </h1>
+            <p>汇聚前沿技术文章，助力开发者成长</p>
+          </div>
+        </section>
 
-      <!-- 热门标签 -->
-      <section class="hero-tags-section">
-        <div class="hero-tags">
-          <span
-            v-for="tag in techTags.slice(0, 7)"
-            :key="tag.id"
-            class="hero-tag"
-            :class="{ active: activeTags.includes(tag.id) }"
-            :style="{ '--tag-color': tag.color }"
-            @click="handleTagClick(tag.id)"
-          >
-            {{ tag.name }}
-          </span>
-          <span
-            class="hero-tag more-tag"
-            :class="{ active: showMoreTags }"
-            @click="showMoreTags = !showMoreTags"
-          >
-            更多
-          </span>
-        </div>
+        <!-- 分类导航 -->
+        <section class="categories">
+          <div class="categories-wrapper">
+            <button
+              v-for="cat in categories"
+              :key="cat.id"
+              class="category-btn"
+              :class="{ active: activeCategory === cat.id }"
+              @click="activeCategory = cat.id"
+            >
+              <component :is="iconMap[cat.icon]" :size="18" />
+              <span>{{ cat.name }}</span>
+            </button>
+          </div>
+        </section>
 
-        <!-- 更多标签面板 -->
-        <transition name="expand">
-          <div v-if="showMoreTags" class="more-tags-panel">
-            <div class="more-tags-grid">
-              <span
-                v-for="tag in techTags.slice(7)"
-                :key="tag.id"
-                class="hero-tag"
-                :class="{ active: activeTags.includes(tag.id) }"
-                :style="{ '--tag-color': tag.color }"
-                @click="handleTagClick(tag.id)"
-              >
-                {{ tag.name }}
-              </span>
+        <!-- 内容区域 -->
+        <main class="main">
+          <!-- 热门精选 / 猜你喜欢 切换 -->
+          <div class="section-tabs">
+            <button
+              class="section-tab"
+              :class="{ active: activeSection === 'featured' }"
+              @click="activeSection = 'featured'"
+            >
+              <TrendingUp :size="18" />
+              <span>热门精选</span>
+            </button>
+            <button
+              class="section-tab"
+              :class="{ active: activeSection === 'recommend' }"
+              @click="activeSection = 'recommend'"
+            >
+              <Sparkles :size="18" />
+              <span>猜你喜欢</span>
+            </button>
+          </div>
+
+          <!-- 文章列表 -->
+          <div class="article-grid">
+            <ArticleCardAI
+              v-for="article in currentArticles"
+              :key="article.article_id"
+              :article="article"
+              @click="handleArticleClick"
+            />
+          </div>
+        </main>
+      </div>
+
+      <!-- 右侧栏 - 热门文章（固定显示） -->
+      <aside class="right-sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-header">
+            <Flame :size="18" />
+            <h3>热门文章</h3>
+          </div>
+          <div class="hot-articles">
+            <div 
+              v-for="(article, index) in hotArticles" 
+              :key="article.article_id" 
+              class="hot-article-item"
+              @click="handleArticleClick(article)"
+            >
+              <span class="rank" :class="{ top: index < 3 }">{{ index + 1 }}</span>
+              <div class="article-info">
+                <span class="article-title">{{ article.title }}</span>
+                <div class="article-meta">
+                  <span><Eye :size="14" />{{ formatNumber(article.view_count) }}</span>
+                  <span>{{ formatDate(article.publish_time) }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </transition>
-      </section>
-
-      <!-- 内容区域 -->
-      <main class="main">
-        <!-- 热门精选 / 猜你喜欢 切换 -->
-        <div class="section-tabs">
-          <button
-            class="section-tab"
-            :class="{ active: activeSection === 'featured' }"
-            @click="activeSection = 'featured'"
-          >
-            <TrendingUp :size="18" />
-            <span>热门精选</span>
-          </button>
-          <button
-            class="section-tab"
-            :class="{ active: activeSection === 'recommend' }"
-            @click="activeSection = 'recommend'"
-          >
-            <Sparkles :size="18" />
-            <span>猜你喜欢</span>
-          </button>
         </div>
-
-        <!-- 文章列表 -->
-        <div class="article-grid">
-          <ArticleCardAI
-            v-for="article in currentArticles"
-            :key="article.article_id"
-            :article="article"
-            @click="handleArticleClick"
-          />
-        </div>
-      </main>
+      </aside>
     </div>
-
-    <!-- 侧边栏 -->
-    <aside class="sidebar">
-      <!-- 热门标签 -->
-      <div class="sidebar-card">
-        <h3>
-          <Hash :size="18" />
-          热门标签
-        </h3>
-        <div class="tag-cloud">
-          <span
-            v-for="tag in techTags.slice(0, 15)"
-            :key="tag.id"
-            class="cloud-tag"
-            :style="{ '--tag-color': tag.color }"
-          >
-            {{ tag.name }}
-          </span>
-        </div>
-      </div>
-
-      <!-- 活跃作者 -->
-      <div class="sidebar-card">
-        <h3>
-          <Users :size="18" />
-          活跃作者
-        </h3>
-        <div class="authors">
-          <div v-for="author in authors" :key="author.name" class="author">
-            <div class="author-avatar">{{ author.name[0] }}</div>
-            <div class="author-info">
-              <span class="author-name">{{ author.name }}</span>
-              <span class="author-bio">{{ author.bio }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, h, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Users } from 'lucide-vue-next'
+import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Flame, Eye } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { recommendArticlesData, categories, techTags } from '../data/mockData'
 import { processArticles } from '../utils/articleFilter'
@@ -164,7 +131,6 @@ const route = useRoute()
 const activeCategory = ref('all')
 const activeSection = ref<'featured' | 'recommend'>('featured')
 const activeTags = ref<string[]>([])
-const showMoreTags = ref(false)
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -175,12 +141,6 @@ const iconMap: Record<string, any> = {
   TrendingUp: (props: any) => h(TrendingUp, props),
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
-
-const authors = [
-  { name: '张三', bio: '前端工程师' },
-  { name: '李四', bio: '后端开发者' },
-  { name: '王五', bio: '全栈工程师' },
-]
 
 const allArticles = recommendArticlesData.data.article_list
 const filteredArticles = processArticles(allArticles)
@@ -201,6 +161,59 @@ watch(refreshTrigger, () => {
   shuffleArticles()
 })
 
+const hotArticles = computed(() => {
+  return [...filteredArticles]
+    .sort((a, b) => b.view_count - a.view_count)
+    .slice(0, 5)
+})
+
+const hotTags = computed(() => {
+  const tagCountMap = new Map<string, number>()
+  
+  filteredArticles.forEach(article => {
+    article.tags.forEach(tagId => {
+      tagCountMap.set(tagId, (tagCountMap.get(tagId) || 0) + 1)
+    })
+  })
+  
+  const sortedTags = [...tagCountMap.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([tagId]) => techTags.find(t => t.id === tagId))
+    .filter(Boolean)
+  
+  return sortedTags
+})
+
+const formatNumber = (num: number) => {
+  if (num >= 10000) return `${(num / 10000).toFixed(1)}万`
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}k`
+  return num.toString()
+}
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const seconds = Math.floor(diff / 1000)
+  const minutes = Math.floor(seconds / 60)
+  const hours = Math.floor(minutes / 60)
+  const days = Math.floor(hours / 24)
+  const weeks = Math.floor(days / 7)
+  const months = Math.floor(days / 30)
+  const years = Math.floor(days / 365)
+
+  if (seconds < 60) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
+  if (days === 1) return '昨天'
+  if (days < 7) return `${days}天前`
+  if (weeks < 4) return `${weeks}周前`
+  if (months < 12) return `${months}个月前`
+  if (years >= 1) return `${years}年前`
+  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
+}
+
 const currentArticles = computed(() => {
   let articles = shuffledArticles.value
 
@@ -215,9 +228,9 @@ const currentArticles = computed(() => {
   }
 
   if (activeSection.value === 'featured') {
-    return articles.slice(0, 6)
+    return articles.slice(0, 10)
   } else {
-    return articles.slice(6)
+    return articles.slice(10)
   }
 })
 
@@ -244,158 +257,101 @@ defineExpose({
 </script>
 
 <style scoped>
-.container {
-  display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: var(--space-xl);
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 var(--space-xl);
+.home-wrapper {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg-primary);
+  overflow-x: hidden;
 }
 
-@media (max-width: 1024px) {
-  .container {
-    grid-template-columns: 1fr;
+.home-inner {
+  display: flex;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+  gap: var(--space-lg);
+}
+
+@media (max-width: 1000px) {
+  .home-inner {
+    padding: 0 var(--space-md);
+  }
+}
+
+/* 左侧固定栏 */
+.left-sidebar {
+  flex-shrink: 0;
+  width: 240px;
+  position: sticky;
+  top: 140px;
+  height: fit-content;
+  align-self: flex-start;
+  margin-top: 20rem;
+}
+
+@media (max-width: 1400px) {
+  .left-sidebar {
+    width: 220px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .left-sidebar {
+    display: none;
   }
 }
 
 /* 主内容区域 */
 .main-content {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
 }
 
-/* Hero 区域 */
-.hero {
-  grid-column: 1 / -1;
-  position: relative;
-  padding: var(--space-2xl) 0;
-  text-align: center;
-  overflow: hidden;
-  min-height: 380px;
+/* 右侧固定栏 */
+.right-sidebar {
+  flex-shrink: 0;
+  width: 320px;
+  position: sticky;
+  top: 140px;
+  height: fit-content;
+  align-self: flex-start;
+  margin-top: 20rem;
 }
 
-.hero-background {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.hero-orb-1 {
-  position: absolute;
-  top: -50%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 600px;
-  height: 600px;
-  max-width: 100%;
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 70%);
-  animation: orbFloat1 8s ease-in-out infinite;
-}
-
-.hero-orb-2 {
-  position: absolute;
-  bottom: -30%;
-  left: 20%;
-  width: 500px;
-  height: 500px;
-  max-width: 100%;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 70%);
-  animation: orbFloat2 10s ease-in-out infinite;
-}
-
-.hero-orb-3 {
-  position: absolute;
-  top: 20%;
-  right: 10%;
-  width: 400px;
-  height: 400px;
-  max-width: 100%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
-  animation: orbFloat3 12s ease-in-out infinite;
-}
-
-/* 深色模式 - 增强光晕 */
-:global([data-theme="dark"]) .hero-orb-1 {
-  background: radial-gradient(circle, rgba(0, 242, 255, 0.3) 0%, rgba(112, 0, 255, 0.15) 40%, transparent 70%);
-  animation: orbFloat1 8s ease-in-out infinite, orbPulse 4s ease-in-out infinite;
-}
-
-:global([data-theme="dark"]) .hero-orb-2 {
-  background: radial-gradient(circle, rgba(112, 0, 255, 0.25) 0%, rgba(168, 85, 247, 0.1) 40%, transparent 70%);
-}
-
-:global([data-theme="dark"]) .hero-orb-3 {
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.2) 0%, rgba(0, 242, 255, 0.08) 40%, transparent 70%);
-}
-
-@keyframes orbPulse {
-  0%, 100% { opacity: 1; transform: translateX(-50%); }
-  50% { opacity: 0.7; transform: translateX(-50%); }
-}
-
-@keyframes orbFloat1 {
-  0%, 100% { transform: translateX(-50%) translateY(0); opacity: 1; }
-  50% { transform: translateX(-50%) translateY(-40px); opacity: 0.8; }
-}
-
-@keyframes orbFloat2 {
-  0%, 100% { transform: translate(0, 0); opacity: 1; }
-  50% { transform: translate(30px, -30px); opacity: 0.7; }
-}
-
-@keyframes orbFloat3 {
-  0%, 100% { transform: translate(0, 0); opacity: 0.8; }
-  50% { transform: translate(-20px, 20px); opacity: 1; }
-}
-
-.hero-content {
-  position: relative;
-  z-index: 1;
-}
-
-.hero-content h1 {
-  font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1.1;
-  margin-bottom: var(--space-sm);
-  color: var(--text-primary);
-  letter-spacing: -0.03em;
-}
-
-@media (max-width: 768px) {
-  .hero-content h1 {
-    font-size: 2.2rem;
+@media (max-width: 1400px) {
+  .right-sidebar {
+    display: none;
   }
 }
 
+/* Hero 区域 */
+.hero {
+  margin-bottom: var(--space-lg);
+}
+
+.hero-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0 0 6px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
 .gradient-text {
-  display: block;
-  background: linear-gradient(135deg, #00F2FF 0%, #7000FF 40%, #A855F7 70%, #00F2FF 100%);
-  background-size: 300% 100%;
+  background: linear-gradient(135deg, #6366f1, #a855f7);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: textShine 4s linear infinite;
-  position: relative;
-}
-
-:global([data-theme="dark"]) .gradient-text {
-  text-shadow: 0 0 40px rgba(0, 242, 255, 0.4), 0 0 80px rgba(112, 0, 255, 0.2);
-  filter: brightness(1.1);
-}
-
-@keyframes textShine {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 300% 50%; }
 }
 
 .hero-content p {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: var(--text-secondary);
-  margin-bottom: var(--space-lg);
+  margin: 0;
 }
 
 /* 热门标签区域 */
@@ -620,31 +576,10 @@ defineExpose({
 }
 
 .article-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-xl);
-}
-
-@media (max-width: 768px) {
-  .article-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* 侧边栏 */
-.sidebar {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
-  position: sticky;
-  top: 120px;
-  margin-top: 480px;
-}
-
-@media (max-width: 1024px) {
-  .sidebar {
-    display: none;
-  }
+  gap: var(--space-md);
+  width: 100%;
 }
 
 .sidebar-card {
@@ -656,6 +591,27 @@ defineExpose({
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+}
+
+.sidebar-header svg {
+  flex-shrink: 0;
+}
+
+.sidebar-header h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 18px;
+  display: flex;
+  align-items: center;
 }
 
 .sidebar-card::before {
@@ -718,7 +674,7 @@ defineExpose({
 
 .cloud-tag {
   padding: 4px var(--space-sm);
-  font-size: 0.8rem;
+  font-size: var(--tag-size, 0.8rem);
   color: var(--tag-color, var(--accent-primary));
   background: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 10%, transparent);
   border-radius: var(--radius-sm);
@@ -730,113 +686,87 @@ defineExpose({
   background: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 20%, transparent);
 }
 
+.cloud-tag.active {
+  background: var(--tag-color, var(--accent-primary));
+  color: white;
+}
+
 :global([data-theme="dark"]) .cloud-tag {
   background: color-mix(in srgb, var(--tag-color, var(--accent-primary)) 15%, transparent);
 }
 
-.authors {
+/* 热门文章 */
+.hot-articles {
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
 }
 
-.author {
+.hot-article-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-sm);
   padding: var(--space-sm);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--transition-fast);
-  justify-content: space-between;
 }
 
-.author:hover {
+.hot-article-item:hover {
   background: var(--bg-tertiary);
 }
 
-:global([data-theme="dark"]) .author:hover {
+:global([data-theme="dark"]) .hot-article-item:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
-.author-avatar {
-  width: 40px;
-  height: 40px;
+.rank {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 600;
+  color: var(--text-tertiary);
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.rank.top {
   color: white;
-  background: var(--accent-gradient);
-  border-radius: var(--radius-full);
-  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.3);
+  background: linear-gradient(135deg, #FF6B6B, #FF8E53);
 }
 
-:global([data-theme="dark"]) .author-avatar {
-  box-shadow: 0 2px 20px rgba(0, 242, 255, 0.5), 0 0 30px rgba(112, 0, 255, 0.3);
-  animation: avatarGlow 3s ease-in-out infinite;
+.article-info {
+  flex: 1;
+  min-width: 0;
 }
 
-@keyframes avatarGlow {
-  0%, 100% {
-    box-shadow: 0 2px 20px rgba(0, 242, 255, 0.5), 0 0 30px rgba(112, 0, 255, 0.3);
-  }
-  50% {
-    box-shadow: 0 2px 28px rgba(0, 242, 255, 0.7), 0 0 40px rgba(112, 0, 255, 0.5);
-  }
-}
-
-.author-info {
-  display: flex;
-  flex-direction: column;
-}
-
-.author-name {
-  font-size: 0.9rem;
+.article-title {
+  display: block;
+  font-size: 0.85rem;
   font-weight: 500;
   color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.author-bio {
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-}
-
-.author-stats {
+.article-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
   font-size: 0.75rem;
   color: var(--text-tertiary);
 }
 
-.follow-btn {
-  padding: var(--space-xs) var(--space-sm);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--accent-primary);
-  background: transparent;
-  border: 1px solid var(--accent-primary);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.follow-btn:hover {
-  background: var(--accent-primary);
-  color: white;
-}
-
-:global([data-theme="dark"]) .follow-btn {
-  border-color: rgba(0, 242, 255, 0.6);
-  color: #00F2FF;
-  text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-:global([data-theme="dark"]) .follow-btn:hover {
-  background: linear-gradient(135deg, rgba(0, 242, 255, 0.2), rgba(112, 0, 255, 0.2));
-  border-color: #00F2FF;
-  box-shadow: 0 0 20px rgba(0, 242, 255, 0.5), inset 0 0 10px rgba(0, 242, 255, 0.1);
-  color: white;
-  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+.article-meta span {
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 </style>
