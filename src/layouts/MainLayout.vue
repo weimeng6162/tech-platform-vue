@@ -17,7 +17,12 @@
         </router-view>
       </main>
     </div>
-    <BackToTop :threshold="300" :show-refresh="showRefreshButton" @refresh="handleRefresh" />
+    <BackToTop 
+      :threshold="300" 
+      :show-refresh="showRefreshButton" 
+      :position="buttonPosition"
+      @refresh="handleRefresh" 
+    />
   </div>
 </template>
 
@@ -27,12 +32,10 @@ import { useRoute } from 'vue-router'
 import Header from '../components/Header.vue'
 import ProgressBar from '../components/ProgressBar.vue'
 import BackToTop from '../components/BackToTop.vue'
-import { useThemeStore } from '../stores/theme'
 import { useScrollProgress } from '../composables/useScrollAnimation'
 import { useRefresh } from '../composables/useRefresh'
 
 const route = useRoute()
-const themeStore = useThemeStore()
 const scrollProgress = useScrollProgress()
 const isScrolled = ref(false)
 
@@ -42,6 +45,10 @@ const showRefreshButton = computed(() => {
   return !route.path.includes('/article-ai') && 
          !route.path.includes('/article/') && 
          !route.path.includes('/footprint')
+})
+
+const buttonPosition = computed(() => {
+  return route.path === '/category' ? 'outside' : 'default'
 })
 
 const handleRefresh = () => {
@@ -84,6 +91,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   position: relative;
+  background: var(--bg-primary);
 }
 
 .content-wrapper {
@@ -91,6 +99,7 @@ onUnmounted(() => {
   flex-direction: column;
   flex: 1;
   position: relative;
+  background: var(--bg-primary);
 }
 
 .main {
@@ -98,6 +107,7 @@ onUnmounted(() => {
   padding-top: var(--space-lg);
   position: relative;
   z-index: 2;
+  background: var(--bg-primary);
 }
 
 .page-wrapper {

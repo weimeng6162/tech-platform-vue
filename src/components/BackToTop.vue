@@ -1,6 +1,6 @@
 <template>
   <transition name="fade">
-    <div v-show="isVisible" class="floating-buttons">
+    <div v-show="isVisible" class="floating-buttons" :class="{ outside: position === 'outside' }">
       <!-- 刷新按钮 -->
       <button
         v-if="showRefresh"
@@ -30,9 +30,11 @@ import { ChevronUp, RefreshCw } from 'lucide-vue-next'
 const props = withDefaults(defineProps<{
   threshold?: number
   showRefresh?: boolean
+  position?: 'default' | 'outside'
 }>(), {
   threshold: 300,
-  showRefresh: true
+  showRefresh: true,
+  position: 'default'
 })
 
 const isVisible = ref(false)
@@ -86,6 +88,10 @@ onUnmounted(() => {
   display: flex;
   gap: var(--space-sm);
   z-index: 1000;
+}
+
+.floating-buttons.outside {
+  right: 2rem;
 }
 
 .refresh-btn,
