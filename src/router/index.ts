@@ -61,6 +61,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/Collection.vue'),
         meta: { transition: 'slide-fade' }
       },
+      {
+        path: 'category',
+        name: 'Category',
+        component: () => import('../views/Category.vue'),
+        meta: { transition: 'slide-fade' }
+      },
     ],
   },
 ]
