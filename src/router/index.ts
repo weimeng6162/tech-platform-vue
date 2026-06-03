@@ -29,7 +29,7 @@ const routes: RouteRecordRaw[] = [
       {
         path: 'article/:id',
         name: 'Article',
-        component: () => import('../views/ArticleDetail.vue'),
+        component: () => import('../views/ArticleDetailAI.vue'),
       },
       {
         path: 'demo',
@@ -74,6 +74,9 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+  scrollBehavior() {
+    return { top: 0, left: 0 }
+  },
 })
 
 export default router

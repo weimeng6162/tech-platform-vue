@@ -72,6 +72,9 @@
         <MarkdownRenderer :content="article.content" />
       </article>
 
+      <!-- 文章脉络图 -->
+      <ArticleOutline article-selector=".article-content" />
+
       <!-- 文章底部 -->
       <footer class="article-footer">
         <!-- 互动数据 -->
@@ -128,6 +131,7 @@
               />
             </svg>
             <span>{{ article.interaction_status.is_liked ? '已点赞' : '点赞' }}</span>
+            <span class="action-count">{{ article.metrics.like_count }}</span>
           </button>
           <button
             class="action-btn"
@@ -143,6 +147,7 @@
               />
             </svg>
             <span>{{ article.interaction_status.is_collected ? '已收藏' : '收藏' }}</span>
+            <span class="action-count">{{ article.metrics.collect_count }}</span>
           </button>
           <button class="action-btn" @click="handleShare">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -159,63 +164,23 @@
 
       <!-- 评论区 -->
       <section class="comments-section">
-        <!-- 评论输入区 -->
-        <div class="comment-input-wrapper">
-          <div class="input-header">
-            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=you" class="user-avatar" alt="avatar" />
-            <div class="input-container">
-              <textarea
-                v-model="newComment"
-                class="comment-textarea"
-                :class="{ focused: isInputFocused }"
-                placeholder="输入你想说的话... 支持 Markdown 和代码块"
-                @focus="isInputFocused = true"
-                @blur="isInputFocused = false"
-                rows="3"
-              ></textarea>
-              
-              <!-- 工具栏 -->
-              <div class="toolbar">
-                <div class="toolbar-left">
-                  <button class="tool-btn" @click="insertCode" title="插入代码块">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="16 18 22 12 16 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                      <polyline points="8 6 2 12 8 18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  </button>
-                  <button class="tool-btn" @click="insertBold" title="粗体">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" stroke-width="2" />
-                      <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" stroke-width="2" />
-                    </svg>
-                  </button>
-                  <button class="tool-btn" @click="insertLink" title="链接">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  </button>
-                  <button class="tool-btn" @click="togglePreview">
-                    {{ isPreview ? '编辑' : '预览' }}
-                  </button>
-                </div>
-                <button class="submit-btn" @click="submitComment" :disabled="!newComment.trim()">
-                  发表评论
-                </button>
-              </div>
-              
-              <!-- 预览 -->
-              <div v-if="isPreview" class="preview-wrapper">
-                <div class="preview-label">预览</div>
-                <MarkdownRenderer :content="newComment || '暂无内容'" />
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- 排序与计数栏 -->
         <div class="comments-header">
-          <span class="comments-count">共 {{ totalComments }} 条评论</span>
+          <div class="comments-header-left">
+            <button class="collapse-btn" @click="toggleCommentsCollapse">
+              <svg 
+                width="16" 
+                height="16" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor"
+                :class="{ rotated: isCommentsCollapsed }"
+              >
+                <polyline points="6 9 12 15 18 9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+            <span class="comments-count">共 {{ totalComments }} 条评论</span>
+          </div>
           <div class="sort-buttons">
             <button
               class="sort-btn"
@@ -235,8 +200,64 @@
           </div>
         </div>
 
-        <!-- 评论列表 -->
-        <div class="comments-list">
+        <!-- 折叠内容区域 -->
+        <div v-show="!isCommentsCollapsed" class="comments-content">
+          <!-- 评论输入区 -->
+          <div class="comment-input-wrapper">
+            <div class="input-header">
+              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=you" class="user-avatar" alt="avatar" />
+              <div class="input-container">
+                <textarea
+                  v-model="newComment"
+                  class="comment-textarea"
+                  :class="{ focused: isInputFocused }"
+                  placeholder="输入你想说的话... 支持 Markdown 和代码块"
+                  @focus="isInputFocused = true"
+                  @blur="isInputFocused = false"
+                  rows="3"
+                ></textarea>
+                
+                <!-- 工具栏 -->
+                <div class="toolbar">
+                  <div class="toolbar-left">
+                    <button class="tool-btn" @click="insertCode" title="插入代码块">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polyline points="16 18 22 12 16 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <polyline points="8 6 2 12 8 18" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                    <button class="tool-btn" @click="insertBold" title="粗体">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" stroke-width="2" />
+                        <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" stroke-width="2" />
+                      </svg>
+                    </button>
+                    <button class="tool-btn" @click="insertLink" title="链接">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </button>
+                    <button class="tool-btn" @click="togglePreview">
+                      {{ isPreview ? '编辑' : '预览' }}
+                    </button>
+                  </div>
+                  <button class="submit-btn" @click="submitComment" :disabled="!newComment.trim()">
+                    发表评论
+                  </button>
+                </div>
+                
+                <!-- 预览 -->
+                <div v-if="isPreview" class="preview-wrapper">
+                  <div class="preview-label">预览</div>
+                  <MarkdownRenderer :content="newComment || '暂无内容'" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 评论列表 -->
+          <div class="comments-list">
           <div v-for="comment in displayedComments" :key="comment.id" class="comment-item">
             <!-- 主评论 -->
             <div class="comment-main">
@@ -257,7 +278,7 @@
                     </svg>
                     {{ comment.likes }}
                   </button>
-                  <button class="action-link" @click="toggleDislike(comment)">
+                  <button class="action-link" @click="toggleDislike()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
@@ -318,7 +339,7 @@
                       <MarkdownRenderer :content="getProcessedContent(reply)" />
                     </div>
                     <div class="reply-actions-bottom">
-                      <button class="action-link" @click="toggleLike(reply, true)">
+                      <button class="action-link" @click="toggleLike(reply)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
@@ -341,95 +362,108 @@
             </div>
           </div>
         </div>
+        <!-- 关闭 comments-content -->
+        </div>
       </section>
 
-      <!-- 加载更多 -->
+      <!-- 展开更多 -->
       <div v-if="hasMoreComments" class="load-more-wrapper">
-        <button class="load-more-btn" @click="loadMore">
-          加载更多评论
+        <button class="load-more-btn" @click="toggleCommentsExpand">
+          展开更多评论 ({{ sortedComments.length - 3 }} 条)
         </button>
       </div>
-    </div>
 
-    <!-- 悬浮侧边栏 -->
-    <div class="floating-sidebar">
-      <button class="floating-btn" @click="handleLike">
-        <svg width="20" height="20" viewBox="0 0 24 24" :fill="article.interaction_status.is_liked ? 'currentColor' : 'none'" stroke="currentColor">
-          <path
-            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        <span>{{ article.metrics.like_count }}</span>
-      </button>
-      <button class="floating-btn" @click="handleCollect">
-        <svg width="20" height="20" viewBox="0 0 24 24" :fill="article.interaction_status.is_collected ? 'currentColor' : 'none'" stroke="currentColor">
-          <path
-            d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
-        </svg>
-        <span>{{ article.metrics.collect_count }}</span>
-      </button>
-      <button class="floating-btn" @click="handleShare">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <circle cx="18" cy="5" r="3" stroke-width="2" />
-          <circle cx="6" cy="12" r="3" stroke-width="2" />
-          <circle cx="18" cy="19" r="3" stroke-width="2" />
-          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke-width="2" />
-          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke-width="2" />
-        </svg>
-      </button>
+      <!-- 收起评论 -->
+      <div v-if="isCommentsExpanded && sortedComments.length > 3" class="load-more-wrapper">
+        <button class="load-more-btn" @click="toggleCommentsExpand">
+          收起评论
+        </button>
+      </div>
+
+      <!-- 相关文章推荐 -->
+      <div class="related-articles-section">
+        <h3 class="related-articles-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="margin-right: 0.5rem;">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <polyline points="14 2 14 8 20 8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <line x1="16" y1="13" x2="8" y2="13" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <line x1="16" y1="17" x2="8" y2="17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <polyline points="10 9 9 9 8 9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          相关文章推荐
+        </h3>
+        <div class="related-articles-list">
+          <div 
+            v-for="article in relatedArticles" 
+            :key="article.article_id"
+            class="related-article-item"
+            @click="goToArticle(article.article_id)"
+          >
+            <div class="related-article-content">
+              <h4 class="related-article-title">{{ article.title }}</h4>
+              <div class="related-article-meta">
+                <span class="related-article-author">{{ article.author }}</span>
+                <span class="related-article-time">{{ article.publish_time }}</span>
+                <span class="related-article-views">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="12" cy="12" r="3" stroke-width="2" />
+                  </svg>
+                  {{ article.view_count }}
+                </span>
+              </div>
+            </div>
+            <svg class="related-article-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <polyline points="9 18 15 12 9 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import SecurityWarning from '../components/SecurityWarning.vue'
+import ArticleOutline from '../components/ArticleOutline.vue'
 import { recommendArticlesData, articleDetailData, getArticleContent } from '../data/mockData'
 import { hasCommercialContent } from '../types/api'
 import { addRecentArticle } from '../stores/recentArticles'
 import { toggleCollectedArticle, isArticleCollected } from '../stores/collectedArticles'
 
 const route = useRoute()
+const router = useRouter()
 
 // 获取文章 ID
-const articleId = computed(() => route.query.id as string || 'wx_9527')
+const articleId = computed(() => route.params.id as string || route.query.id as string || 'wx_9527')
 
 // 从推荐列表中查找文章
 const articleFromList = computed(() => {
   return recommendArticlesData.data.article_list.find(a => a.article_id === articleId.value)
 })
 
-// 使用 computed 动态计算文章数据
-const article = computed(() => {
-  const found = articleFromList.value
-  return {
-    article_id: found?.article_id || articleDetailData.data.article_id,
-    title: found?.title || articleDetailData.data.title,
-    author: found?.author || articleDetailData.data.author,
-    publish_time: found?.publish_time || articleDetailData.data.publish_time,
-    category: found?.category || articleDetailData.data.category,
-    ai_summary: found?.ai_summary || articleDetailData.data.ai_summary,
-    tags: found?.tags || articleDetailData.data.tags,
-    content: getArticleContent(articleId.value),
-    metrics: {
-      view_count: found?.view_count || articleDetailData.data.metrics.view_count,
-      like_count: Math.floor(Math.random() * 500) + 100,
-      collect_count: Math.floor(Math.random() * 100) + 20,
-    },
-    interaction_status: {
-      is_liked: false,
-      is_collected: isArticleCollected(articleId.value),
-    },
-  }
+// 使用 ref 存储文章数据，避免每次访问都重新计算
+const article = ref({
+  article_id: '',
+  title: '',
+  author: '',
+  publish_time: '',
+  category: '',
+  ai_summary: '',
+  tags: [] as string[],
+  content: '',
+  metrics: {
+    view_count: 0,
+    like_count: 0,
+    collect_count: 0,
+  },
+  interaction_status: {
+    is_liked: false,
+    is_collected: isArticleCollected(articleId.value),
+  },
 })
 
 // 检查是否包含商业推广
@@ -437,6 +471,7 @@ const hasWarning = computed(() => hasCommercialContent(article.value.tags))
 
 // 评论状态
 const newComment = ref('')
+const isCommentsCollapsed = ref(false)
 const replyText = ref('')
 const isInputFocused = ref(false)
 const isPreview = ref(false)
@@ -508,6 +543,45 @@ const comments = ref<Comment[]>([
   },
 ])
 
+// 相关文章推荐数据
+const relatedArticles = computed(() => {
+  const currentId = articleId.value
+  const currentArticle = article.value
+  
+  // 获取当前文章的标签
+  const currentTags = currentArticle.tags || []
+  
+  // 从推荐列表中筛选相关文章（有相同标签的优先）
+  const allArticles = recommendArticlesData.data.article_list
+    .filter(a => a.article_id !== currentId)
+    .map(a => {
+      // 计算与当前文章的标签匹配度
+      const matchScore = a.tags?.filter(t => currentTags.includes(t)).length || 0
+      return {
+        ...a,
+        matchScore
+      }
+    })
+    // 按匹配度排序，匹配度高的在前
+    .sort((a, b) => b.matchScore - a.matchScore)
+    // 取前 3 篇
+    .slice(0, 3)
+  
+  return allArticles.map(a => ({
+    article_id: a.article_id,
+    title: a.title,
+    author: a.author,
+    publish_time: a.publish_time,
+    view_count: a.view_count,
+  }))
+})
+
+// 跳转到文章详情
+const goToArticle = (articleId: string) => {
+  console.log('跳转到文章:', articleId)
+  router.push({ path: `/article/${articleId}` })
+}
+
 // 排序后的评论
 const sortedComments = computed(() => {
   const sorted = [...comments.value]
@@ -523,25 +597,27 @@ const sortedComments = computed(() => {
   return sorted
 })
 
-// 分页相关
-const pageSize = ref(5)
-const currentPage = ref(1)
+// 评论展开状态
+const isCommentsExpanded = ref(false) // 评论区是否已展开
 
 // 显示的评论
 const displayedComments = computed(() => {
-  const start = 0
-  const end = currentPage.value * pageSize.value
-  return sortedComments.value.slice(start, end)
+  if (!isCommentsExpanded.value) {
+    // 未展开时只显示 3 条
+    return sortedComments.value.slice(0, 3)
+  }
+  // 展开后显示所有评论
+  return sortedComments.value
 })
 
 // 是否有更多评论
 const hasMoreComments = computed(() => {
-  return displayedComments.value.length < sortedComments.value.length
+  return !isCommentsExpanded.value && sortedComments.value.length > 3
 })
 
-// 加载更多
-const loadMore = () => {
-  currentPage.value++
+// 展开/收起评论
+const toggleCommentsExpand = () => {
+  isCommentsExpanded.value = !isCommentsExpanded.value
 }
 
 // 总评论数（包括回复）
@@ -571,11 +647,7 @@ const parseTime = (timeStr: string) => {
 
 // 滚动到页面顶部
 const scrollToTop = () => {
-  window.scrollTo({
-    top: 0,
-    left: 0,
-    behavior: 'smooth'
-  })
+  window.scrollTo(0, 0)
 }
 
 // 记录阅读历史
@@ -586,7 +658,7 @@ const recordReading = () => {
 }
 
 // 监听路由变化
-watch(() => route.query.id, () => {
+watch(() => [route.params.id, route.query.id], () => {
   scrollToTop()
   recordReading()
 })
@@ -595,6 +667,28 @@ watch(() => route.query.id, () => {
 onMounted(() => {
   scrollToTop()
   recordReading()
+  
+  // 初始化文章数据
+  const found = articleFromList.value
+  article.value = {
+    article_id: found?.article_id || articleDetailData.data.article_id,
+    title: found?.title || articleDetailData.data.title,
+    author: found?.author || articleDetailData.data.author,
+    publish_time: found?.publish_time || articleDetailData.data.publish_time,
+    category: found?.category || articleDetailData.data.category,
+    ai_summary: found?.ai_summary || articleDetailData.data.ai_summary,
+    tags: found?.tags || articleDetailData.data.tags,
+    content: getArticleContent(articleId.value),
+    metrics: {
+      view_count: found?.view_count || articleDetailData.data.metrics.view_count,
+      like_count: Math.floor(Math.random() * 500) + 100,
+      collect_count: Math.floor(Math.random() * 100) + 20,
+    },
+    interaction_status: {
+      is_liked: false,
+      is_collected: isArticleCollected(articleId.value),
+    },
+  }
 })
 
 // 格式化时间
@@ -716,7 +810,7 @@ const deleteComment = (comment: Comment) => {
 const deleteReply = (comment: Comment, reply: Comment) => {
   if (confirm('确定要删除这条回复吗？')) {
     const index = comment.replies?.findIndex(r => r.id === reply.id)
-    if (index !== -1 && comment.replies) {
+    if (index !== undefined && index !== -1 && comment.replies) {
       comment.replies.splice(index, 1)
     }
   }
@@ -755,8 +849,13 @@ const submitReply = (comment: Comment) => {
   replyText.value = ''
 }
 
+// 切换评论区折叠
+const toggleCommentsCollapse = () => {
+  isCommentsCollapsed.value = !isCommentsCollapsed.value
+}
+
 // 切换点赞
-const toggleLike = (comment: Comment, isReply = false) => {
+const toggleLike = (comment: Comment) => {
   comment.likes++
 }
 
@@ -769,7 +868,7 @@ const getProcessedContent = (comment: Comment) => {
 }
 
 // 切换踩
-const toggleDislike = (comment: Comment) => {
+const toggleDislike = () => {
   // 可以在这里实现踩的逻辑
 }
 </script>
@@ -854,13 +953,14 @@ const toggleDislike = (comment: Comment) => {
 /* AI 摘要卡片 - 极其显眼的极客 UI */
 .ai-summary-card {
   position: relative;
-  margin: 3rem 0;
-  padding: 2rem;
+  margin: 3rem auto;
+  padding: 1.25rem 1.5rem;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
   border-radius: 16px;
   border: 2px solid transparent;
   background-clip: padding-box;
   overflow: hidden;
+  max-width: 800px;
 }
 
 .ai-summary-card::before {
@@ -889,8 +989,8 @@ const toggleDislike = (comment: Comment) => {
 .ai-header {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .ai-icon-wrapper {
@@ -949,16 +1049,18 @@ const toggleDislike = (comment: Comment) => {
 }
 
 .ai-content {
-  font-size: 1.125rem;
-  line-height: 1.8;
+  font-size: 1rem;
+  line-height: 1.6;
   color: var(--text-primary);
   margin: 0;
   padding-left: 4rem;
+  max-width: 600px;
 }
 
 /* 文章正文 */
 .article-content {
-  margin: 3rem 0;
+  margin: 3rem auto;
+  max-width: 800px;
 }
 
 /* 文章底部 */
@@ -1015,6 +1117,11 @@ const toggleDislike = (comment: Comment) => {
   background: var(--primary-color);
   border-color: var(--primary-color);
   color: white;
+}
+
+.action-count {
+  font-size: 0.8rem;
+  opacity: 0.8;
 }
 
 /* 响应式 */
@@ -1212,6 +1319,46 @@ const toggleDislike = (comment: Comment) => {
 
 .sort-divider {
   color: var(--border-color);
+}
+
+/* 折叠内容区域 */
+.comments-content {
+  margin-top: 1.5rem;
+}
+
+/* 评论列表头部 */
+.comments-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collapse-btn:hover {
+  background: var(--bg-secondary);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.collapse-btn svg {
+  transition: transform 0.2s;
+}
+
+.collapse-btn svg.rotated {
+  transform: rotate(180deg);
 }
 
 /* @某某蓝色样式 */
@@ -1530,50 +1677,115 @@ const toggleDislike = (comment: Comment) => {
   gap: 0.75rem;
 }
 
-/* 悬浮侧边栏 */
-.floating-sidebar {
-  position: fixed;
-  left: 2rem;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  z-index: 100;
-}
-
-.floating-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  width: 48px;
-  padding: 0.75rem 0.5rem;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.floating-btn:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--primary-color);
-  color: var(--primary-color);
-  transform: translateY(-2px);
-}
-
-.floating-btn span {
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
 /* 暗色主题适配 */
 @media (prefers-color-scheme: dark) {
   .ai-summary-card {
     background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
   }
+}
+
+/* 相关文章推荐样式 */
+.related-articles-section {
+  margin-top: 3rem;
+  padding: 1.5rem;
+  background: var(--bg-secondary);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.related-articles-title {
+  display: flex;
+  align-items: center;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 1.5rem;
+  svg {
+    color: var(--primary-color);
+  }
+}
+
+.related-articles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.related-article-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: var(--bg-primary);
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.related-article-item:hover {
+  border-color: var(--primary-color);
+  background: var(--bg-tertiary);
+  transform: translateX(4px);
+}
+
+.related-article-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.related-article-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.related-article-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.related-article-author {
+  font-weight: 500;
+}
+
+.related-article-time {
+  flex-shrink: 0;
+}
+
+.related-article-views {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.related-article-views svg {
+  opacity: 0.7;
+}
+
+.related-article-arrow {
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+  color: var(--text-secondary);
+  transition: all 0.3s;
+}
+
+.related-article-item:hover .related-article-arrow {
+  color: var(--primary-color);
+  transform: translateX(4px);
 }
 
 /* 响应式 */
