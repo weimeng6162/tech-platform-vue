@@ -208,6 +208,210 @@ app.get('/api/user/profile', (req, res) => {
   });
 });
 
+// ========== 互动动作接口 ==========
+
+// 文章互动（点赞/收藏）
+app.post('/api/user/action', (req, res) => {
+  const { article_id, action_type } = req.body;
+  const actionText = action_type === 1 ? '点赞' : action_type === 2 ? '收藏' : '未知';
+  console.log(`[POST] /api/user/action - ${actionText}文章: ${article_id}`);
+  
+  res.json({
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "article_id": article_id,
+      "action_type": action_type,
+      "success": true
+    }
+  });
+});
+
+// ========== 评论系统接口 ==========
+
+// Mock评论数据
+const mockComments = {
+  "wx_9527": [
+    {
+      "comment_id": "1001",
+      "user_id": "dev_045",
+      "username": "Linux狂热者",
+      "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user1",
+      "content": "作者对 GMP 源码解析太透彻了！终于明白为什么Go的并发这么强",
+      "like_count": 42,
+      "is_liked": true,
+      "created_at": "2026-04-18T11:05:00Z",
+      "replies": [
+        {
+          "comment_id": "1005",
+          "user_id": "dev_102",
+          "username": "Go夜读(作者)",
+          "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=author",
+          "reply_to_user_id": "dev_045",
+          "reply_to_username": "Linux狂热者",
+          "content": "感谢认可！很高兴这篇文章能帮到你",
+          "like_count": 15,
+          "is_liked": false,
+          "created_at": "2026-04-18T11:30:00Z"
+        },
+        {
+          "comment_id": "1006",
+          "user_id": "dev_088",
+          "username": "Gopher新手",
+          "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user2",
+          "reply_to_user_id": "dev_045",
+          "reply_to_username": "Linux狂热者",
+          "content": "同感！之前一直看不懂GMP，这篇文章讲得很清楚",
+          "like_count": 8,
+          "is_liked": false,
+          "created_at": "2026-04-18T12:00:00Z"
+        }
+      ]
+    },
+    {
+      "comment_id": "1002",
+      "user_id": "dev_077",
+      "username": "后端架构师",
+      "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user3",
+      "content": "任务窃取机制是关键，这样才能保证CPU利用率最大化",
+      "like_count": 28,
+      "is_liked": false,
+      "created_at": "2026-04-18T11:20:00Z",
+      "replies": [
+        {
+          "comment_id": "1007",
+          "user_id": "dev_156",
+          "username": "性能优化专家",
+          "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user4",
+          "reply_to_user_id": "dev_077",
+          "reply_to_username": "后端架构师",
+          "content": "对的，工作窃取是Go调度器的精髓",
+          "like_count": 12,
+          "is_liked": true,
+          "created_at": "2026-04-18T11:45:00Z"
+        }
+      ]
+    },
+    {
+      "comment_id": "1003",
+      "user_id": "dev_099",
+      "username": "Java转Go",
+      "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user5",
+      "content": "对比Java的线程模型，Go的协程真是太轻量了",
+      "like_count": 35,
+      "is_liked": false,
+      "created_at": "2026-04-18T12:30:00Z",
+      "replies": []
+    },
+    {
+      "comment_id": "1004",
+      "user_id": "dev_123",
+      "username": "云原生爱好者",
+      "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user6",
+      "content": "在K8s环境下，GOMAXPROCS的设置需要特别注意",
+      "like_count": 22,
+      "is_liked": true,
+      "created_at": "2026-04-18T13:00:00Z",
+      "replies": [
+        {
+          "comment_id": "1008",
+          "user_id": "dev_102",
+          "username": "Go夜读(作者)",
+          "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=author",
+          "reply_to_user_id": "dev_123",
+          "reply_to_username": "云原生爱好者",
+          "content": "是的，容器环境下需要根据CPU配额来设置",
+          "like_count": 18,
+          "is_liked": false,
+          "created_at": "2026-04-18T13:20:00Z"
+        }
+      ]
+    },
+    {
+      "comment_id": "1009",
+      "user_id": "dev_145",
+      "username": "Go进阶学习者",
+      "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user7",
+      "content": "请问作者，在什么场景下会出现Goroutine泄漏？",
+      "like_count": 15,
+      "is_liked": false,
+      "created_at": "2026-04-18T14:00:00Z",
+      "replies": []
+    },
+    {
+      "comment_id": "1010",
+      "user_id": "dev_167",
+      "username": "并发编程新手",
+      "avatar_url": "https://api.dicebear.com/7.x/avataaars/svg?seed=user8",
+      "content": "学习了！准备用Go重构我们的后端服务",
+      "like_count": 12,
+      "is_liked": false,
+      "created_at": "2026-04-18T14:30:00Z",
+      "replies": []
+    }
+  ]
+};
+
+// 获取文章评论列表
+app.get('/api/articles/comments', (req, res) => {
+  const { article_id, page = 1, size = 10 } = req.query;
+  const pageNum = parseInt(page);
+  const sizeNum = parseInt(size);
+  
+  console.log(`[GET] /api/articles/comments?article_id=${article_id}&page=${page}&size=${size} - 获取文章评论列表`);
+  
+  const comments = mockComments[article_id] || mockComments["wx_9527"];
+  const total = comments.length;
+  const start = (pageNum - 1) * sizeNum;
+  const end = start + sizeNum;
+  const paginatedComments = comments.slice(start, end);
+  
+  res.json({
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "total": total,
+      "page": pageNum,
+      "size": sizeNum,
+      "comments": paginatedComments
+    }
+  });
+});
+
+// 发表评论/二级回复
+app.post('/api/comments/create', (req, res) => {
+  const { article_id, content, parent_id = "0", reply_to_user_id } = req.body;
+  console.log(`[POST] /api/comments/create - 发表评论, article_id: ${article_id}, parent_id: ${parent_id}`);
+  
+  res.json({
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "comment_id": "new_" + Date.now(),
+      "article_id": article_id,
+      "content": content,
+      "success": true
+    }
+  });
+});
+
+// 评论互动（点赞评论）
+app.post('/api/comments/action', (req, res) => {
+  const { comment_id, action_type } = req.body;
+  const actionText = action_type === 1 ? '点赞' : action_type === 2 ? '取消点赞' : '未知';
+  console.log(`[POST] /api/comments/action - ${actionText}评论: ${comment_id}`);
+  
+  res.json({
+    "code": 200,
+    "msg": "success",
+    "data": {
+      "comment_id": comment_id,
+      "action_type": action_type,
+      "success": true
+    }
+  });
+});
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`✅ Mock服务器已启动！`);
@@ -216,5 +420,9 @@ app.listen(PORT, () => {
   console.log(`   GET http://localhost:${PORT}/api/articles/recommend`);
   console.log(`   GET http://localhost:${PORT}/api/articles/detail?article_id=xxx`);
   console.log(`   GET http://localhost:${PORT}/api/user/profile`);
+  console.log(`   POST http://localhost:${PORT}/api/user/action`);
+  console.log(`   GET http://localhost:${PORT}/api/articles/comments?article_id=xxx&page=1&size=10`);
+  console.log(`   POST http://localhost:${PORT}/api/comments/create`);
+  console.log(`   POST http://localhost:${PORT}/api/comments/action`);
   console.log(`\n💡 提示: 按 Ctrl+C 停止服务器\n`);
 });

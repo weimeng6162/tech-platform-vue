@@ -3,7 +3,7 @@
  */
 
 import { get, post } from '../request';
-import type { UserProfile } from '../types';
+import type { UserProfile, ArticleActionRequest } from '../types';
 
 /**
  * 获取用户侧写信息
@@ -111,4 +111,17 @@ export interface ResetPasswordRequest {
  */
 export function resetPassword(data: ResetPasswordRequest): Promise<void> {
   return post<void>('/api/user/reset-password', data);
+}
+
+/**
+ * 文章互动动作（点赞/收藏）
+ * @param data 互动数据
+ * @returns 互动结果
+ */
+export function articleAction(data: ArticleActionRequest): Promise<{
+  article_id: string;
+  action_type: number;
+  success: boolean;
+}> {
+  return post('/api/user/action', data);
 }

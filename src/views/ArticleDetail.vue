@@ -66,6 +66,9 @@
         </button>
       </div>
     </footer>
+
+    <!-- 评论区 -->
+    <CommentsSection />
   </div>
 </template>
 
@@ -76,6 +79,7 @@ import { ArrowLeft, Eye, Clock, Heart, MessageCircle, Bookmark, Share2 } from 'l
 import { techTags, articleContent } from '../data/mockData'
 import { useBrowsingHistory } from '../stores/browsingHistory'
 import type { ArticleItem } from '../types/api'
+import CommentsSection from '../components/CommentsSection.vue'
 
 const router = useRouter()
 const route = useRoute()
