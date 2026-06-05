@@ -26,10 +26,10 @@
       <!-- 外圈 -->
       <div class="orbit orbit-outer">
         <div 
-          v-for="(tech, i) in outerTechs" 
+          v-for="(tech, index) in outerTechs" 
           :key="tech"
           class="orbit-item"
-          :style="{ animationDelay: (i * 4) + 's, ' + (1.5 + i * 4) + 's' }"
+          :style="{ animationDelay: (index * 4) + 's, ' + (1.5 + index * 4) + 's' }"
         >
           {{ tech }}
         </div>
@@ -38,10 +38,10 @@
       <!-- 中圈 -->
       <div class="orbit orbit-middle">
         <div 
-          v-for="(tech, i) in middleTechs" 
+          v-for="(tech, index) in middleTechs" 
           :key="tech"
           class="orbit-item"
-          :style="{ animationDelay: (i * 5) + 's, ' + (1.8 + i * 5) + 's' }"
+          :style="{ animationDelay: (index * 5) + 's, ' + (1.8 + index * 5) + 's' }"
         >
           {{ tech }}
         </div>
@@ -50,10 +50,10 @@
       <!-- 内圈 -->
       <div class="orbit orbit-inner">
         <div 
-          v-for="(tech, i) in innerTechs" 
+          v-for="(tech, index) in innerTechs" 
           :key="tech"
           class="orbit-item"
-          :style="{ animationDelay: (i * 8.75) + 's, ' + (2 + i * 8.75) + 's' }"
+          :style="{ animationDelay: (index * 8.75) + 's, ' + (2 + index * 8.75) + 's' }"
         >
           {{ tech }}
         </div>
@@ -378,7 +378,7 @@ import {
   AlertCircle, Github, Mail, X, KeyRound, Send, CheckCircle
 } from 'lucide-vue-next'
 import { useUserStore } from '../stores/user'
-import { aesEncrypt } from '../utils/aes'
+import { encryptPassword } from '../utils/crypto'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -561,7 +561,8 @@ const handleLogin = async () => {
       return
     }
 
-    const encryptedPassword = aesEncrypt(form.password)
+    // 加密密码
+    const encryptedPassword = await encryptPassword(form.password)
     
     // 调用登录接口
     const result = await userStore.login(form.account, encryptedPassword)
@@ -654,7 +655,7 @@ const handleRegister = () => {
 }
 
 // 粒子样式生成
-const getParticleStyle = (_index: number) => {
+const getParticleStyle = (index: number) => {
   const size = Math.random() * 4 + 2
   const x = Math.random() * 100
   const y = Math.random() * 100

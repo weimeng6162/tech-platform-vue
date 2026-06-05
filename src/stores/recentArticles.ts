@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import type { ArticleItem } from '../types/api'
 
 // 最近阅读的文章列表

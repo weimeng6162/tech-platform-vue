@@ -8,8 +8,6 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 const canvasRef = ref<HTMLCanvasElement>()
 let animationId: number
 let particles: Particle[] = []
-let mouseX = 0
-let mouseY = 0
 
 interface Particle {
   x: number
@@ -305,9 +303,8 @@ const handleResize = () => {
   initParticles(width, height)
 }
 
-const handleMouseMove = (e: MouseEvent) => {
-  mouseX = e.clientX
-  mouseY = e.clientY
+const handleMouseMove = (_e: MouseEvent) => {
+  // track mouse for future interaction
 }
 
 onMounted(() => {

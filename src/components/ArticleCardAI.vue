@@ -16,8 +16,19 @@
 
     <!-- 文章内容 -->
     <div class="card-content">
-      <!-- 标题 -->
-      <h3 class="title">{{ article.title }}</h3>
+      <!-- 标题 + 标签行 -->
+      <div class="title-row">
+        <h3 class="title">{{ article.title }}</h3>
+        <div class="inline-tags">
+          <span
+            v-for="tag in displayTags"
+            :key="tag"
+            class="tag"
+            :class="{ 'warning-tag': tag === '含商业推广' }"
+            :style="tag === '含商业推广' ? {} : { backgroundColor: getTagColor(tag) }"
+          >{{ tag }}</span>
+        </div>
+      </div>
 
       <!-- AI 摘要 - 带闪光图标 -->
       <div class="ai-summary">
@@ -33,19 +44,6 @@
           <span class="ai-label">AI</span>
         </div>
         <p class="summary-text">{{ article.ai_summary }}</p>
-      </div>
-
-      <!-- 标签 -->
-      <div class="tags">
-        <span
-          v-for="tag in displayTags"
-          :key="tag"
-          class="tag"
-          :class="{ 'warning-tag': tag === '含商业推广' }"
-          :style="tag === '含商业推广' ? {} : { backgroundColor: getTagColor(tag) }"
-        >
-          {{ tag }}
-        </span>
       </div>
 
       <!-- 元信息 -->
@@ -75,7 +73,7 @@
           </svg>
           {{ formatViewCount(article.view_count) }}
         </span>
-        <span class="time">{{ formatTime(article.publish_time) }}</span>
+        <span class="time">{{ formatRelativeTime(article.publish_time) }}</span>
       </div>
     </div>
   </div>
@@ -139,28 +137,7 @@ const formatViewCount = (count: number) => {
 }
 
 // 格式化时间
-const formatTime = (time: string) => {
-  const date = new Date(time)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const seconds = Math.floor(diff / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-  const weeks = Math.floor(days / 7)
-  const months = Math.floor(days / 30)
-  const years = Math.floor(days / 365)
-
-  if (seconds < 60) return '刚刚'
-  if (minutes < 60) return `${minutes}分钟前`
-  if (hours < 24) return `${hours}小时前`
-  if (days === 1) return '昨天'
-  if (days < 7) return `${days}天前`
-  if (weeks < 4) return `${weeks}周前`
-  if (months < 12) return `${months}个月前`
-  if (years >= 1) return `${years}年前`
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-}
+import { formatRelativeTime } from '../utils/formatTime'
 
 const handleClick = () => {
   emit('click', props.article)
@@ -171,127 +148,219 @@ const handleClick = () => {
 .article-card-ai {
   position: relative;
   background: var(--bg-secondary);
-  border-radius: 8px;
-  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  padding: 1.5rem;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   border: 1px solid var(--border-color);
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  overflow: hidden;
+}
+
+.article-card-ai::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #00F2FF, #7000FF, #A855F7);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.article-card-ai::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  pointer-events: none;
 }
 
 .article-card-ai:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  border-color: var(--accent-primary);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-color);
+}
+
+.article-card-ai:hover::before {
+  opacity: 1;
+}
+
+.article-card-ai:hover::after {
+  left: 100%;
+}
+
+/* 深色模式 - 全息玻璃卡片 */
+:global([data-theme="dark"]) .article-card-ai {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+}
+
+:global([data-theme="dark"]) .article-card-ai::before {
+  opacity: 0.5;
+  background: linear-gradient(90deg, #00F2FF, #7000FF, #A855F7);
+  box-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+}
+
+:global([data-theme="dark"]) .article-card-ai::after {
+  background: linear-gradient(90deg, transparent, rgba(0, 242, 255, 0.08), transparent);
+}
+
+:global([data-theme="dark"]) .article-card-ai:hover {
+  transform: translateY(-4px);
+  border-color: rgba(0, 242, 255, 0.3);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.8),
+    0 0 60px rgba(0, 242, 255, 0.15),
+    0 0 100px rgba(112, 0, 255, 0.1);
+}
+
+:global([data-theme="dark"]) .article-card-ai:hover::before {
+  opacity: 1;
+  box-shadow: 0 0 30px rgba(0, 242, 255, 0.8);
 }
 
 /* 难度角标 */
 .difficulty-badge {
-  flex-shrink: 0;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.7rem;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 收藏标记 */
 .collected-mark {
   position: absolute;
-  top: 0.6rem;
-  left: 0.6rem;
+  top: 1rem;
+  left: 1rem;
   color: #fbbf24;
+  filter: drop-shadow(0 2px 4px rgba(251, 191, 36, 0.3));
 }
 
 .card-content {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-  min-width: 0;
+  gap: 1rem;
+}
+
+/* 标题 + 标签行 */
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-right: 5rem;
+}
+
+.inline-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.inline-tags .tag {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
 }
 
 /* 标题 */
 .title {
-  font-size: 1rem;
+  font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-  line-height: 1.3;
+  line-height: 1.4;
   margin: 0;
+  padding-right: 5rem; /* 为难度角标留空间 */
 }
 
 /* AI 摘要 */
 .ai-summary {
   display: flex;
-  gap: 0.5rem;
-  padding: 0.6rem 0.8rem;
+  gap: 0.75rem;
+  padding: 1rem;
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
-  border-radius: 6px;
-  border-left: 2px solid #6366f1;
+  border-radius: 8px;
+  border-left: 3px solid #6366f1;
 }
 
 .ai-icon {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
   color: #6366f1;
   flex-shrink: 0;
 }
 
 .ai-label {
-  font-size: 0.6rem;
+  font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.05em;
 }
 
 .summary-text {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.6;
   margin: 0;
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
 }
 
 /* 标签 */
 .tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 0.5rem;
 }
 
 .tag {
-  padding: 0.15rem 0.5rem;
-  border-radius: 10px;
-  font-size: 0.7rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-primary);
   transition: transform 0.2s;
 }
 
 .tag:hover {
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
-/* 警示标签 */
+/* 警示标签 - 特殊样式 */
 .tag.warning-tag {
   background: linear-gradient(135deg, #f97316, #fb923c);
   color: white;
   font-weight: 600;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+  animation: tag-glow 2s ease-in-out infinite;
+}
+
+@keyframes tag-glow {
+  0%,
+  100% {
+    box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+  }
+  50% {
+    box-shadow: 0 2px 12px rgba(249, 115, 22, 0.5);
+  }
 }
 
 /* 元信息 */
 .meta {
   display: flex;
   align-items: center;
-  gap: 0.8rem;
-  font-size: 0.75rem;
+  gap: 1rem;
+  font-size: 0.875rem;
   color: var(--text-tertiary);
 }
 
@@ -299,13 +368,20 @@ const handleClick = () => {
 .views {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0.25rem;
 }
 
 .category {
-  padding: 0.1rem 0.4rem;
+  padding: 0.125rem 0.5rem;
   background: var(--bg-tertiary);
   border-radius: 4px;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .ai-summary {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+  }
 }
 </style>

@@ -8,6 +8,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/Login.vue'),
   },
   {
+    path: '/register',
+    name: 'Register',
+    component: () => import('../views/Register.vue'),
+  },
+  {
     path: '/interest',
     name: 'Interest',
     component: () => import('../views/InterestSetup.vue'),
@@ -69,6 +74,17 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes,
+  scrollBehavior(_to, _from, savedPosition) {
+    return savedPosition || { top: 0 }
+  },
+})
+
+// 路由预加载策略：在空闲时预加载可能访问的页面
+router.beforeEach((to) => {
+  // 文章详情页需要 highlight.js，提前预加载
+  if (to.path.startsWith('/article')) {
+    import('../utils/markdown').then((m) => m.preloadHighlight?.())
+  }
 })
 
 export default router
