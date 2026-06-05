@@ -26,10 +26,10 @@
       <!-- 外圈 -->
       <div class="orbit orbit-outer">
         <div 
-          v-for="(tech, index) in outerTechs" 
+          v-for="(tech, i) in outerTechs" 
           :key="tech"
           class="orbit-item"
-          :style="{ animationDelay: (index * 4) + 's, ' + (1.5 + index * 4) + 's' }"
+          :style="{ animationDelay: (i * 4) + 's, ' + (1.5 + i * 4) + 's' }"
         >
           {{ tech }}
         </div>
@@ -38,10 +38,10 @@
       <!-- 中圈 -->
       <div class="orbit orbit-middle">
         <div 
-          v-for="(tech, index) in middleTechs" 
+          v-for="(tech, i) in middleTechs" 
           :key="tech"
           class="orbit-item"
-          :style="{ animationDelay: (index * 5) + 's, ' + (1.8 + index * 5) + 's' }"
+          :style="{ animationDelay: (i * 5) + 's, ' + (1.8 + i * 5) + 's' }"
         >
           {{ tech }}
         </div>
@@ -50,10 +50,10 @@
       <!-- 内圈 -->
       <div class="orbit orbit-inner">
         <div 
-          v-for="(tech, index) in innerTechs" 
+          v-for="(tech, i) in innerTechs" 
           :key="tech"
           class="orbit-item"
-          :style="{ animationDelay: (index * 8.75) + 's, ' + (2 + index * 8.75) + 's' }"
+          :style="{ animationDelay: (i * 8.75) + 's, ' + (2 + i * 8.75) + 's' }"
         >
           {{ tech }}
         </div>
@@ -654,7 +654,7 @@ const handleRegister = () => {
 }
 
 // 粒子样式生成
-const getParticleStyle = (index: number) => {
+const getParticleStyle = (_index: number) => {
   const size = Math.random() * 4 + 2
   const x = Math.random() * 100
   const y = Math.random() * 100

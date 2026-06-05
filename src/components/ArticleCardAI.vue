@@ -16,8 +16,19 @@
 
     <!-- 文章内容 -->
     <div class="card-content">
-      <!-- 标题 -->
-      <h3 class="title">{{ article.title }}</h3>
+      <!-- 标题 + 标签行 -->
+      <div class="title-row">
+        <h3 class="title">{{ article.title }}</h3>
+        <div class="inline-tags">
+          <span
+            v-for="tag in displayTags"
+            :key="tag"
+            class="tag"
+            :class="{ 'warning-tag': tag === '含商业推广' }"
+            :style="tag === '含商业推广' ? {} : { backgroundColor: getTagColor(tag) }"
+          >{{ tag }}</span>
+        </div>
+      </div>
 
       <!-- AI 摘要 - 带闪光图标 -->
       <div class="ai-summary">
@@ -33,19 +44,6 @@
           <span class="ai-label">AI</span>
         </div>
         <p class="summary-text">{{ article.ai_summary }}</p>
-      </div>
-
-      <!-- 标签 -->
-      <div class="tags">
-        <span
-          v-for="tag in displayTags"
-          :key="tag"
-          class="tag"
-          :class="{ 'warning-tag': tag === '含商业推广' }"
-          :style="tag === '含商业推广' ? {} : { backgroundColor: getTagColor(tag) }"
-        >
-          {{ tag }}
-        </span>
       </div>
 
       <!-- 元信息 -->
@@ -75,7 +73,7 @@
           </svg>
           {{ formatViewCount(article.view_count) }}
         </span>
-        <span class="time">{{ formatTime(article.publish_time) }}</span>
+        <span class="time">{{ formatRelativeTime(article.publish_time) }}</span>
       </div>
     </div>
   </div>
@@ -139,17 +137,7 @@ const formatViewCount = (count: number) => {
 }
 
 // 格式化时间
-const formatTime = (time: string) => {
-  const date = new Date(time)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-
-  if (days === 0) return '今天'
-  if (days === 1) return '昨天'
-  if (days < 7) return `${days}天前`
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-}
+import { formatRelativeTime } from '../utils/formatTime'
 
 const handleClick = () => {
   emit('click', props.article)
@@ -263,6 +251,26 @@ const handleClick = () => {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* 标题 + 标签行 */
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-right: 5rem;
+}
+
+.inline-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.inline-tags .tag {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
 }
 
 /* 标题 */

@@ -3,43 +3,60 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { marked } from 'marked'
-import hljs from 'highlight.js'
 
 const props = defineProps<{
   content: string
 }>()
 
-// 配置 marked
-marked.setOptions({
-  highlight: function (code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(code, { language: lang }).value
-      } catch (err) {
-        console.error(err)
-      }
+marked.setOptions({ breaks: true, gfm: true })
+
+const renderedContent = ref('')
+let highlightReady = false
+
+/** 异步应用高亮渲染器 */
+async function applyHighlight() {
+  const hljs = await import('highlight.js')
+  await import('highlight.js/styles/github-dark.css')
+
+  const renderer = new marked.Renderer()
+  renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
+    const language = lang || ''
+    try {
+      const code = language && hljs.default.getLanguage(language)
+        ? hljs.default.highlight(text, { language }).value
+        : hljs.default.highlightAuto(text).value
+      return `<pre><code class="hljs ${language}">${code}</code></pre>`
+    } catch {
+      return `<pre><code class="hljs ${language}">${text}</code></pre>`
     }
-    return hljs.highlightAuto(code).value
-  },
-  breaks: true,
-  gfm: true,
+  }
+  marked.use({ renderer })
+  highlightReady = true
+  // 重新渲染当前内容（带高亮）
+  renderedContent.value = marked.parse(props.content) as string
+}
+
+/** 快速渲染（无高亮） */
+function renderPlain(content: string) {
+  renderedContent.value = marked.parse(content) as string
+}
+
+// 初始渲染（无高亮，快速显示内容）
+renderPlain(props.content)
+onMounted(() => {
+  applyHighlight()
 })
 
-// 渲染 Markdown
-const renderedContent = computed(() => {
-  try {
-    return marked.parse(props.content) as string
-  } catch (err) {
-    console.error('Markdown 渲染错误:', err)
-    return props.content
-  }
+// 内容变化时重新渲染
+watch(() => props.content, (newContent) => {
+  renderPlain(newContent)
+  if (!highlightReady) applyHighlight()
 })
 </script>
 
 <style>
-/* Markdown 样式 */
 .markdown-body {
   font-size: 1rem;
   line-height: 1.8;
@@ -131,7 +148,6 @@ const renderedContent = computed(() => {
   border-top: 2px solid var(--border-color);
 }
 
-/* 代码块样式 */
 .markdown-body pre {
   margin: 1.5rem 0;
   padding: 1rem;
@@ -161,7 +177,6 @@ const renderedContent = computed(() => {
   display: block;
 }
 
-/* 行内代码 */
 .markdown-body p code,
 .markdown-body li code {
   padding: 0.2rem 0.4rem;
@@ -171,7 +186,6 @@ const renderedContent = computed(() => {
   font-size: 0.875em;
 }
 
-/* 表格样式 */
 .markdown-body table {
   width: 100%;
   margin: 1.5rem 0;
@@ -196,7 +210,6 @@ const renderedContent = computed(() => {
   background: var(--bg-secondary);
 }
 
-/* 图片样式 */
 .markdown-body img {
   max-width: 100%;
   height: auto;
@@ -206,65 +219,35 @@ const renderedContent = computed(() => {
 
 /* Highlight.js 主题覆盖 */
 .hljs-comment,
-.hljs-quote {
-  color: #6a9955;
-}
-
+.hljs-quote { color: #6a9955; }
 .hljs-keyword,
 .hljs-selector-tag,
-.hljs-addition {
-  color: #569cd6;
-}
-
+.hljs-addition { color: #569cd6; }
 .hljs-number,
 .hljs-string,
 .hljs-meta .hljs-meta-string,
 .hljs-literal,
 .hljs-doctag,
-.hljs-regexp {
-  color: #ce9178;
-}
-
+.hljs-regexp { color: #ce9178; }
 .hljs-title,
 .hljs-section,
 .hljs-selector-attr,
 .hljs-selector-pseudo,
-.hljs-type {
-  color: #4ec9b0;
-}
-
+.hljs-type { color: #4ec9b0; }
 .hljs-attribute,
 .hljs-name,
 .hljs-variable,
 .hljs-template-variable,
 .hljs-class .hljs-title,
-.hljs-built_in {
-  color: #4fc1ff;
-}
-
+.hljs-built_in { color: #4fc1ff; }
 .hljs-symbol,
 .hljs-bullet,
 .hljs-subst,
 .hljs-meta,
 .hljs-meta .hljs-keyword,
-.hljs-selector-tag,
-.hljs-link {
-  color: #dcdcaa;
-}
-
-.hljs-deletion {
-  color: #f44747;
-}
-
-.hljs-formula {
-  background: #3c3c3c;
-}
-
-.hljs-emphasis {
-  font-style: italic;
-}
-
-.hljs-strong {
-  font-weight: bold;
-}
+.hljs-link { color: #dcdcaa; }
+.hljs-deletion { color: #f44747; }
+.hljs-formula { background: #3c3c3c; }
+.hljs-emphasis { font-style: italic; }
+.hljs-strong { font-weight: bold; }
 </style>

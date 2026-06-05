@@ -54,7 +54,7 @@ export function usePageTransition() {
 
   // 路由守卫
   const setupGuards = () => {
-    router.beforeEach((to, from, next) => {
+    router.beforeEach((_to, from, next) => {
       isTransitioning.value = true
 
       // 添加当前路径到历史记录
@@ -65,7 +65,7 @@ export function usePageTransition() {
       next()
     })
 
-    router.afterEach((to) => {
+    router.afterEach(() => {
       // 延迟重置过渡状态，确保动画完成
       setTimeout(() => {
         isTransitioning.value = false
@@ -81,10 +81,10 @@ export function usePageTransition() {
         // 预加载路由组件
         const route = router.resolve(path)
         if (route.matched.length > 0) {
-          const component = route.matched[0].components?.default
-          if (component && typeof component === 'function') {
+          const comp = route.matched[0].components?.default
+          if (comp && typeof comp === 'function') {
             // 触发组件预加载
-            component()
+            ;(comp as any)()
           }
         }
       })

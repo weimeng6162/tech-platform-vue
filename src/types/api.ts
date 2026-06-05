@@ -24,6 +24,8 @@ export interface ArticleItem {
   tags: string[]
   difficulty: '初级' | '中级' | '深度'
   view_count: number
+  like_count?: number
+  collect_count?: number
   is_collected: boolean
 }
 

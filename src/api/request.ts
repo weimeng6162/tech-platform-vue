@@ -5,7 +5,6 @@
 
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { apiConfig, USE_REAL_BACKEND_FOR_AUTH, REAL_BACKEND_URL, MOCK_SERVER_URL, AUTH_ENDPOINTS } from './config';
-import type { ApiResponse } from './types';
 import router from '../router';
 
 // 创建Axios实例
