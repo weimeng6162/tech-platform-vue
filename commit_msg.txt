@@ -1,0 +1,7 @@
+feat: homepage API integration and difficulty tags fix
+
+- Home.vue: static mock -> getRecommendArticles() API with loading/error/retry states
+- articleFilter.ts integration for filtering commercial tags
+- Fix tags type conversion (string to array)
+- Fix computed refs missing .value
+- New difficulty tags: entry-level and advanced
