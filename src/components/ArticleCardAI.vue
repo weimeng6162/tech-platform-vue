@@ -99,15 +99,19 @@ const displayTags = computed(() => {
 
 // 难度颜色映射
 const difficultyColorMap: Record<string, string> = {
+  入门: '#95de64',
   初级: '#52c41a',
   中级: '#1890ff',
+  进阶: '#13c2c2',
   深度: '#722ed1',
 }
 
 // 难度图标映射
 const difficultyIconMap: Record<string, string> = {
+  入门: '🌰',
   初级: '🌱',
   中级: '⚡',
+  进阶: '🔧',
   深度: '🚀',
 }
 

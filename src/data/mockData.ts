@@ -618,7 +618,7 @@ export const recommendArticlesData = {
     },
     {
       article_id: '8927138916859905',
-      title: 'I Built a PDF Conversion API So You Don't Have to Install Ghostscript - DEV Community',
+      title: "I Built a PDF Conversion API So You Don't Have to Install Ghostscript - DEV Community",
       author: '未知作者',
       publish_time: '',
       category: '后端',
