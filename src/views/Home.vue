@@ -74,8 +74,20 @@
             </button>
           </div>
 
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-state">
+            <Loader2 :size="32" class="spin" />
+            <span>正在加载推荐文章...</span>
+          </div>
+
+          <!-- 错误状态 -->
+          <div v-else-if="error" class="error-state">
+            <p>{{ error }}</p>
+            <button class="retry-btn" @click="loadArticles">重新加载</button>
+          </div>
+
           <!-- 文章列表 -->
-          <div class="article-grid">
+          <div v-else class="article-grid">
             <ArticleCardAI
               v-for="article in currentArticles"
               :key="article.article_id"
@@ -119,18 +131,55 @@
 <script setup lang="ts">
 import { ref, computed, h, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Flame, Eye } from 'lucide-vue-next'
+import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Flame, Eye, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
-import { recommendArticlesData, categories, techTags } from '../data/mockData'
+import { categories, techTags } from '../data/mockData'
 import { processArticles } from '../utils/articleFilter'
 import type { ArticleItem } from '../types/api'
 import { useRefresh } from '../composables/useRefresh'
+import { getRecommendArticles } from '../api/modules/article'
 
 const router = useRouter()
 const route = useRoute()
 const activeCategory = ref('all')
 const activeSection = ref<'featured' | 'recommend'>('featured')
 const activeTags = ref<string[]>([])
+
+// API状态
+const loading = ref(false)
+const error = ref<string | null>(null)
+const allArticles = ref<ArticleItem[]>([])
+
+// 从API加载推荐文章列表
+const loadArticles = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const articles = await getRecommendArticles()
+    // 规范化：确保 tags 是数组（Mock server 返回的是字符串，需转换为数组）
+    allArticles.value = articles.map(a => ({
+      ...a,
+      tags: typeof a.tags === 'string' 
+        ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
+        : a.tags
+    }))
+    console.log('[Home] 推荐文章加载成功，共', articles.length, '篇')
+  } catch (err: any) {
+    console.error('[Home] 加载推荐文章失败:', err)
+    error.value = err.message || '加载失败，请稍后重试'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 初始化加载
+loadArticles()
+
+const { refreshTrigger } = useRefresh()
+watch(refreshTrigger, () => {
+  loadArticles()
+  shuffleArticles()
+})
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -142,13 +191,13 @@ const iconMap: Record<string, any> = {
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
 
-const allArticles = recommendArticlesData.data.article_list
-const filteredArticles = processArticles(allArticles)
+const filteredArticles = computed(() => processArticles(allArticles.value))
 
-const shuffledArticles = ref<ArticleItem[]>([...filteredArticles])
+const shuffledArticles = ref<ArticleItem[]>([])
 
 const shuffleArticles = () => {
-  const array = [...filteredArticles]
+  const source = filteredArticles.value
+  const array = [...source]
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]]
@@ -156,13 +205,14 @@ const shuffleArticles = () => {
   shuffledArticles.value = array
 }
 
-const { refreshTrigger } = useRefresh()
-watch(refreshTrigger, () => {
-  shuffleArticles()
-})
+watch(filteredArticles, (newVal) => {
+  if (newVal.length > 0) {
+    shuffleArticles()
+  }
+}, { immediate: true })
 
 const hotArticles = computed(() => {
-  return [...filteredArticles]
+  return [...filteredArticles.value]
     .sort((a, b) => b.view_count - a.view_count)
     .slice(0, 5)
 })
@@ -170,7 +220,7 @@ const hotArticles = computed(() => {
 const hotTags = computed(() => {
   const tagCountMap = new Map<string, number>()
   
-  filteredArticles.forEach(article => {
+  filteredArticles.value.forEach(article => {
     article.tags.forEach(tagId => {
       tagCountMap.set(tagId, (tagCountMap.get(tagId) || 0) + 1)
     })
@@ -768,5 +818,61 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  color: var(--accent-primary);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.error-state p {
+  color: #ef4444;
+  margin: 0;
+}
+
+.retry-btn {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  background: var(--accent-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.retry-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 </style>
