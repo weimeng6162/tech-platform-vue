@@ -112,10 +112,9 @@
 <script setup lang="ts">
 import ArticleCardAI from '../components/ArticleCardAI.vue'
 import UserProfileAI from '../components/UserProfileAI.vue'
-import SecurityWarning from '../components/SecurityWarning.vue'
 import TestReport from '../components/TestReport.vue'
 import { recommendArticlesData, userProfileData } from '../data/mockData'
-import { processArticles, getSecurityStatus } from '../utils/articleFilter'
+import { processArticles } from '../utils/articleFilter'
 import type { ArticleItem } from '../types/api'
 
 // 使用假数据并过滤劣质文章

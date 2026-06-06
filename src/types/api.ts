@@ -22,8 +22,10 @@ export interface ArticleItem {
   category: string
   ai_summary: string // AI 生成的精华摘要
   tags: string[]
-  difficulty: '初级' | '中级' | '深度'
+  difficulty: '入门' | '初级' | '中级' | '进阶' | '深度'
   view_count: number
+  like_count?: number
+  collect_count?: number
   is_collected: boolean
 }
 
@@ -48,15 +50,19 @@ export interface CoreInterest {
 
 // 难度颜色映射
 export const difficultyColors = {
+  入门: '#95de64',
   初级: '#52c41a',
   中级: '#1890ff',
+  进阶: '#13c2c2',
   深度: '#722ed1',
 } as const
 
 // 难度图标映射
 export const difficultyIcons = {
+  入门: '🌰',
   初级: '🌱',
   中级: '⚡',
+  进阶: '🔧',
   深度: '🚀',
 } as const
 

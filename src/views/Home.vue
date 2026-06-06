@@ -5,8 +5,7 @@
       <aside class="left-sidebar">
         <div class="sidebar-card">
           <div class="sidebar-header">
-            <Hash :size="18" />
-            <h3>热门标签</h3>
+            <h3>🔥热门标签</h3>
           </div>
           <div class="tag-cloud">
             <span
@@ -74,8 +73,20 @@
             </button>
           </div>
 
+          <!-- 加载状态 -->
+          <div v-if="loading" class="loading-state">
+            <Loader2 :size="32" class="spin" />
+            <span>正在加载推荐文章...</span>
+          </div>
+
+          <!-- 错误状态 -->
+          <div v-else-if="error" class="error-state">
+            <p>{{ error }}</p>
+            <button class="retry-btn" @click="loadArticles">重新加载</button>
+          </div>
+
           <!-- 文章列表 -->
-          <div class="article-grid">
+          <div v-else class="article-grid">
             <ArticleCardAI
               v-for="article in currentArticles"
               :key="article.article_id"
@@ -90,8 +101,7 @@
       <aside class="right-sidebar">
         <div class="sidebar-card">
           <div class="sidebar-header">
-            <Flame :size="18" />
-            <h3>热门文章</h3>
+            <h3>🔥热门文章</h3>
           </div>
           <div class="hot-articles">
             <div 
@@ -118,19 +128,56 @@
 
 <script setup lang="ts">
 import { ref, computed, h, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Flame, Eye } from 'lucide-vue-next'
+import { useRouter } from 'vue-router'
+import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Eye, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
-import { recommendArticlesData, categories, techTags } from '../data/mockData'
+import { categories, techTags } from '../data/mockData'
 import { processArticles } from '../utils/articleFilter'
+import { formatRelativeTime } from '../utils/formatTime'
 import type { ArticleItem } from '../types/api'
 import { useRefresh } from '../composables/useRefresh'
+import { getRecommendArticles } from '../api/modules/article'
 
 const router = useRouter()
-const route = useRoute()
 const activeCategory = ref('all')
 const activeSection = ref<'featured' | 'recommend'>('featured')
 const activeTags = ref<string[]>([])
+
+// API状态
+const loading = ref(false)
+const error = ref<string | null>(null)
+const allArticles = ref<ArticleItem[]>([])
+
+// 从API加载推荐文章列表
+const loadArticles = async () => {
+  loading.value = true
+  error.value = null
+  try {
+    const articles = await getRecommendArticles()
+    // 规范化：确保 tags 是数组（Mock server 返回的是字符串，需转换为数组）
+    allArticles.value = articles.map(a => ({
+      ...a,
+      tags: typeof a.tags === 'string' 
+        ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
+        : a.tags
+    }))
+    console.log('[Home] 推荐文章加载成功，共', articles.length, '篇')
+  } catch (err: any) {
+    console.error('[Home] 加载推荐文章失败:', err)
+    error.value = err.message || '加载失败，请稍后重试'
+  } finally {
+    loading.value = false
+  }
+}
+
+// 初始化加载
+loadArticles()
+
+const { refreshTrigger } = useRefresh()
+watch(refreshTrigger, () => {
+  loadArticles()
+  shuffleArticles()
+})
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -142,13 +189,13 @@ const iconMap: Record<string, any> = {
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
 
-const allArticles = recommendArticlesData.data.article_list
-const filteredArticles = processArticles(allArticles)
+const filteredArticles = computed(() => processArticles(allArticles.value))
 
-const shuffledArticles = ref<ArticleItem[]>([...filteredArticles])
+const shuffledArticles = ref<ArticleItem[]>([])
 
 const shuffleArticles = () => {
-  const array = [...filteredArticles]
+  const source = filteredArticles.value
+  const array = [...source]
   for (let i = array.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]]
@@ -156,13 +203,14 @@ const shuffleArticles = () => {
   shuffledArticles.value = array
 }
 
-const { refreshTrigger } = useRefresh()
-watch(refreshTrigger, () => {
-  shuffleArticles()
-})
+watch(filteredArticles, (newVal) => {
+  if (newVal.length > 0) {
+    shuffleArticles()
+  }
+}, { immediate: true })
 
 const hotArticles = computed(() => {
-  return [...filteredArticles]
+  return [...filteredArticles.value]
     .sort((a, b) => b.view_count - a.view_count)
     .slice(0, 5)
 })
@@ -170,7 +218,7 @@ const hotArticles = computed(() => {
 const hotTags = computed(() => {
   const tagCountMap = new Map<string, number>()
   
-  filteredArticles.forEach(article => {
+  filteredArticles.value.forEach(article => {
     article.tags.forEach(tagId => {
       tagCountMap.set(tagId, (tagCountMap.get(tagId) || 0) + 1)
     })
@@ -180,7 +228,7 @@ const hotTags = computed(() => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([tagId]) => techTags.find(t => t.id === tagId))
-    .filter(Boolean)
+    .filter((t): t is NonNullable<typeof t> => !!t)
   
   return sortedTags
 })
@@ -191,28 +239,7 @@ const formatNumber = (num: number) => {
   return num.toString()
 }
 
-const formatDate = (dateStr: string) => {
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const seconds = Math.floor(diff / 1000)
-  const minutes = Math.floor(seconds / 60)
-  const hours = Math.floor(minutes / 60)
-  const days = Math.floor(hours / 24)
-  const weeks = Math.floor(days / 7)
-  const months = Math.floor(days / 30)
-  const years = Math.floor(days / 365)
-
-  if (seconds < 60) return '刚刚'
-  if (minutes < 60) return `${minutes}分钟前`
-  if (hours < 24) return `${hours}小时前`
-  if (days === 1) return '昨天'
-  if (days < 7) return `${days}天前`
-  if (weeks < 4) return `${weeks}周前`
-  if (months < 12) return `${months}个月前`
-  if (years >= 1) return `${years}年前`
-  return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })
-}
+const formatDate = formatRelativeTime
 
 const currentArticles = computed(() => {
   let articles = shuffledArticles.value
@@ -600,10 +627,6 @@ defineExpose({
   margin-bottom: var(--space-md);
 }
 
-.sidebar-header svg {
-  flex-shrink: 0;
-}
-
 .sidebar-header h3 {
   font-size: 0.95rem;
   font-weight: 600;
@@ -768,5 +791,61 @@ defineExpose({
   display: flex;
   align-items: center;
   gap: 2px;
+}
+
+/* 加载状态 */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+  color: var(--accent-primary);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.error-state p {
+  color: #ef4444;
+  margin: 0;
+}
+
+.retry-btn {
+  padding: var(--space-sm) var(--space-lg);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
+  background: var(--accent-primary);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.retry-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 </style>

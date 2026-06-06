@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Search, User, Home, FileText, Grid } from 'lucide-vue-next'
 import { useBrowsingHistory } from '../stores/browsingHistory'

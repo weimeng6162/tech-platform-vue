@@ -12,10 +12,6 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-
 // 页面切换前的准备
 const beforeEnter = () => {
   // 添加页面切换标记，用于优化渲染性能

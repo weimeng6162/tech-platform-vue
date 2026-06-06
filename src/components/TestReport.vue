@@ -124,7 +124,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ArticleItem } from '../types/api'
-import { isBlockedArticle, hasCommercialContent } from '../types/api'
+import { hasCommercialContent } from '../types/api'
 
 const props = defineProps<{
   allArticles: ArticleItem[]
