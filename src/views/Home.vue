@@ -138,6 +138,9 @@ import { processArticles } from '../utils/articleFilter'
 import type { ArticleItem } from '../types/api'
 import { useRefresh } from '../composables/useRefresh'
 import { getRecommendArticles } from '../api/modules/article'
+// TODO: 等AI算力节点搭好后取消注释
+// import { getRegistrationTime } from '../api/modules/user'
+// import { setRegisteredAt } from '../api/request'
 
 const router = useRouter()
 const activeCategory = ref('all')
@@ -155,10 +158,10 @@ const loadArticles = async () => {
   error.value = null
   try {
     const articles = await getRecommendArticles()
-    // 规范化：确保 tags 是数组（Mock server 返回的是字符串，需转换为数组）
+    // 规范化：确保 tags 是数组
     allArticles.value = articles.map(a => ({
       ...a,
-      tags: typeof a.tags === 'string' 
+      tags: typeof a.tags === 'string'
         ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
         : a.tags
     }))
@@ -171,8 +174,22 @@ const loadArticles = async () => {
   }
 }
 
-// 初始化加载
-loadArticles()
+// 初始化：先查注册时间，再加载文章
+// TODO: 等后端AI算力节点搭好后，取消注释 getRegistrationTime 调用
+const init = async () => {
+  // const token = localStorage.getItem('token')
+  // if (token) {
+  //   try {
+  //     const res = await getRegistrationTime()
+  //     setRegisteredAt(res.registered_at)
+  //     console.log('[Home] 用户注册时间:', res.registered_at)
+  //   } catch {
+  //     // 获取注册时间失败，视为新用户，不传 token
+  //   }
+  // }
+  loadArticles()
+}
+init()
 
 const { refreshTrigger } = useRefresh()
 watch(refreshTrigger, () => {

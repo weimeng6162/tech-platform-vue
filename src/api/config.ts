@@ -40,6 +40,19 @@ export const AUTH_ENDPOINTS = [
   '/api/user/collections'
 ];
 
+// 需要登录认证的接口（必须带 token）
+export const PRIVATE_ENDPOINTS = [
+  '/api/user/profile',
+  '/api/user/footprint',
+  '/api/user/collections',
+  '/api/user/action',
+  '/api/user/logout',
+  '/api/user/registration-time'
+];
+
+// 新用户免 token 天数（注册后 N 天内不传 token）
+export const NEW_USER_GRACE_DAYS = 1;
+
 // ========== 配置开关结束 ==========
 
 // API配置

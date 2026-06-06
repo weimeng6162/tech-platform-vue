@@ -4,8 +4,28 @@
  */
 
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
-import { apiConfig, USE_REAL_BACKEND_FOR_AUTH, REAL_BACKEND_URL, MOCK_SERVER_URL, AUTH_ENDPOINTS } from './config';
+import { apiConfig, USE_REAL_BACKEND_FOR_AUTH, REAL_BACKEND_URL, MOCK_SERVER_URL, PRIVATE_ENDPOINTS, NEW_USER_GRACE_DAYS } from './config';
 import router from '../router';
+
+// 缓存用户注册时间（毫秒时间戳），0 表示未知/新用户
+let cachedRegisteredAt = 0;
+try {
+  const stored = localStorage.getItem('registered_at');
+  if (stored) cachedRegisteredAt = parseInt(stored, 10);
+} catch { /* ignore */ }
+
+/** 判断当前用户是否为"新用户"（注册未超过配置天数） */
+export function isNewUser(): boolean {
+  if (cachedRegisteredAt === 0) return true; // 未知视为新用户
+  const daysSince = (Date.now() - cachedRegisteredAt) / 86400000;
+  return daysSince < NEW_USER_GRACE_DAYS;
+}
+
+/** 更新缓存的注册时间（供 getRegistrationTime 调用后使用） */
+export function setRegisteredAt(isoString: string) {
+  cachedRegisteredAt = new Date(isoString).getTime();
+  localStorage.setItem('registered_at', String(cachedRegisteredAt));
+}
 
 // 创建Axios实例
 const request: AxiosInstance = axios.create({
@@ -19,22 +39,24 @@ request.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // 智能路由：判断是否使用真实后端
     const url = config.url || '';
-    const isAuthEndpoint = AUTH_ENDPOINTS.some(endpoint => url.includes(endpoint));
-    
-    if (USE_REAL_BACKEND_FOR_AUTH && isAuthEndpoint) {
-      // 登录/注册接口使用真实后端
+    if (USE_REAL_BACKEND_FOR_AUTH) {
+      // 所有接口统一使用真实后端
       config.baseURL = REAL_BACKEND_URL;
-      console.log(`[API路由] 使用真实后端: ${REAL_BACKEND_URL}${url}`);
+      console.log(`[API路由] 真实后端: ${REAL_BACKEND_URL}${url}`);
     } else {
-      // 其他接口使用Mock服务器
+      // 使用Mock服务器
       config.baseURL = MOCK_SERVER_URL;
-      console.log(`[API路由] 使用Mock服务器: ${MOCK_SERVER_URL}${url}`);
+      console.log(`[API路由] Mock服务器: ${MOCK_SERVER_URL}${url}`);
     }
 
-    // 从localStorage读取token，无Bearer前缀则补上
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+    // 决定是否发送 token
+    const isPrivate = PRIVATE_ENDPOINTS.some(ep => url.includes(ep));
+    const shouldSendToken = isPrivate || !isNewUser();
+    if (shouldSendToken) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+      }
     }
 
     // 记录请求日志

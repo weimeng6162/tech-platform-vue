@@ -14,6 +14,14 @@ export function getUserProfile(): Promise<UserProfile> {
 }
 
 /**
+ * 获取用户注册时间（需要登录）
+ * @returns 注册时间字符串
+ */
+export function getRegistrationTime(): Promise<{ registered_at: string }> {
+  return get<{ registered_at: string }>('/api/user/registration-time');
+}
+
+/**
  * 登录请求参数
  */
 export interface LoginRequest {
