@@ -8,7 +8,6 @@ import type { UserProfile } from '../api/types'
 import { login as loginApi, logout as logoutApi } from '../api/modules/user'
 
 export const useUserStore = defineStore('user', () => {
-  // 状态
   const token = ref<string | null>(localStorage.getItem('token'))
   const userInfo = ref<UserProfile | null>(null)
   const isLoggedIn = computed(() => !!token.value)
@@ -18,30 +17,21 @@ export const useUserStore = defineStore('user', () => {
    */
   async function login(username: string, encryptedPassword: string) {
     try {
-      console.log('[登录] 发送请求:', { username, password: encryptedPassword })
-      
       const response = await loginApi({
         username,
         password: encryptedPassword,
         timestamp: Date.now()
       })
 
-      console.log('[登录] 响应数据:', response)
-      console.log('[登录] token:', response.token)
-
-      // 保存 token 和用户信息
       token.value = response.token
       userInfo.value = response.user
       localStorage.setItem('token', response.token)
 
-      console.log('[登录] token已保存:', localStorage.getItem('token'))
-
       return { success: true, message: '登录成功' }
     } catch (error: any) {
-      console.error('[登录] 错误:', error)
-      return { 
-        success: false, 
-        message: error.message || '登录失败，请重试' 
+      return {
+        success: false,
+        message: error.message || '登录失败，请重试'
       }
     }
   }
@@ -55,31 +45,21 @@ export const useUserStore = defineStore('user', () => {
     } catch (error) {
       console.error('登出接口调用失败:', error)
     } finally {
-      // 无论接口是否成功，都清除本地状态
       token.value = null
       userInfo.value = null
       localStorage.removeItem('token')
     }
   }
 
-  /**
-   * 设置用户信息
-   */
   function setUserInfo(info: UserProfile) {
     userInfo.value = info
   }
 
-  /**
-   * 设置token
-   */
   function setToken(newToken: string) {
     token.value = newToken
     localStorage.setItem('token', newToken)
   }
 
-  /**
-   * 清除用户信息
-   */
   function clearUserInfo() {
     token.value = null
     userInfo.value = null

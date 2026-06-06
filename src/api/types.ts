@@ -74,3 +74,110 @@ export interface UserProfile {
   avatar_url: string;
   ai_analysis: AIAnalysis;
 }
+
+// ========== 评论相关类型 ==========
+
+// 二级回复
+export interface CommentReply {
+  comment_id: string;
+  user_id: string;
+  username: string;
+  avatar_url: string;
+  reply_to_user_id: string;
+  reply_to_username: string;
+  content: string;
+  like_count: number;
+  is_liked: boolean;
+  created_at: string;
+}
+
+// 一级评论（含二级回复）
+export interface Comment {
+  comment_id: string;
+  user_id: string;
+  username: string;
+  avatar_url: string;
+  content: string;
+  like_count: number;
+  is_liked: boolean;
+  created_at: string;
+  replies?: CommentReply[];
+}
+
+// 评论列表响应
+export interface CommentListResponse {
+  total: number;
+  page: number;
+  size: number;
+  comments: Comment[];
+}
+
+// 发表评论请求
+export interface CreateCommentRequest {
+  article_id: string;
+  content: string;
+  parent_id?: string;        // 默认为 "0"，代表一级评论
+  reply_to_user_id?: string; // 回复二级评论时需要
+}
+
+// 评论互动请求
+export interface CommentActionRequest {
+  comment_id: string;
+  action_type: 1 | 2; // 1: 点赞, 2: 取消点赞
+}
+
+// ========== 互动动作类型 ==========
+
+// 文章互动请求
+export interface ArticleActionRequest {
+  article_id: string;
+  action_type: 1 | 2; // 1: 点赞, 2: 收藏
+}
+
+// ========== 用户主页相关类型 ==========
+
+export interface UserProfileResponse {
+  user_id: string;
+  nickname: string;
+  avatar_url: string;
+  is_configured: boolean;
+  ai_analysis: AIAnalysis;
+  technical_level?: string;
+}
+
+export interface HistoryItem {
+  article_id: string;
+  title: string;
+  author: string;
+  publish_time: string;
+  category: string;
+  tags: string[];
+  difficulty: Difficulty;
+  view_count: number;
+  browsed_at: string;
+}
+
+export interface CollectionItem {
+  article_id: string;
+  title: string;
+  author: string;
+  publish_time: string;
+  category: string;
+  tags: string[];
+  difficulty: Difficulty;
+  collected_at: string;
+}
+
+export interface FootprintResponse {
+  total: number;
+  page: number;
+  size: number;
+  items: HistoryItem[];
+}
+
+export interface CollectionsResponse {
+  total: number;
+  page: number;
+  size: number;
+  items: CollectionItem[];
+}

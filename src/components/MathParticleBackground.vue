@@ -330,7 +330,6 @@ onMounted(() => {
     }
     
     window.addEventListener('resize', handleResize)
-    window.addEventListener('mousemove', handleMouseMove)
     
     // 开始动画
     animate(0)
@@ -340,7 +339,6 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(animationId)
   window.removeEventListener('resize', handleResize)
-  window.removeEventListener('mousemove', handleMouseMove)
 })
 </script>
 

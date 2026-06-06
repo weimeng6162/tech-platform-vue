@@ -32,15 +32,33 @@ export const AUTH_ENDPOINTS = [
   '/api/user/register',
   '/api/user/logout',
   '/api/user/forgot-password',
-  '/api/user/reset-password'
+  '/api/user/reset-password',
+  '/api/user/check-username',
+  '/api/user/check-email',
+  '/api/user/profile',
+  '/api/user/footprint',
+  '/api/user/collections'
 ];
+
+// 需要登录认证的接口（必须带 token）
+export const PRIVATE_ENDPOINTS = [
+  '/api/user/profile',
+  '/api/user/footprint',
+  '/api/user/collections',
+  '/api/user/action',
+  '/api/user/logout',
+  '/api/user/registration-time'
+];
+
+// 新用户免 token 天数（注册后 N 天内不传 token）
+export const NEW_USER_GRACE_DAYS = 1;
 
 // ========== 配置开关结束 ==========
 
 // API配置
 export const apiConfig: ApiConfig = {
   // 默认使用mock服务器
-  baseURL: MOCK_SERVER_URL,
+  baseURL:'',
   // 请求超时时间：10秒
   timeout: 10000,
   // 公共请求头

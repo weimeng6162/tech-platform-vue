@@ -45,6 +45,9 @@
       <div v-html="renderedContent" class="markdown-body"></div>
     </article>
 
+    <!-- 文章脉络图 -->
+    <ArticleOutline article-selector=".content" />
+
     <!-- 文章底部 -->
     <footer class="footer">
       <div class="actions">
@@ -66,6 +69,11 @@
         </button>
       </div>
     </footer>
+
+    <!-- 评论区 -->
+    <div class="comments-placeholder">
+      <p>评论区功能即将上线</p>
+    </div>
   </div>
 </template>
 
@@ -73,9 +81,11 @@
 import { computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ArrowLeft, Eye, Clock, Heart, MessageCircle, Bookmark, Share2 } from 'lucide-vue-next'
+import ArticleOutline from '../components/ArticleOutline.vue'
 import { techTags, articleContent } from '../data/mockData'
 import { useBrowsingHistory } from '../stores/browsingHistory'
 import type { ArticleItem } from '../types/api'
+
 
 const router = useRouter()
 const route = useRoute()
