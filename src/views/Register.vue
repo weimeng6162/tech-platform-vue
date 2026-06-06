@@ -290,7 +290,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onUnmounted } from 'vue'
+import { ref, reactive, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   Eye, EyeOff, Lock, User, ArrowRight, Loader2, 
@@ -547,7 +547,7 @@ const handleLogin = () => {
 }
 
 // 粒子样式生成
-const getParticleStyle = (index: number) => {
+const getParticleStyle = (_index: number) => {
   const size = Math.random() * 4 + 2
   const x = Math.random() * 100
   const y = Math.random() * 100

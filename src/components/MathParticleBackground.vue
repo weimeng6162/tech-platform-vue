@@ -8,8 +8,6 @@ import { ref, onMounted, onUnmounted, nextTick } from 'vue'
 const canvasRef = ref<HTMLCanvasElement>()
 let animationId: number
 let particles: Particle[] = []
-let mouseX = 0
-let mouseY = 0
 
 interface Particle {
   x: number
@@ -305,11 +303,6 @@ const handleResize = () => {
   initParticles(width, height)
 }
 
-const handleMouseMove = (e: MouseEvent) => {
-  mouseX = e.clientX
-  mouseY = e.clientY
-}
-
 onMounted(() => {
   nextTick(() => {
     const canvas = canvasRef.value
@@ -333,7 +326,6 @@ onMounted(() => {
     }
     
     window.addEventListener('resize', handleResize)
-    window.addEventListener('mousemove', handleMouseMove)
     
     // 开始动画
     animate(0)
@@ -343,7 +335,6 @@ onMounted(() => {
 onUnmounted(() => {
   cancelAnimationFrame(animationId)
   window.removeEventListener('resize', handleResize)
-  window.removeEventListener('mousemove', handleMouseMove)
 })
 </script>
 

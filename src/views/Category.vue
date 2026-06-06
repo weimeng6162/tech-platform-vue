@@ -182,10 +182,10 @@ const currentArticles = computed(() => {
       articles.sort((a, b) => b.view_count - a.view_count)
       break
     case 'likes':
-      articles.sort((a, b) => (b.like_count || 0) - (a.like_count || 0))
+      articles.sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
       break
     case 'collects':
-      articles.sort((a, b) => (b.collect_count || 0) - (a.collect_count || 0))
+      articles.sort((a, b) => (b.view_count || 0) - (a.view_count || 0))
       break
     case 'latest':
     default:

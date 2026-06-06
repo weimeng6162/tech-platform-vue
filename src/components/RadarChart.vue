@@ -1,5 +1,5 @@
 <template>
-  <div ref="containerRef" class="radar-container">
+  <div class="radar-container">
     <VChart
       v-if="option"
       :option="option"
@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import VChart from 'vue-echarts'
 import { use } from 'echarts/core'
 import { RadarChart as ERadar } from 'echarts/charts'
@@ -28,8 +28,6 @@ interface RadarDataItem {
 const props = defineProps<{
   data: RadarDataItem[]
 }>()
-
-const containerRef = ref<HTMLElement>()
 
 const option = computed(() => {
   if (!props.data.length) return null

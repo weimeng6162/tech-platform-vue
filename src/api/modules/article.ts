@@ -3,7 +3,7 @@
  */
 
 import { get } from '../request';
-import type { ArticleItem, ArticleDetailData, RecommendArticlesData } from '../types';
+import type { ArticleItem, ArticleDetailData, RecommendArticlesData } from '../../types/api';
 
 /**
  * 获取推荐文章列表

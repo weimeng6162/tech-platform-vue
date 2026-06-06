@@ -81,11 +81,12 @@ interface Tab {
   key: TabKey
   label: string
   icon: typeof Footprints
+  count: number
 }
 
 const tabs: Tab[] = [
-  { key: 'footprint', label: '足迹', icon: Footprints },
-  { key: 'collections', label: '收藏', icon: Bookmark },
+  { key: 'footprint', label: '足迹', icon: Footprints, count: 0 },
+  { key: 'collections', label: '收藏', icon: Bookmark, count: 0 },
 ]
 
 type ListItem = (HistoryItem | CollectionItem) & { article_id: string; title: string; author: string; publish_time: string; category: string; tags: string[]; view_count: number }
@@ -114,7 +115,6 @@ function formatTime(dateStr: string): string {
 
 async function fetchData(tab: TabKey, pageNum: number, append: boolean) {
   const fetcher = tab === 'footprint' ? getFootprint : getCollections
-  const state = tab === 'footprint' ? loading : loading
   if (append) {
     loadingMore.value = true
   } else {

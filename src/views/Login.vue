@@ -626,7 +626,7 @@ const handleRegister = () => {
 }
 
 // 粒子样式生成
-const getParticleStyle = (index: number) => {
+const getParticleStyle = (_index: number) => {
   const size = Math.random() * 4 + 2
   const x = Math.random() * 100
   const y = Math.random() * 100

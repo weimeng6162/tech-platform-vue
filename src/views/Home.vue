@@ -130,7 +130,7 @@
 
 <script setup lang="ts">
 import { ref, computed, h, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Hash, Flame, Eye, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { categories, techTags } from '../data/mockData'
@@ -140,7 +140,6 @@ import { useRefresh } from '../composables/useRefresh'
 import { getRecommendArticles } from '../api/modules/article'
 
 const router = useRouter()
-const route = useRoute()
 const activeCategory = ref('all')
 const activeSection = ref<'featured' | 'recommend'>('featured')
 const activeTags = ref<string[]>([])
@@ -230,7 +229,7 @@ const hotTags = computed(() => {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([tagId]) => techTags.find(t => t.id === tagId))
-    .filter(Boolean)
+    .filter((t): t is NonNullable<typeof t> => t != null)
   
   return sortedTags
 })

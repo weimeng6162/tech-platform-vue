@@ -11,18 +11,21 @@ const props = defineProps<{
   content: string
 }>()
 
-// 配置 marked
-marked.setOptions({
-  highlight: function (code, lang) {
-    if (lang && hljs.getLanguage(lang)) {
-      try {
-        return hljs.highlight(code, { language: lang }).value
-      } catch (err) {
-        console.error(err)
+// 配置 marked 代码高亮
+marked.use({
+  renderer: {
+    code({ text, lang }: { text: string; lang?: string }): string {
+      const validLang = lang && hljs.getLanguage(lang)
+      if (validLang) {
+        try {
+          return `<pre><code class="hljs language-${lang}">${hljs.highlight(text, { language: lang! }).value}</code></pre>`
+        } catch { /* fall through */ }
       }
+      return `<pre><code class="hljs">${hljs.highlightAuto(text).value}</code></pre>`
     }
-    return hljs.highlightAuto(code).value
-  },
+  }
+})
+marked.setOptions({
   breaks: true,
   gfm: true,
 })
