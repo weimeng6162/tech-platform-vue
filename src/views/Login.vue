@@ -107,20 +107,6 @@
         <p>登录以继续探索技术世界</p>
       </div>
 
-      <!-- 一键填充测试账号 -->
-      <div class="demo-account-hint">
-        <button type="button" class="demo-fill-btn" @click="fillDemoAccount">
-          <span class="demo-icon">🎯</span>
-          <span>一键填充测试账号</span>
-        </button>
-        <div class="mock-login-toggle">
-          <label class="toggle-label">
-            <input type="checkbox" v-model="useMockLogin" />
-            <span class="toggle-text">🔧 模拟登录模式（测试用）</span>
-          </label>
-        </div>
-      </div>
-
       <!-- 登录表单 -->
       <form class="login-form" @submit.prevent="handleLogin">
         <!-- 账号输入 -->
@@ -136,7 +122,8 @@
               type="text"
               placeholder="请输入账号"
               autocomplete="username"
-              @focus="focusedField = 'account'"
+              @focus="focusedField = 'account'; errors.account = ''"
+              @input="errors.account = ''"
               @blur="handleBlur('account')"
             />
             <div class="input-highlight"></div>
@@ -162,7 +149,8 @@
               :type="showPassword ? 'text' : 'password'"
               placeholder="请输入密码"
               autocomplete="current-password"
-              @focus="focusedField = 'password'"
+              @focus="focusedField = 'password'; errors.password = ''"
+              @input="errors.password = ''"
               @blur="handleBlur('password')"
             />
             <button
@@ -372,7 +360,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { 
   Eye, EyeOff, Lock, User, ArrowRight, Loader2, 
   AlertCircle, Github, Mail, X, KeyRound, Send, CheckCircle
@@ -381,6 +369,7 @@ import { useUserStore } from '../stores/user'
 import { aesEncrypt } from '../utils/aes'
 
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 
 // AI词条数据 - 外圈（编程语言）
@@ -421,7 +410,6 @@ const focusedField = ref<string | null>(null)
 const isShaking = ref(false)
 const rememberMe = ref(false)
 const showTerminal = ref(false)
-const useMockLogin = ref(false) // 模拟登录开关
 
 // 找回密码相关
 const showForgotPassword = ref(false)
@@ -437,14 +425,6 @@ const forgotSuccess = ref(false)
 // 切换密码显示
 const togglePassword = () => {
   showPassword.value = !showPassword.value
-}
-
-// 一键填充测试账号
-const fillDemoAccount = () => {
-  form.account = 'demo@techflow.com'
-  form.password = 'Demo123456'
-  errors.account = ''
-  errors.password = ''
 }
 
 // 监听 Ctrl+K 快捷键
@@ -553,29 +533,21 @@ const handleLogin = async () => {
   isSubmitting.value = true
 
   try {
-    // 模拟登录模式
-    if (useMockLogin.value) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      localStorage.setItem('token', 'mock-token-' + Date.now())
-      router.push('/')
-      return
-    }
-
     const encryptedPassword = aesEncrypt(form.password)
     
     // 调用登录接口
     const result = await userStore.login(form.account, encryptedPassword)
     
     if (result.success) {
-      // 登录成功，跳转到首页
-      router.push('/')
+      // 登录成功，跳转到 redirect 页面或首页
+      const redirect = route.query.redirect as string | undefined
+      router.push(redirect || '/')
     } else {
       // 登录失败，显示错误
       errors.password = result.message
       shake()
     }
   } catch (error: any) {
-    console.error('登录失败:', error)
     errors.password = error.message || '登录失败，请重试'
     shake()
   } finally {
@@ -1742,60 +1714,6 @@ onMounted(() => {
 .modal-fade-enter-active .modal-card,
 .modal-fade-leave-active .modal-card {
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-/* 一键填充测试账号 */
-.demo-account-hint {
-  margin-bottom: 1.5rem;
-}
-
-.demo-fill-btn {
-  width: 100%;
-  padding: 0.75rem 1rem;
-  background: rgba(99, 102, 241, 0.1);
-  border: 1px dashed rgba(129, 140, 248, 0.3);
-  border-radius: 10px;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.demo-fill-btn:hover {
-  background: rgba(99, 102, 241, 0.2);
-  border-color: rgba(129, 140, 248, 0.5);
-  color: #818cf8;
-}
-
-.demo-icon {
-  font-size: 1rem;
-}
-
-.mock-login-toggle {
-  margin-top: 0.75rem;
-}
-
-.toggle-label {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-size: 0.8rem;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.toggle-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.toggle-text {
-  user-select: none;
 }
 
 /* 记住我 */

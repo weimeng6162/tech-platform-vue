@@ -32,10 +32,10 @@ request.interceptors.request.use(
       console.log(`[API路由] 使用Mock服务器: ${MOCK_SERVER_URL}${url}`);
     }
 
-    // 从localStorage读取token
+    // 从localStorage读取token，无Bearer前缀则补上
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
     }
 
     // 记录请求日志
@@ -56,23 +56,23 @@ request.interceptors.response.use(
 
     console.log(`[API Response] ${response.config.url}`, data);
 
-    // 兼容真实后端直接返回数据的格式（如 {token: "Bearer xxx"}）
-    if (data.token || data.user_id || data.error) {
-      // 真实后端格式
-      if (data.error) {
-        handleError(400, data.error);
-        return Promise.reject(new Error(data.error));
-      }
-      return data;
+    // 有 error 字段 → 统一视为错误
+    if (data.error) {
+      handleError(400, data.error);
+      return Promise.reject(new Error(data.error));
     }
 
-    // Mock服务器格式 {code: 200, data: {...}}
-    if (data.code === 200) {
-      return data.data;
-    } else {
+    // Mock 格式 { code: 200, data: {...} }，code 为数字才走这条
+    if (typeof data.code === 'number') {
+      if (data.code === 200) {
+        return data.data;
+      }
       handleError(data.code, data.msg);
       return Promise.reject(new Error(data.msg));
     }
+
+    // 其他格式（真实后端简单返回如 {exists: false}），直接透传
+    return data;
   },
   (error) => {
     // 网络错误、超时等
@@ -80,6 +80,10 @@ request.interceptors.response.use(
       // 服务器返回了响应，但状态码不是2xx
       const status = error.response.status;
       const message = error.response.data?.msg || error.message;
+      console.error('[API Error Detail] 状态码:', status);
+      console.error('[API Error Detail] 响应体:', JSON.stringify(error.response.data, null, 2));
+      console.error('[API Error Detail] 请求URL:', error.config?.url);
+      console.error('[API Error Detail] 请求方法:', error.config?.method?.toUpperCase());
       handleError(status, message);
     } else if (error.request) {
       // 请求已发出，但没有收到响应

@@ -121,7 +121,8 @@
               v-model="form.username"
               type="text"
               placeholder="请输入用户名"
-              @focus="focusedField = 'username'"
+              @focus="focusedField = 'username'; clearError('username')"
+              @input="clearError('username')"
               @blur="handleBlur('username')"
             />
             <div class="input-highlight"></div>
@@ -146,7 +147,8 @@
               v-model="form.email"
               type="email"
               placeholder="请输入邮箱地址"
-              @focus="focusedField = 'email'"
+              @focus="focusedField = 'email'; clearError('email')"
+              @input="clearError('email')"
               @blur="handleBlur('email')"
             />
             <div class="input-highlight"></div>
@@ -171,7 +173,8 @@
               v-model="form.password"
               :type="showPassword ? 'text' : 'password'"
               placeholder="请输入密码"
-              @focus="focusedField = 'password'"
+              @focus="focusedField = 'password'; clearError('password')"
+              @input="clearError('password')"
               @blur="handleBlur('password')"
             />
             <button
@@ -193,16 +196,17 @@
               {{ errors.password }}
             </span>
           </transition>
-          <!-- 密码强度提示 -->
-          <div class="password-strength" v-if="form.password">
-            <div class="strength-bar">
-              <div 
-                class="strength-fill" 
-                :style="{ width: passwordStrength.percentage + '%' }"
-                :class="passwordStrength.level"
-              ></div>
+          <!-- 密码规则逐行展示 -->
+          <div class="password-rules" v-if="form.password">
+            <div
+              v-for="rule in passwordRules"
+              :key="rule.label"
+              class="rule-line"
+              :class="{ pass: rule.pass }"
+            >
+              <span class="rule-icon">{{ rule.pass ? '✓' : '·' }}</span>
+              <span class="rule-label">{{ rule.label }}</span>
             </div>
-            <span class="strength-text" :class="passwordStrength.level">{{ passwordStrength.text }}</span>
           </div>
         </div>
 
@@ -218,7 +222,8 @@
               v-model="form.confirmPassword"
               :type="showConfirmPassword ? 'text' : 'password'"
               placeholder="请再次输入密码"
-              @focus="focusedField = 'confirmPassword'"
+              @focus="focusedField = 'confirmPassword'; clearError('confirmPassword')"
+              @input="clearError('confirmPassword')"
               @blur="handleBlur('confirmPassword')"
             />
             <button
@@ -285,13 +290,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { 
   Eye, EyeOff, Lock, User, ArrowRight, Loader2, 
   AlertCircle, Mail
 } from 'lucide-vue-next'
-import { register } from '../api/modules/user'
+import { register, checkUsername, checkEmail } from '../api/modules/user'
 import { aesEncrypt } from '../utils/aes'
 import { useUserStore } from '../stores/user'
 
@@ -339,28 +344,62 @@ const isSubmitting = ref(false)
 const focusedField = ref<string | null>(null)
 const isShaking = ref(false)
 
-// 密码强度计算
-const passwordStrength = computed(() => {
-  const password = form.password
-  let score = 0
-  
-  if (password.length >= 8) score += 20
-  if (password.length >= 12) score += 10
-  if (/[a-z]/.test(password)) score += 15
-  if (/[A-Z]/.test(password)) score += 15
-  if (/[0-9]/.test(password)) score += 20
-  if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20
-  
-  if (score < 40) {
-    return { percentage: score, level: 'weak', text: '弱' }
-  } else if (score < 70) {
-    return { percentage: score, level: 'medium', text: '中等' }
-  } else {
-    return { percentage: score, level: 'strong', text: '强' }
-  }
+// 密码五条规则逐行校验
+const passwordRules = computed(() => [
+  { label: '至少6个字符', pass: form.password.length >= 6 },
+  { label: '包含大写字母', pass: /[A-Z]/.test(form.password) },
+  { label: '包含小写字母', pass: /[a-z]/.test(form.password) },
+  { label: '包含数字', pass: /[0-9]/.test(form.password) },
+  { label: '包含特殊符号（如 !@#$%^&*）', pass: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password) },
+])
+
+const isPasswordValid = computed(() => passwordRules.value.every(r => r.pass))
+
+// 远程唯一性校验（防抖 500ms）
+let usernameTimer: ReturnType<typeof setTimeout> | null = null
+let emailTimer: ReturnType<typeof setTimeout> | null = null
+
+function checkUsernameDebounced() {
+  if (usernameTimer) clearTimeout(usernameTimer)
+  if (!form.username.trim() || form.username.trim().length < 3) return
+  usernameTimer = setTimeout(async () => {
+    try {
+      const res = await checkUsername(form.username.trim())
+      if (res.exists) {
+        errors.username = '用户名已存在'
+      }
+    } catch { /* 静默 */ }
+  }, 500)
+}
+
+function checkEmailDebounced() {
+  if (emailTimer) clearTimeout(emailTimer)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(form.email)) return
+  emailTimer = setTimeout(async () => {
+    try {
+      const res = await checkEmail(form.email.trim())
+      if (res.exists) {
+        errors.email = '邮箱已注册'
+      }
+    } catch { /* 静默 */ }
+  }, 500)
+}
+
+onUnmounted(() => {
+  if (usernameTimer) clearTimeout(usernameTimer)
+  if (emailTimer) clearTimeout(emailTimer)
 })
 
-// 验证用户名
+// 清除错误
+function clearError(field: string) {
+  if (field === 'username') errors.username = ''
+  if (field === 'email') errors.email = ''
+  if (field === 'password') errors.password = ''
+  if (field === 'confirmPassword') errors.confirmPassword = ''
+}
+
+// 验证用户名（本地规则）
 const validateUsername = (): boolean => {
   if (!form.username.trim()) {
     errors.username = '用户名不能为空'
@@ -397,50 +436,20 @@ const validateEmail = (): boolean => {
   return true
 }
 
-// 验证密码
+// 验证密码（规则化）
 const validatePassword = (): boolean => {
   if (!form.password) {
     errors.password = '密码不能为空'
     return false
   }
-  
-  if (form.password.length < 6) {
-    errors.password = '密码长度至少为6个字符'
-    return false
-  }
-  
-  if (!/[A-Z]/.test(form.password)) {
-    errors.password = '密码必须包含大写字母'
-    return false
-  }
-  
-  if (!/[a-z]/.test(form.password)) {
-    errors.password = '密码必须包含小写字母'
-    return false
-  }
-  
-  if (!/[0-9]/.test(form.password)) {
-    errors.password = '密码必须包含数字'
-    return false
-  }
-  
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password)) {
-    errors.password = '密码必须包含特殊符号（如 !@#$%^&*）'
-    return false
-  }
-  
   errors.password = ''
-  return true
+  return isPasswordValid.value
 }
 
-// 验证确认密码
+// 验证确认密码（仅在有输入且不匹配时提示）
 const validateConfirmPassword = (): boolean => {
-  if (!form.confirmPassword) {
-    errors.confirmPassword = '请确认密码'
-    return false
-  }
-  if (form.password !== form.confirmPassword) {
-    errors.confirmPassword = '两次输入的密码不一致'
+  if (form.confirmPassword && form.password !== form.confirmPassword) {
+    errors.confirmPassword = '两次密码不一致'
     return false
   }
   errors.confirmPassword = ''
@@ -452,10 +461,10 @@ const handleBlur = (field: string) => {
   focusedField.value = null
   switch (field) {
     case 'username':
-      validateUsername()
+      if (validateUsername()) checkUsernameDebounced()
       break
     case 'email':
-      validateEmail()
+      if (validateEmail()) checkEmailDebounced()
       break
     case 'password':
       validatePassword()
@@ -1030,8 +1039,7 @@ const getParticleStyle = (index: number) => {
 }
 
 .form-group.has-error .input-wrapper input {
-  border-color: #ef4444;
-  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+  /* 仅保留文字提示，不设红色边框 */
 }
 
 .input-highlight {
@@ -1093,56 +1101,35 @@ const getParticleStyle = (index: number) => {
   transform: translateY(-5px);
 }
 
-/* 密码强度指示器 */
-.password-strength {
+/* 密码规则逐行展示 */
+.password-rules {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rule-line {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 0.5rem;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  transition: color 0.2s ease;
 }
 
-.strength-bar {
+.rule-line.pass {
+  color: #22c55e;
+}
+
+.rule-icon {
+  width: 14px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.rule-label {
   flex: 1;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.strength-fill {
-  height: 100%;
-  transition: all 0.3s;
-  border-radius: 2px;
-}
-
-.strength-fill.weak {
-  background: #ef4444;
-}
-
-.strength-fill.medium {
-  background: #f59e0b;
-}
-
-.strength-fill.strong {
-  background: #10b981;
-}
-
-.strength-text {
-  font-size: 0.85rem;
-  font-weight: 500;
-  min-width: 40px;
-}
-
-.strength-text.weak {
-  color: #ef4444;
-}
-
-.strength-text.medium {
-  color: #f59e0b;
-}
-
-.strength-text.strong {
-  color: #10b981;
 }
 
 /* 注册按钮 */

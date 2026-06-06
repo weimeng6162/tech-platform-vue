@@ -1,6 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
+const WHITELIST = ['/login', '/register']
+
+function isValidToken(token: string): boolean {
+  return token.startsWith('eyJ') || token.length > 20
+}
+
+function getAuthState(): boolean {
+  const token = localStorage.getItem('token')
+  if (!token) return false
+  if (token.length < 10) {
+    localStorage.removeItem('token')
+    return false
+  }
+  return isValidToken(token)
+}
+
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
@@ -67,6 +83,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/Category.vue'),
         meta: { transition: 'slide-fade' }
       },
+      {
+        path: 'user/profile',
+        name: 'UserProfile',
+        component: () => import('../views/UserProfile.vue'),
+        meta: { transition: 'slide-fade' }
+      },
     ],
   },
 ]
@@ -77,6 +99,25 @@ const router = createRouter({
   scrollBehavior() {
     return { top: 0, left: 0 }
   },
+})
+
+router.beforeEach((to, _from, next) => {
+  const isAuthenticated = getAuthState()
+
+  if (isAuthenticated) {
+    if (to.path === '/login' || to.path === '/register') {
+      next({ path: '/' })
+      return
+    }
+    next()
+    return
+  }
+
+  if (WHITELIST.includes(to.path)) {
+    next()
+  } else {
+    next({ path: '/login', query: { redirect: to.fullPath } })
+  }
 })
 
 export default router

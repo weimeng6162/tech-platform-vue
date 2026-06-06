@@ -133,3 +133,51 @@ export interface ArticleActionRequest {
   article_id: string;
   action_type: 1 | 2; // 1: 点赞, 2: 收藏
 }
+
+// ========== 用户主页相关类型 ==========
+
+export interface UserProfileResponse {
+  user_id: string;
+  nickname: string;
+  avatar_url: string;
+  is_configured: boolean;
+  ai_analysis: AIAnalysis;
+  technical_level?: string;
+}
+
+export interface HistoryItem {
+  article_id: string;
+  title: string;
+  author: string;
+  publish_time: string;
+  category: string;
+  tags: string[];
+  difficulty: Difficulty;
+  view_count: number;
+  browsed_at: string;
+}
+
+export interface CollectionItem {
+  article_id: string;
+  title: string;
+  author: string;
+  publish_time: string;
+  category: string;
+  tags: string[];
+  difficulty: Difficulty;
+  collected_at: string;
+}
+
+export interface FootprintResponse {
+  total: number;
+  page: number;
+  size: number;
+  items: HistoryItem[];
+}
+
+export interface CollectionsResponse {
+  total: number;
+  page: number;
+  size: number;
+  items: CollectionItem[];
+}

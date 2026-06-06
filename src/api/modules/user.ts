@@ -3,7 +3,7 @@
  */
 
 import { get, post } from '../request';
-import type { UserProfile, ArticleActionRequest } from '../types';
+import type { UserProfile, ArticleActionRequest, FootprintResponse, CollectionsResponse } from '../types';
 
 /**
  * 获取用户侧写信息
@@ -67,10 +67,46 @@ export function register(data: RegisterRequest): Promise<RegisterResponse> {
 }
 
 /**
+ * 用户名唯一性校验
+ * @param username 用户名
+ * @returns 是否存在
+ */
+export function checkUsername(username: string): Promise<{ exists: boolean; message?: string }> {
+  return get<{ exists: boolean; message?: string }>(`/api/user/check-username?username=${encodeURIComponent(username)}`);
+}
+
+/**
+ * 邮箱唯一性校验
+ * @param email 邮箱
+ * @returns 是否存在
+ */
+export function checkEmail(email: string): Promise<{ exists: boolean; message?: string }> {
+  return get<{ exists: boolean; message?: string }>(`/api/user/check-email?email=${encodeURIComponent(email)}`);
+}
+
+/**
  * 用户登出
  */
 export function logout(): Promise<void> {
   return post<void>('/api/user/logout');
+}
+
+/**
+ * 获取用户足迹（浏览历史）
+ */
+export function getFootprint(page?: number, size?: number): Promise<FootprintResponse> {
+  return get<FootprintResponse>(
+    `/api/user/footprint?page=${page ?? 1}&size=${size ?? 10}`
+  );
+}
+
+/**
+ * 获取用户收藏列表
+ */
+export function getCollections(page?: number, size?: number): Promise<CollectionsResponse> {
+  return get<CollectionsResponse>(
+    `/api/user/collections?page=${page ?? 1}&size=${size ?? 10}`
+  );
 }
 
 /**

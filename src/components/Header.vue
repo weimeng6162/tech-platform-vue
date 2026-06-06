@@ -63,9 +63,24 @@
         </div>
 
         <div class="actions">
-          <button class="avatar-btn">
-            <User :size="18" />
-          </button>
+          <div class="avatar-dropdown" ref="dropdownRef">
+            <button class="avatar-btn" @click="toggleMenu">
+              <User :size="18" />
+            </button>
+            <transition name="menu-fade">
+              <div v-if="showMenu" class="dropdown-menu">
+                <button class="menu-item" @click="goProfile">
+                  <User :size="15" />
+                  <span>个人主页</span>
+                </button>
+                <div class="menu-divider" />
+                <button class="menu-item danger" @click="handleLogout">
+                  <LogOut :size="15" />
+                  <span>退出登录</span>
+                </button>
+              </div>
+            </transition>
+          </div>
         </div>
       </div>
     </div>
@@ -76,17 +91,50 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search, User, Home, FileText, Grid } from 'lucide-vue-next'
+import { Search, User, Home, FileText, Grid, LogOut } from 'lucide-vue-next'
 import { useBrowsingHistory } from '../stores/browsingHistory'
 import { getRecentArticle } from '../stores/recentArticles'
+import { useUserStore } from '../stores/user'
 import SearchModal from './SearchModal.vue'
 
 const router = useRouter()
 const route = useRoute()
 const { browsingHistory } = useBrowsingHistory()
+const userStore = useUserStore()
 const showSearch = ref(false)
+const showMenu = ref(false)
+const dropdownRef = ref<HTMLElement>()
+
+function toggleMenu() {
+  showMenu.value = !showMenu.value
+}
+
+function goProfile() {
+  showMenu.value = false
+  router.push('/user/profile')
+}
+
+async function handleLogout() {
+  showMenu.value = false
+  await userStore.logout()
+  router.push('/login')
+}
+
+function onClickOutside(e: MouseEvent) {
+  if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) {
+    showMenu.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', onClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside)
+})
 
 // 判断当前是否是指定文章页面
 const isCurrentArticle = (articleId: string) => {
@@ -456,5 +504,70 @@ const handleArticleClick = () => {
 .avatar-btn:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+}
+
+/* 头像下拉菜单 */
+.avatar-dropdown {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 150px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  padding: 6px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 200;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: 9px var(--space-md);
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+  background: var(--bg-tertiary);
+}
+
+.menu-item.danger {
+  color: #f87171;
+}
+
+.menu-item.danger:hover {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.menu-divider {
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--border-primary);
+}
+
+/* 下拉动画 */
+.menu-fade-enter-active,
+.menu-fade-leave-active {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.menu-fade-enter-from,
+.menu-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
