@@ -1,7 +1,11 @@
-feat: homepage API integration and difficulty tags fix
+feat: 完成冷启动(Onboarding)接口实现
 
-- Home.vue: static mock -> getRecommendArticles() API with loading/error/retry states
-- articleFilter.ts integration for filtering commercial tags
-- Fix tags type conversion (string to array)
-- Fix computed refs missing .value
-- New difficulty tags: entry-level and advanced
+- 新增 POST /api/user/cold_start API 调用
+- 重构 InterestSetup.vue 为 5 步向导（欢迎→身份→领域→标签→完成）
+- 添加身份选择（identity_tag）、宏观领域（selected_domains）、微观标签（selected_tags）选择
+- 步骤校验：身份必选、领域至少1个、标签至少3个
+- 步骤3→4 时自动调用 submitColdStart() API
+- 新增 mock-server.cjs 中冷启动端点
+- ArticleDetail.vue 已集成 getArticleDetail() API
+- 修复 BackToTop.vue 按钮位置（0.25rem 靠近边缘）
+- 修复 MainLayout.vue 首页按钮位置与分类页一致
