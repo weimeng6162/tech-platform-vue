@@ -1,22 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
 
-const WHITELIST = ['/login', '/register']
-
-function isValidToken(token: string): boolean {
-  return token.startsWith('eyJ') || token.length > 20
-}
-
-function getAuthState(): boolean {
-  const token = localStorage.getItem('token')
-  if (!token) return false
-  if (token.length < 10) {
-    localStorage.removeItem('token')
-    return false
-  }
-  return isValidToken(token)
-}
-
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',

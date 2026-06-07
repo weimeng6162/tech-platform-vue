@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { Search, User, Home, FileText, Grid, LogOut } from 'lucide-vue-next'
 import { useBrowsingHistory } from '../stores/browsingHistory'

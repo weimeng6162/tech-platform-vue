@@ -303,9 +303,7 @@ const handleResize = () => {
   initParticles(width, height)
 }
 
-const handleMouseMove = (_e: MouseEvent) => {
-  // track mouse for future interaction
-}
+
 
 onMounted(() => {
   nextTick(() => {
