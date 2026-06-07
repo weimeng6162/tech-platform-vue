@@ -258,30 +258,29 @@
 
           <!-- 评论列表 -->
           <div class="comments-list">
-          <div v-for="comment in displayedComments" :key="comment.id" class="comment-item">
+          <div v-for="comment in displayedComments" :key="comment.comment_id" class="comment-item">
             <!-- 主评论 -->
             <div class="comment-main">
-              <img :src="comment.avatar" class="comment-avatar" alt="avatar" />
+              <img :src="comment.avatar_url" class="comment-avatar" alt="avatar" />
               <div class="comment-content-wrapper">
                 <div class="comment-meta">
-                  <span class="comment-author">{{ comment.author }}</span>
-                  <span v-if="comment.isAuthor" class="author-badge">作者</span>
-                  <span class="comment-time">{{ comment.time }}</span>
+                  <span class="comment-author">{{ comment.username }}</span>
+                  <span v-if="comment.username === 'Go夜读(作者)'" class="author-badge">作者</span>
+                  <span class="comment-time">{{ formatCommentTime(comment.created_at) }}</span>
                 </div>
                 <div class="comment-body">
-                  <MarkdownRenderer :content="getProcessedContent(comment)" />
+                  <MarkdownRenderer :content="comment.content" />
                 </div>
                 <div class="comment-actions">
-                  <button class="action-link" @click="toggleLike(comment)">
+                  <button 
+                    class="action-link" 
+                    :class="{ active: comment.is_liked }"
+                    @click="toggleCommentLike(comment)"
+                  >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                     </svg>
-                    {{ comment.likes }}
-                  </button>
-                  <button class="action-link" @click="toggleDislike()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
+                    {{ comment.like_count }}
                   </button>
                   <button class="action-link" @click="startReply(comment)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -290,7 +289,7 @@
                     </svg>
                     回复
                   </button>
-                  <button v-if="comment.author === '你'" class="action-link delete-btn" @click="deleteComment(comment)">
+                  <button v-if="comment.username === '你'" class="action-link delete-btn" @click="deleteComment(comment)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                       <polyline points="3 6 5 6 21 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -302,16 +301,16 @@
             </div>
 
             <!-- 回复输入框 -->
-            <div v-if="replyingTo === comment.id" class="reply-input-wrapper">
+            <div v-if="replyingTo === comment.comment_id" class="reply-input-wrapper">
               <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=you" class="reply-avatar" alt="avatar" />
               <div class="reply-input-container">
                 <div class="reply-quote">
-                  @{{ comment.author }}：{{ comment.content.substring(0, 50) }}{{ comment.content.length > 50 ? '...' : '' }}
+                  @{{ comment.username }}：{{ comment.content.substring(0, 50) }}{{ comment.content.length > 50 ? '...' : '' }}
                 </div>
                 <textarea
                   v-model="replyText"
                   class="reply-textarea"
-                  placeholder="回复 @{{ comment.author }}"
+                  placeholder="回复 @{{ comment.username }}"
                   rows="2"
                 ></textarea>
                 <div class="reply-actions">
@@ -327,28 +326,38 @@
             <div v-if="comment.replies && comment.replies.length > 0" class="replies-wrapper">
               <div class="thread-line"></div>
               <div class="replies-list">
-                <div v-for="reply in comment.replies" :key="reply.id" class="reply-item">
-                  <img :src="reply.avatar" class="reply-avatar-small" alt="avatar" />
+                <div v-for="reply in comment.replies" :key="reply.comment_id" class="reply-item">
+                  <img :src="reply.avatar_url" class="reply-avatar-small" alt="avatar" />
                   <div class="reply-content-wrapper">
                     <div class="reply-meta">
-                      <span class="reply-author">{{ reply.author }}</span>
-                      <span v-if="reply.isAuthor" class="author-badge">作者</span>
-                      <span class="reply-time">{{ reply.time }}</span>
+                      <span class="reply-author">{{ reply.username }}</span>
+                      <span v-if="reply.username === 'Go夜读(作者)'" class="author-badge">作者</span>
+                      <span class="reply-time">{{ formatCommentTime(reply.created_at) }}</span>
                     </div>
                     <div class="reply-body">
-                      <MarkdownRenderer :content="getProcessedContent(reply)" />
+                      <template v-if="reply.reply_to_username">
+                        <span class="mention">@{{ reply.reply_to_username }}</span>
+                        <MarkdownRenderer :content="reply.content" />
+                      </template>
+                      <template v-else>
+                        <MarkdownRenderer :content="reply.content" />
+                      </template>
                     </div>
                     <div class="reply-actions-bottom">
-                      <button class="action-link" @click="toggleLike(reply)">
+                      <button 
+                        class="action-link" 
+                        :class="{ active: reply.is_liked }"
+                        @click="toggleReplyLike(reply)"
+                      >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                         </svg>
-                        {{ reply.likes }}
+                        {{ reply.like_count }}
                       </button>
                       <button class="action-link" @click="startReply(comment, reply)">
                         回复
                       </button>
-                      <button v-if="reply.author === '你'" class="action-link delete-btn" @click="deleteReply(comment, reply)">
+                      <button v-if="reply.username === '你'" class="action-link delete-btn" @click="deleteReply(comment, reply)">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                           <polyline points="3 6 5 6 21 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
@@ -424,8 +433,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import SecurityWarning from '../components/SecurityWarning.vue'
 import ArticleOutline from '../components/ArticleOutline.vue'
@@ -433,6 +442,12 @@ import { recommendArticlesData, articleDetailData, getArticleContent } from '../
 import { hasCommercialContent } from '../types/api'
 import { addRecentArticle } from '../stores/recentArticles'
 import { toggleCollectedArticle, isArticleCollected } from '../stores/collectedArticles'
+import { 
+  getArticleComments, 
+  createComment, 
+  commentAction, 
+  articleAction 
+} from '../api/modules/article'
 
 const route = useRoute()
 const router = useRouter()
@@ -478,70 +493,116 @@ const isPreview = ref(false)
 const sortBy = ref<'hot' | 'new'>('hot')
 const replyingTo = ref<string | null>(null)
 
-// 评论数据
-interface Comment {
-  id: string
-  author: string
-  avatar: string
+// 评论数据结构（匹配API返回）
+interface CommentReply {
+  comment_id: string
+  user_id: string
+  username: string
+  avatar_url: string
+  reply_to_user_id: string
+  reply_to_username: string
   content: string
-  time: string
-  likes: number
-  isAuthor: boolean
-  replies?: Comment[]
-  mentionedUser?: string
-  plainContent?: string
+  like_count: number
+  is_liked: boolean
+  created_at: string
 }
 
-const comments = ref<Comment[]>([
-  {
-    id: '1',
-    author: '前端大牛',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=frontend',
-    content: '这里确实需要注意，很多新人在 `useEffect` 里用 `setInterval` 很容易忘记清除定时器，导致内存泄漏。\n\n```javascript\nuseEffect(() => {\n  const timer = setInterval(() => {\n    console.log(\'tick\');\n  }, 1000);\n  \n  return () => clearInterval(timer);\n}, []);\n```',
-    time: '2小时前',
-    likes: 24,
-    isAuthor: true,
-    mentionedUser: undefined,
-    plainContent: '这里确实需要注意，很多新人在 `useEffect` 里用 `setInterval` 很容易忘记清除定时器，导致内存泄漏。\n\n```javascript\nuseEffect(() => {\n  const timer = setInterval(() => {\n    console.log(\'tick\');\n  }, 1000);\n  \n  return () => clearInterval(timer);\n}, []);\n```',
-    replies: [
-      {
-        id: '1-1',
-        author: '小卷王',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=xiaojuan',
-        content: '@前端大牛 确实，最好在 return 里写上 `clearInterval`。',
-        time: '1小时前',
-        likes: 5,
-        isAuthor: false,
-        mentionedUser: '前端大牛',
-        plainContent: '确实，最好在 return 里写上 `clearInterval`。',
-      },
-    ],
-  },
-  {
-    id: '2',
-    author: '架构师张三',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
-    content: '写得很清晰！不过我建议补充一下 `requestAnimationFrame` 的使用场景，在某些动画场景下比 `setTimeout` 更合适。',
-    time: '3小时前',
-    likes: 18,
-    isAuthor: false,
-    mentionedUser: undefined,
-    plainContent: '写得很清晰！不过我建议补充一下 `requestAnimationFrame` 的使用场景，在某些动画场景下比 `setTimeout` 更合适。',
-    replies: [],
-  },
-  {
-    id: '3',
-    author: '全栈小李',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=xiaoli',
-    content: '学习了！刚好最近在做一个倒计时组件，正好用得上。',
-    time: '5小时前',
-    likes: 12,
-    isAuthor: false,
-    mentionedUser: undefined,
-    plainContent: '学习了！刚好最近在做一个倒计时组件，正好用得上。',
-    replies: [],
-  },
-])
+interface Comment {
+  comment_id: string
+  user_id: string
+  username: string
+  avatar_url: string
+  content: string
+  like_count: number
+  is_liked: boolean
+  created_at: string
+  replies?: CommentReply[]
+}
+
+// 评论相关状态
+const comments = ref<Comment[]>([])
+const currentPage = ref(1)
+const pageSize = ref(10)
+const isLoading = ref(false)
+const hasMore = ref(true)
+
+// 加载评论列表
+const loadComments = async (page: number = 1, append: boolean = false) => {
+  if (isLoading.value) return
+  
+  isLoading.value = true
+  try {
+    const response = await getArticleComments(articleId.value, page, pageSize.value)
+    
+    if (append) {
+      comments.value = [...comments.value, ...response.comments]
+    } else {
+      comments.value = response.comments
+    }
+    
+    currentPage.value = response.page
+    hasMore.value = response.page * response.size < response.total
+  } catch (error) {
+    console.error('加载评论失败:', error)
+    // 如果API失败，使用mock数据作为降级
+    loadMockComments()
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// 加载Mock评论数据（降级方案）
+const loadMockComments = () => {
+  comments.value = [
+    {
+      comment_id: '1001',
+      user_id: 'dev_045',
+      username: 'Linux狂热者',
+      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=linuxfan',
+      content: '作者对 GMP 源码解析太透彻了！',
+      like_count: 42,
+      is_liked: true,
+      created_at: '2026-04-18T11:05:00Z',
+      replies: [
+        {
+          comment_id: '1005',
+          user_id: 'dev_102',
+          username: 'Go夜读(作者)',
+          avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=goauthor',
+          reply_to_user_id: 'dev_045',
+          reply_to_username: 'Linux狂热者',
+          content: '感谢认可！',
+          like_count: 15,
+          is_liked: false,
+          created_at: '2026-04-18T11:30:00Z'
+        }
+      ]
+    },
+    {
+      comment_id: '1002',
+      user_id: 'dev_089',
+      username: '前端大牛',
+      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=frontend',
+      content: '这里确实需要注意，很多新人在 `useEffect` 里用 `setInterval` 很容易忘记清除定时器，导致内存泄漏。',
+      like_count: 24,
+      is_liked: false,
+      created_at: '2026-04-18T10:20:00Z',
+      replies: []
+    },
+    {
+      comment_id: '1003',
+      user_id: 'dev_156',
+      username: '架构师张三',
+      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
+      content: '写得很清晰！不过我建议补充一下 `requestAnimationFrame` 的使用场景。',
+      like_count: 18,
+      is_liked: false,
+      created_at: '2026-04-18T09:45:00Z',
+      replies: []
+    }
+  ]
+  hasMore.value = false
+}
 
 // 相关文章推荐数据
 const relatedArticles = computed(() => {
@@ -586,16 +647,32 @@ const goToArticle = (articleId: string) => {
 const sortedComments = computed(() => {
   const sorted = [...comments.value]
   if (sortBy.value === 'hot') {
-    sorted.sort((a, b) => b.likes - a.likes)
+    sorted.sort((a, b) => b.like_count - a.like_count)
   } else {
     sorted.sort((a, b) => {
-      const timeA = parseTime(a.time)
-      const timeB = parseTime(b.time)
+      const timeA = new Date(a.created_at).getTime()
+      const timeB = new Date(b.created_at).getTime()
       return timeB - timeA
     })
   }
   return sorted
 })
+
+// 格式化评论时间
+const formatCommentTime = (dateString: string): string => {
+  const date = new Date(dateString)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const minutes = Math.floor(diff / (1000 * 60))
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const days = Math.floor(hours / 24)
+  
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
+  if (days < 7) return `${days}天前`
+  return date.toLocaleDateString('zh-CN')
+}
 
 // 评论展开状态
 const isCommentsExpanded = ref(false) // 评论区是否已展开
@@ -631,20 +708,6 @@ const totalComments = computed(() => {
   return count
 })
 
-// 解析相对时间
-const parseTime = (timeStr: string) => {
-  const now = Date.now()
-  if (timeStr.includes('分钟前')) {
-    const mins = parseInt(timeStr)
-    return now - mins * 60 * 1000
-  }
-  if (timeStr.includes('小时前')) {
-    const hours = parseInt(timeStr)
-    return now - hours * 60 * 60 * 1000
-  }
-  return now
-}
-
 // 滚动到页面顶部
 const scrollToTop = () => {
   window.scrollTo(0, 0)
@@ -667,6 +730,7 @@ watch(() => [route.params.id, route.query.id], () => {
 onMounted(() => {
   scrollToTop()
   recordReading()
+  loadComments()
   
   // 初始化文章数据
   const found = articleFromList.value
@@ -701,27 +765,66 @@ const formatTime = (time: string) => {
   })
 }
 
-// 处理点赞
-const handleLike = () => {
-  article.value.interaction_status.is_liked = !article.value.interaction_status.is_liked
+// 处理点赞（乐观UI）
+const handleLike = async () => {
+  // 乐观更新UI
+  const wasLiked = article.value.interaction_status.is_liked
+  article.value.interaction_status.is_liked = !wasLiked
   if (article.value.interaction_status.is_liked) {
     article.value.metrics.like_count++
   } else {
     article.value.metrics.like_count--
   }
+  
+  // 发送请求
+  try {
+    await articleAction({
+      article_id: article.value.article_id,
+      action_type: article.value.interaction_status.is_liked ? 1 : 2
+    })
+  } catch (error) {
+    // 请求失败，回滚状态
+    article.value.interaction_status.is_liked = wasLiked
+    if (article.value.interaction_status.is_liked) {
+      article.value.metrics.like_count++
+    } else {
+      article.value.metrics.like_count--
+    }
+    console.error('点赞失败:', error)
+  }
 }
 
-// 处理收藏
-const handleCollect = () => {
+// 处理收藏（乐观UI）
+const handleCollect = async () => {
+  // 乐观更新UI
+  const wasCollected = article.value.interaction_status.is_collected
+  article.value.interaction_status.is_collected = !wasCollected
+  if (article.value.interaction_status.is_collected) {
+    article.value.metrics.collect_count++
+  } else {
+    article.value.metrics.collect_count--
+  }
+  
+  // 更新本地收藏状态
   if (articleFromList.value) {
-    const isCollected = toggleCollectedArticle(articleFromList.value)
-    article.value.interaction_status.is_collected = isCollected
-    
-    if (isCollected) {
+    toggleCollectedArticle(articleFromList.value)
+  }
+  
+  // 发送请求
+  try {
+    await articleAction({
+      article_id: article.value.article_id,
+      action_type: article.value.interaction_status.is_collected ? 2 : 1
+    })
+  } catch (error) {
+    // 请求失败，回滚状态
+    article.value.interaction_status.is_collected = wasCollected
+    if (article.value.interaction_status.is_collected) {
       article.value.metrics.collect_count++
     } else {
       article.value.metrics.collect_count--
     }
+    console.error('收藏失败:', error)
   }
 }
 
@@ -759,32 +862,48 @@ const togglePreview = () => {
 }
 
 // 提交评论
-const submitComment = () => {
+const submitComment = async () => {
   if (!newComment.value.trim()) return
   
-  const comment: Comment = {
-    id: Date.now().toString(),
-    author: '你',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=you',
+  // 构建评论数据
+  const commentData = {
+    article_id: articleId.value,
     content: newComment.value,
-    time: '刚刚',
-    likes: 0,
-    isAuthor: false,
-    replies: [],
-    mentionedUser: undefined,
-    plainContent: newComment.value,
+    parent_id: '0', // 一级评论
+    reply_to_user_id: ''
   }
   
-  comments.value.unshift(comment)
-  newComment.value = ''
-  isPreview.value = false
+  try {
+    // 发送请求
+    await createComment(commentData)
+    
+    // 成功后添加到本地列表（乐观更新）
+    const newCommentItem: Comment = {
+      comment_id: Date.now().toString(),
+      user_id: 'current_user',
+      username: '你',
+      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=you',
+      content: newComment.value,
+      like_count: 0,
+      is_liked: false,
+      created_at: new Date().toISOString(),
+      replies: []
+    }
+    
+    comments.value.unshift(newCommentItem)
+    newComment.value = ''
+    isPreview.value = false
+  } catch (error) {
+    console.error('发表评论失败:', error)
+    alert('发表评论失败，请稍后重试')
+  }
 }
 
 // 开始回复
-const startReply = (comment: Comment, reply?: Comment) => {
-  replyingTo.value = comment.id
+const startReply = (comment: Comment, reply?: CommentReply) => {
+  replyingTo.value = comment.comment_id
   if (reply) {
-    replyText.value = `@${reply.author} `
+    replyText.value = `@${reply.username} `
   } else {
     replyText.value = ''
   }
@@ -799,7 +918,7 @@ const cancelReply = () => {
 // 删除评论
 const deleteComment = (comment: Comment) => {
   if (confirm('确定要删除这条评论吗？')) {
-    const index = comments.value.findIndex(c => c.id === comment.id)
+    const index = comments.value.findIndex(c => c.comment_id === comment.comment_id)
     if (index !== -1) {
       comments.value.splice(index, 1)
     }
@@ -807,9 +926,9 @@ const deleteComment = (comment: Comment) => {
 }
 
 // 删除回复
-const deleteReply = (comment: Comment, reply: Comment) => {
+const deleteReply = (comment: Comment, reply: CommentReply) => {
   if (confirm('确定要删除这条回复吗？')) {
-    const index = comment.replies?.findIndex(r => r.id === reply.id)
+    const index = comment.replies?.findIndex(r => r.comment_id === reply.comment_id)
     if (index !== undefined && index !== -1 && comment.replies) {
       comment.replies.splice(index, 1)
     }
@@ -817,36 +936,54 @@ const deleteReply = (comment: Comment, reply: Comment) => {
 }
 
 // 提交回复
-const submitReply = (comment: Comment) => {
+const submitReply = async (comment: Comment) => {
   if (!replyText.value.trim()) return
   
   // 处理@某某的情况
   const mentionRegex = /^@(\S+)\s*/
   const match = replyText.value.match(mentionRegex)
-  const mentionedUser = match ? match[1] : undefined
-  const plainContent = mentionedUser 
+  const replyToUsername = match ? match[1] : undefined
+  const content = replyToUsername 
     ? replyText.value.replace(mentionRegex, '') 
     : replyText.value
   
-  const reply: Comment = {
-    id: `${comment.id}-${Date.now()}`,
-    author: '你',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=you',
-    content: replyText.value,
-    time: '刚刚',
-    likes: 0,
-    isAuthor: false,
-    mentionedUser,
-    plainContent,
+  // 构建回复数据
+  const replyData = {
+    article_id: articleId.value,
+    content: content,
+    parent_id: comment.comment_id,
+    reply_to_user_id: replyToUsername ? 'target_user_id' : ''
   }
   
-  if (!comment.replies) {
-    comment.replies = []
+  try {
+    // 发送请求
+    await createComment(replyData)
+    
+    // 成功后添加到本地列表
+    const newReply: CommentReply = {
+      comment_id: `${comment.comment_id}-${Date.now()}`,
+      user_id: 'current_user',
+      username: '你',
+      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=you',
+      reply_to_user_id: replyToUsername ? 'target_user_id' : '',
+      reply_to_username: replyToUsername || '',
+      content: replyText.value,
+      like_count: 0,
+      is_liked: false,
+      created_at: new Date().toISOString()
+    }
+    
+    if (!comment.replies) {
+      comment.replies = []
+    }
+    comment.replies.push(newReply)
+    
+    replyingTo.value = null
+    replyText.value = ''
+  } catch (error) {
+    console.error('发表回复失败:', error)
+    alert('发表回复失败，请稍后重试')
   }
-  comment.replies.push(reply)
-  
-  replyingTo.value = null
-  replyText.value = ''
 }
 
 // 切换评论区折叠
@@ -854,22 +991,62 @@ const toggleCommentsCollapse = () => {
   isCommentsCollapsed.value = !isCommentsCollapsed.value
 }
 
-// 切换点赞
-const toggleLike = (comment: Comment) => {
-  comment.likes++
-}
-
-// 处理评论内容，将@某某转换为蓝色样式
-const getProcessedContent = (comment: Comment) => {
-  if (comment.mentionedUser) {
-    return `<span class="mention">@${comment.mentionedUser}</span> ${comment.plainContent || comment.content}`
+// 评论点赞（乐观UI）
+const toggleCommentLike = async (comment: Comment) => {
+  // 乐观更新UI
+  const wasLiked = comment.is_liked
+  comment.is_liked = !wasLiked
+  if (comment.is_liked) {
+    comment.like_count++
+  } else {
+    comment.like_count--
   }
-  return comment.content
+  
+  // 发送请求
+  try {
+    await commentAction({
+      comment_id: comment.comment_id,
+      action_type: comment.is_liked ? 1 : 2
+    })
+  } catch (error) {
+    // 请求失败，回滚状态
+    comment.is_liked = wasLiked
+    if (comment.is_liked) {
+      comment.like_count++
+    } else {
+      comment.like_count--
+    }
+    console.error('评论点赞失败:', error)
+  }
 }
 
-// 切换踩
-const toggleDislike = () => {
-  // 可以在这里实现踩的逻辑
+// 回复点赞（乐观UI）
+const toggleReplyLike = async (reply: CommentReply) => {
+  // 乐观更新UI
+  const wasLiked = reply.is_liked
+  reply.is_liked = !wasLiked
+  if (reply.is_liked) {
+    reply.like_count++
+  } else {
+    reply.like_count--
+  }
+  
+  // 发送请求
+  try {
+    await commentAction({
+      comment_id: reply.comment_id,
+      action_type: reply.is_liked ? 1 : 2
+    })
+  } catch (error) {
+    // 请求失败，回滚状态
+    reply.is_liked = wasLiked
+    if (reply.is_liked) {
+      reply.like_count++
+    } else {
+      reply.like_count--
+    }
+    console.error('回复点赞失败:', error)
+  }
 }
 </script>
 

@@ -4,7 +4,7 @@
  */
 
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
-import { apiConfig, USE_REAL_BACKEND_FOR_AUTH, REAL_BACKEND_URL, MOCK_SERVER_URL, AUTH_ENDPOINTS } from './config';
+import { apiConfig, USE_REAL_BACKEND_FOR_AUTH, REAL_BACKEND_URL, MOCK_SERVER_URL, PRIVATE_ENDPOINTS, NEW_USER_GRACE_DAYS } from './config';
 import router from '../router';
 
 // 缓存用户注册时间（毫秒时间戳），0 表示未知/新用户
