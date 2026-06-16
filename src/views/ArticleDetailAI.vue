@@ -823,11 +823,11 @@ const submitComment = async () => {
   
   try {
     // 发送请求
-    await createComment(commentData)
-    
-    // 成功后添加到本地列表（乐观更新）
+    const res = await createComment(commentData)
+
+    // 成功后添加到本地列表
     const newCommentItem: Comment = {
-      comment_id: Date.now().toString(),
+      comment_id: res?.comment_id || Date.now().toString(),
       user_id: 'current_user',
       username: '你',
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=you',
@@ -837,7 +837,7 @@ const submitComment = async () => {
       created_at: new Date().toISOString(),
       replies: []
     }
-    
+
     comments.value.unshift(newCommentItem)
     newComment.value = ''
     isPreview.value = false
@@ -905,11 +905,11 @@ const submitReply = async (comment: Comment) => {
   
   try {
     // 发送请求
-    await createComment(replyData)
-    
+    const res = await createComment(replyData)
+
     // 成功后添加到本地列表
     const newReply: CommentReply = {
-      comment_id: `${comment.comment_id}-${Date.now()}`,
+      comment_id: res?.comment_id || `${comment.comment_id}-${Date.now()}`,
       user_id: 'current_user',
       username: '你',
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=you',
