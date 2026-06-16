@@ -6,6 +6,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { UserProfile } from '../api/types'
 import { login as loginApi, logout as logoutApi } from '../api/modules/user'
+import { setRegisteredAt } from '../api/request'
 
 export const useUserStore = defineStore('user', () => {
   const token = ref<string | null>(localStorage.getItem('token'))
@@ -26,6 +27,9 @@ export const useUserStore = defineStore('user', () => {
       token.value = response.token
       userInfo.value = response.user
       localStorage.setItem('token', response.token)
+      if (!localStorage.getItem('registered_at')) {
+        setRegisteredAt(new Date().toISOString())
+      }
 
       return { success: true, message: '登录成功' }
     } catch (error: any) {

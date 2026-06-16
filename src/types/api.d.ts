@@ -25,7 +25,7 @@ export interface ArticleListItem {
  */
 export interface UserProfile {
   user_id: string;
-  nickname: string;
+  username: string;
   avatar_url: string;
   ai_analysis: {
     ai_profile_summary: string;

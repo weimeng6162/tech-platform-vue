@@ -88,11 +88,22 @@
           <!-- 文章列表 -->
           <div v-else class="article-grid">
             <ArticleCardAI
-              v-for="article in currentArticles"
+              v-for="article in filteredArticles"
               :key="article.article_id"
               :article="article"
               @click="handleArticleClick"
             />
+          </div>
+
+          <!-- 加载更多指示器 -->
+          <div ref="loadMoreTrigger" class="load-more">
+            <template v-if="loadingMore">
+              <Loader2 :size="20" class="spin" />
+              <span>加载更多文章...</span>
+            </template>
+            <template v-else-if="!hasMore">
+              <span class="no-more">— 已加载全部 {{ filteredArticles.length }} 篇文章 —</span>
+            </template>
           </div>
         </main>
       </div>
@@ -127,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, watch } from 'vue'
+import { ref, computed, h, watch, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Eye, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
@@ -135,8 +146,11 @@ import { categories, techTags } from '../data/mockData'
 import { processArticles } from '../utils/articleFilter'
 import { formatRelativeTime } from '../utils/formatTime'
 import type { ArticleItem } from '../types/api'
+import type { ArticleListItem } from '../api/types'
 import { useRefresh } from '../composables/useRefresh'
 import { getRecommendArticles } from '../api/modules/article'
+
+const PAGE_SIZE = 10
 
 const router = useRouter()
 const activeCategory = ref('all')
@@ -146,29 +160,103 @@ const activeTags = ref<string[]>([])
 // API状态
 const loading = ref(false)
 const error = ref<string | null>(null)
-const allArticles = ref<ArticleItem[]>([])
+const articles = ref<ArticleItem[]>([])
+const currentPage = ref(0)
+const hasMore = ref(true)
+const loadingMore = ref(false)
+const loadMoreTrigger = ref<HTMLElement>()
+let observer: IntersectionObserver | null = null
 
-// 从API加载推荐文章列表
-const loadArticles = async () => {
+const userInterests = ref<string[]>([])
+try {
+  const stored = localStorage.getItem('user_interests')
+  if (stored) userInterests.value = JSON.parse(stored)
+} catch { /* ignore */ }
+
+const filteredArticles = computed(() => {
+  const processed = processArticles(articles.value)
+  if (activeSection.value === 'recommend' && userInterests.value.length > 0) {
+    return processed
+      .map(a => {
+        const matchCount = a.tags.filter(t => userInterests.value.includes(t)).length
+        return { article: a, matchCount }
+      })
+      .filter(({ matchCount }) => matchCount > 0)
+      .sort((a, b) => b.matchCount - a.matchCount)
+      .map(({ article }) => article)
+  }
+  return processed
+})
+
+function normalizeArticles(list: ArticleListItem[]): ArticleItem[] {
+  return list.map(a => ({
+    ...a,
+    tags: typeof a.tags === 'string'
+      ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
+      : a.tags
+  })) as unknown as ArticleItem[]
+}
+
+// 首页加载（清空重建）
+async function loadArticles() {
   loading.value = true
   error.value = null
   try {
-    const articles = await getRecommendArticles()
-    // 规范化：确保 tags 是数组（Mock server 返回的是字符串，需转换为数组）
-    allArticles.value = articles.map(a => ({
-      ...a,
-      tags: typeof a.tags === 'string' 
-        ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
-        : a.tags
-    }))
-    console.log('[Home] 推荐文章加载成功，共', articles.length, '篇')
+    const list = await getRecommendArticles(1, PAGE_SIZE)
+    articles.value = normalizeArticles(list)
+    currentPage.value = 1
+    hasMore.value = list.length >= PAGE_SIZE
+    console.log('[Home] 第1页加载成功，共', list.length, '篇')
   } catch (err: any) {
-    console.error('[Home] 加载推荐文章失败:', err)
+    console.error('[Home] 加载失败:', err)
     error.value = err.message || '加载失败，请稍后重试'
   } finally {
     loading.value = false
   }
 }
+
+// 加载更多（追加）
+async function loadMore() {
+  if (loadingMore.value || !hasMore.value) return
+  loadingMore.value = true
+  const nextPage = currentPage.value + 1
+  try {
+    const list = await getRecommendArticles(nextPage, PAGE_SIZE)
+    const normalized = normalizeArticles(list)
+    articles.value = [...articles.value, ...normalized]
+    currentPage.value = nextPage
+    hasMore.value = list.length >= PAGE_SIZE
+    console.log(`[Home] 第${nextPage}页加载成功，+${list.length}篇，累计${articles.value.length}篇`)
+  } catch {
+    // 静默失败
+  } finally {
+    loadingMore.value = false
+  }
+}
+
+function setupObserver() {
+  observer?.disconnect()
+  if (!loadMoreTrigger.value) return
+  observer = new IntersectionObserver(
+    (entries) => {
+      if (entries[0].isIntersecting) loadMore()
+    },
+    { rootMargin: '200px' }
+  )
+  observer.observe(loadMoreTrigger.value)
+}
+
+watch(loading, (val) => {
+  if (!val) nextTick(() => setupObserver())
+})
+
+watch([filteredArticles], () => {
+  nextTick(() => setupObserver())
+})
+
+onUnmounted(() => {
+  observer?.disconnect()
+})
 
 // 初始化加载
 loadArticles()
@@ -176,7 +264,6 @@ loadArticles()
 const { refreshTrigger } = useRefresh()
 watch(refreshTrigger, () => {
   loadArticles()
-  shuffleArticles()
 })
 
 const iconMap: Record<string, any> = {
@@ -188,26 +275,6 @@ const iconMap: Record<string, any> = {
   TrendingUp: (props: any) => h(TrendingUp, props),
   MessageCircle: (props: any) => h(MessageCircle, props),
 }
-
-const filteredArticles = computed(() => processArticles(allArticles.value))
-
-const shuffledArticles = ref<ArticleItem[]>([])
-
-const shuffleArticles = () => {
-  const source = filteredArticles.value
-  const array = [...source]
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]]
-  }
-  shuffledArticles.value = array
-}
-
-watch(filteredArticles, (newVal) => {
-  if (newVal.length > 0) {
-    shuffleArticles()
-  }
-}, { immediate: true })
 
 const hotArticles = computed(() => {
   return [...filteredArticles.value]
@@ -241,26 +308,6 @@ const formatNumber = (num: number) => {
 
 const formatDate = formatRelativeTime
 
-const currentArticles = computed(() => {
-  let articles = shuffledArticles.value
-
-  if (activeCategory.value !== 'all') {
-    articles = articles
-  }
-
-  if (activeTags.value.length > 0) {
-    articles = articles.filter(article => 
-      activeTags.value.some(tag => article.tags.includes(tag))
-    )
-  }
-
-  if (activeSection.value === 'featured') {
-    return articles.slice(0, 10)
-  } else {
-    return articles.slice(10)
-  }
-})
-
 const handleTagClick = (tagId: string) => {
   const index = activeTags.value.indexOf(tagId)
   if (index > -1) {
@@ -278,9 +325,6 @@ const handleArticleClick = (article: ArticleItem) => {
   })
 }
 
-defineExpose({
-  shuffleArticles
-})
 </script>
 
 <style scoped>
@@ -847,5 +891,22 @@ defineExpose({
 .retry-btn:hover {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+/* 无限滚动加载更多 */
+.load-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-xl) 0;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  min-height: 48px;
+}
+
+.load-more .no-more {
+  color: var(--text-tertiary);
+  opacity: 0.6;
 }
 </style>

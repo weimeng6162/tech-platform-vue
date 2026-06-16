@@ -31,23 +31,25 @@ export const AUTH_ENDPOINTS = [
   '/api/user/login',
   '/api/user/register',
   '/api/user/logout',
-  '/api/user/forgot-password',
-  '/api/user/reset-password',
-  '/api/user/check-username',
-  '/api/user/check-email',
-  '/api/user/profile',
+  '/api/user/check_username',
+  '/api/user/check_email',
+  '/api/user/info',
   '/api/user/footprint',
   '/api/user/collections'
 ];
 
 // 需要登录认证的接口（必须带 token）
 export const PRIVATE_ENDPOINTS = [
-  '/api/user/profile',
+  '/api/user/info',
   '/api/user/footprint',
   '/api/user/collections',
   '/api/user/action',
   '/api/user/logout',
-  '/api/user/registration-time'
+  '/api/user/password/change',
+  '/api/user/profile/update',
+  '/api/user/delete',
+  '/api/user/cold_start',
+  '/api/articles/recommend'
 ];
 
 // 新用户免 token 天数（注册后 N 天内不传 token）

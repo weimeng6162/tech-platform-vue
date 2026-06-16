@@ -438,15 +438,16 @@ import { useRoute, useRouter } from 'vue-router'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import SecurityWarning from '../components/SecurityWarning.vue'
 import ArticleOutline from '../components/ArticleOutline.vue'
-import { recommendArticlesData, articleDetailData, getArticleContent } from '../data/mockData'
+import { recommendArticlesData } from '../data/mockData'
 import { hasCommercialContent } from '../types/api'
 import { addRecentArticle } from '../stores/recentArticles'
 import { toggleCollectedArticle, isArticleCollected } from '../stores/collectedArticles'
-import { 
-  getArticleComments, 
-  createComment, 
-  commentAction, 
-  articleAction 
+import {
+  getArticleDetail,
+  getArticleComments,
+  createComment,
+  commentAction,
+  articleAction
 } from '../api/modules/article'
 
 const route = useRoute()
@@ -533,75 +534,23 @@ const loadComments = async (page: number = 1, append: boolean = false) => {
   isLoading.value = true
   try {
     const response = await getArticleComments(articleId.value, page, pageSize.value)
-    
+    const list = Array.isArray(response.comments) ? response.comments : []
+
     if (append) {
-      comments.value = [...comments.value, ...response.comments]
+      comments.value = [...comments.value, ...list]
     } else {
-      comments.value = response.comments
+      comments.value = list
     }
-    
+
     currentPage.value = response.page
     hasMore.value = response.page * response.size < response.total
   } catch (error) {
     console.error('加载评论失败:', error)
-    // 如果API失败，使用mock数据作为降级
-    loadMockComments()
+    comments.value = []
+    hasMore.value = false
   } finally {
     isLoading.value = false
   }
-}
-
-// 加载Mock评论数据（降级方案）
-const loadMockComments = () => {
-  comments.value = [
-    {
-      comment_id: '1001',
-      user_id: 'dev_045',
-      username: 'Linux狂热者',
-      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=linuxfan',
-      content: '作者对 GMP 源码解析太透彻了！',
-      like_count: 42,
-      is_liked: true,
-      created_at: '2026-04-18T11:05:00Z',
-      replies: [
-        {
-          comment_id: '1005',
-          user_id: 'dev_102',
-          username: 'Go夜读(作者)',
-          avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=goauthor',
-          reply_to_user_id: 'dev_045',
-          reply_to_username: 'Linux狂热者',
-          content: '感谢认可！',
-          like_count: 15,
-          is_liked: false,
-          created_at: '2026-04-18T11:30:00Z'
-        }
-      ]
-    },
-    {
-      comment_id: '1002',
-      user_id: 'dev_089',
-      username: '前端大牛',
-      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=frontend',
-      content: '这里确实需要注意，很多新人在 `useEffect` 里用 `setInterval` 很容易忘记清除定时器，导致内存泄漏。',
-      like_count: 24,
-      is_liked: false,
-      created_at: '2026-04-18T10:20:00Z',
-      replies: []
-    },
-    {
-      comment_id: '1003',
-      user_id: 'dev_156',
-      username: '架构师张三',
-      avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=zhangsan',
-      content: '写得很清晰！不过我建议补充一下 `requestAnimationFrame` 的使用场景。',
-      like_count: 18,
-      is_liked: false,
-      created_at: '2026-04-18T09:45:00Z',
-      replies: []
-    }
-  ]
-  hasMore.value = false
 }
 
 // 相关文章推荐数据
@@ -727,29 +676,28 @@ watch(() => [route.params.id, route.query.id], () => {
 })
 
 // 组件挂载时
-onMounted(() => {
+onMounted(async () => {
   scrollToTop()
   recordReading()
   loadComments()
-  
-  // 初始化文章数据
-  const found = articleFromList.value
+
+  const detail = await getArticleDetail(articleId.value)
   article.value = {
-    article_id: found?.article_id || articleDetailData.data.article_id,
-    title: found?.title || articleDetailData.data.title,
-    author: found?.author || articleDetailData.data.author,
-    publish_time: found?.publish_time || articleDetailData.data.publish_time,
-    category: found?.category || articleDetailData.data.category,
-    ai_summary: found?.ai_summary || articleDetailData.data.ai_summary,
-    tags: found?.tags || articleDetailData.data.tags,
-    content: getArticleContent(articleId.value),
+    article_id: detail.article_id,
+    title: detail.title,
+    author: detail.author,
+    publish_time: detail.publish_time,
+    category: detail.category,
+    ai_summary: detail.ai_summary || '',
+    tags: detail.tags || [],
+    content: detail.content || '',
     metrics: {
-      view_count: found?.view_count || articleDetailData.data.metrics.view_count,
-      like_count: Math.floor(Math.random() * 500) + 100,
-      collect_count: Math.floor(Math.random() * 100) + 20,
+      view_count: detail.metrics?.view_count || 0,
+      like_count: detail.metrics?.like_count || 0,
+      collect_count: detail.metrics?.collect_count || 0,
     },
     interaction_status: {
-      is_liked: false,
+      is_liked: detail.interaction_status?.is_liked || false,
       is_collected: isArticleCollected(articleId.value),
     },
   }

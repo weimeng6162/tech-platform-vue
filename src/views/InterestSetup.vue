@@ -53,7 +53,7 @@
       <!-- 主技术栈步骤 -->
       <div v-if="currentStep === 1" class="step">
         <h1>选择你的主技术栈</h1>
-        <p class="subtitle">选择 1-3 个你最擅长或最想深入学习的技术领域</p>
+        <p class="subtitle">至少选择 3 个你最擅长或最想深入学习的技术领域</p>
         
         <div class="tag-grid">
           <div v-for="(tags, category) in groupedTags" :key="category" class="tag-group">
@@ -78,8 +78,11 @@
         </div>
         
         <div class="selection-info">
-          已选择 <strong>{{ primaryTags.length }}</strong>/3 个主技术栈
+          已选择 <strong>{{ primaryTags.length }}</strong> 个主技术栈（至少 3 个）
         </div>
+        <Transition name="toast-fade">
+          <p v-if="showMinError" class="min-error">请至少选择 3 个技术领域</p>
+        </Transition>
       </div>
 
       <!-- 完成步骤 -->
@@ -123,6 +126,7 @@ import { ref, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { Check, ChevronRight, Sparkles, Target, Zap, Code, Database, Cloud, Cpu, Smartphone, Wrench } from 'lucide-vue-next'
 import { techTags } from '../data/mockData'
+import { coldStart } from '../api/modules/user'
 import ParticleBackground from '../components/ParticleBackground.vue'
 
 const router = useRouter()
@@ -176,16 +180,27 @@ const toggleTag = (tagId: string, isPrimary: boolean = false) => {
   if (isPrimary) {
     if (primaryTags.value.includes(tagId)) {
       primaryTags.value = primaryTags.value.filter(t => t !== tagId)
-    } else if (primaryTags.value.length < 3) {
+    } else {
       primaryTags.value.push(tagId)
     }
   }
 }
 
-const handleNext = () => {
+const showMinError = ref(false)
+
+const handleNext = async () => {
+  if (currentStep.value === 1 && primaryTags.value.length < 3) {
+    showMinError.value = true
+    setTimeout(() => { showMinError.value = false }, 3000)
+    return
+  }
   if (currentStep.value < steps.length - 1) {
     currentStep.value++
   } else {
+    localStorage.setItem('user_interests', JSON.stringify(primaryTags.value))
+    coldStart({ interests: primaryTags.value }).catch(() => {
+      console.warn('⚠️ cold_start 提交失败，兴趣已保存到本地')
+    })
     router.push('/')
   }
 }
@@ -443,6 +458,23 @@ const getTagColor = (tagId: string) => {
 
 .selection-info strong {
   color: var(--accent-primary);
+}
+
+.min-error {
+  margin-top: var(--space-sm);
+  font-size: 0.85rem;
+  color: #f87171;
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .complete-icon {

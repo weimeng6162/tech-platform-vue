@@ -3,10 +3,10 @@
     <!-- 用户基本信息 -->
     <div class="user-header">
       <div class="avatar">
-        <img :src="profile.avatar_url" :alt="profile.nickname" />
+        <img :src="profile.avatar_url" :alt="profile.username" />
       </div>
       <div class="user-info">
-        <h2 class="nickname">{{ profile.nickname }}</h2>
+        <h2 class="nickname">{{ profile.username }}</h2>
         <div class="tech-level">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
             <polygon

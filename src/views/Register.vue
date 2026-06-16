@@ -365,7 +365,7 @@ function checkUsernameDebounced() {
   usernameTimer = setTimeout(async () => {
     try {
       const res = await checkUsername(form.username.trim())
-      if (res.exists) {
+      if (!res.is_available) {
         errors.username = '用户名已存在'
       }
     } catch { /* 静默 */ }
@@ -379,7 +379,7 @@ function checkEmailDebounced() {
   emailTimer = setTimeout(async () => {
     try {
       const res = await checkEmail(form.email.trim())
-      if (res.exists) {
+      if (!res.is_available) {
         errors.email = '邮箱已注册'
       }
     } catch { /* 静默 */ }

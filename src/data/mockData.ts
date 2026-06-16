@@ -1016,7 +1016,7 @@ export const userProfileData = {
   msg: 'success',
   data: {
     user_id: 'dev_001',
-    nickname: '代码不加糖',
+    username: '代码不加糖',
     avatar_url: 'https://example.com/avatar.png',
     ai_analysis: {
       ai_profile_summary:

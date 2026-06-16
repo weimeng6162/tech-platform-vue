@@ -67,11 +67,23 @@ export interface AIAnalysis {
   core_interests: CoreInterest[]; // 核心技术栈
 }
 
-// 用户侧写
+// 用户侧写（/api/user/info 返回的基础信息）
+export interface UserInfo {
+  username: string;
+  email: string;
+  avatar_url: string;
+  join_days: number;
+  created_at: string;
+}
+
+// 用户侧写（旧版，Mock降级用）
 export interface UserProfile {
   user_id: string;
-  nickname: string;
+  username: string;
+  email: string;
   avatar_url: string;
+  created_at: string;
+  join_days: number;
   ai_analysis: AIAnalysis;
 }
 
@@ -138,7 +150,7 @@ export interface ArticleActionRequest {
 
 export interface UserProfileResponse {
   user_id: string;
-  nickname: string;
+  username: string;
   avatar_url: string;
   is_configured: boolean;
   ai_analysis: AIAnalysis;
@@ -172,12 +184,36 @@ export interface FootprintResponse {
   total: number;
   page: number;
   size: number;
-  items: HistoryItem[];
+  list: HistoryItem[];
 }
 
 export interface CollectionsResponse {
   total: number;
   page: number;
   size: number;
-  items: CollectionItem[];
+  list: CollectionItem[];
+}
+
+// ========== 账号设置相关类型 ==========
+
+export interface UpdateProfileRequest {
+  username?: string;
+  email?: string;
+  avatar_url?: string;
+}
+
+export interface UpdateProfileResponse {
+  user_id: string;
+  username: string;
+  email: string;
+  avatar_url: string;
+}
+
+export interface ChangePasswordRequest {
+  old_password: string;
+  new_password: string;
+}
+
+export interface DeleteAccountRequest {
+  password: string;
 }
