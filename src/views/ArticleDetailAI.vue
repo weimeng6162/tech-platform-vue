@@ -493,6 +493,7 @@ const isInputFocused = ref(false)
 const isPreview = ref(false)
 const sortBy = ref<'hot' | 'new'>('hot')
 const replyingTo = ref<string | null>(null)
+const replyingToReply = ref<CommentReply | null>(null)
 
 // 评论数据结构（匹配API返回）
 interface CommentReply {
@@ -850,6 +851,7 @@ const submitComment = async () => {
 // 开始回复
 const startReply = (comment: Comment, reply?: CommentReply) => {
   replyingTo.value = comment.comment_id
+  replyingToReply.value = reply || null
   if (reply) {
     replyText.value = `@${reply.username} `
   } else {
@@ -860,6 +862,7 @@ const startReply = (comment: Comment, reply?: CommentReply) => {
 // 取消回复
 const cancelReply = () => {
   replyingTo.value = null
+  replyingToReply.value = null
   replyText.value = ''
 }
 
@@ -886,23 +889,23 @@ const deleteReply = (comment: Comment, reply: CommentReply) => {
 // 提交回复
 const submitReply = async (comment: Comment) => {
   if (!replyText.value.trim()) return
-  
-  // 处理@某某的情况
+
+  const targetReply = replyingToReply.value
+  const replyToUserId = targetReply ? targetReply.user_id : comment.user_id
+  const replyToUsername = targetReply ? targetReply.username : comment.username
+
+  // 处理@某某的情况（去除文本中的@mention，后端字段已承载回复目标）
   const mentionRegex = /^@(\S+)\s*/
-  const match = replyText.value.match(mentionRegex)
-  const replyToUsername = match ? match[1] : undefined
-  const content = replyToUsername 
-    ? replyText.value.replace(mentionRegex, '') 
-    : replyText.value
-  
+  const content = replyText.value.replace(mentionRegex, '')
+
   // 构建回复数据
   const replyData = {
     article_id: articleId.value,
     content: content,
     parent_id: comment.comment_id,
-    reply_to_user_id: replyToUsername ? 'target_user_id' : ''
+    reply_to_user_id: replyToUserId
   }
-  
+
   try {
     // 发送请求
     const res = await createComment(replyData)
@@ -913,8 +916,8 @@ const submitReply = async (comment: Comment) => {
       user_id: 'current_user',
       username: '你',
       avatar_url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=you',
-      reply_to_user_id: replyToUsername ? 'target_user_id' : '',
-      reply_to_username: replyToUsername || '',
+      reply_to_user_id: replyToUserId,
+      reply_to_username: replyToUsername,
       content: replyText.value,
       like_count: 0,
       is_liked: false,
@@ -927,6 +930,7 @@ const submitReply = async (comment: Comment) => {
     comment.replies.push(newReply)
     
     replyingTo.value = null
+    replyingToReply.value = null
     replyText.value = ''
   } catch (error) {
     console.error('发表回复失败:', error)
