@@ -32,7 +32,7 @@ export interface ArticleItem {
 // 用户画像响应
 export interface UserProfileData {
   user_id: string
-  nickname: string
+  username: string
   avatar_url: string
   ai_analysis: AIAnalysis
 }

@@ -31,10 +31,10 @@ export const AUTH_ENDPOINTS = [
   '/api/user/login',
   '/api/user/register',
   '/api/user/logout',
-  '/api/user/forgot-password',
-  '/api/user/reset-password',
-  '/api/user/check-username',
-  '/api/user/check-email',
+  '/api/user/forgot_password',
+  '/api/user/reset_password',
+  '/api/user/check_username',
+  '/api/user/check_email',
   '/api/user/profile',
   '/api/user/footprint',
   '/api/user/collections'
@@ -47,7 +47,10 @@ export const PRIVATE_ENDPOINTS = [
   '/api/user/collections',
   '/api/user/action',
   '/api/user/logout',
-  '/api/user/registration-time'
+  '/api/user/registration_time',
+  '/api/user/change_password',
+  '/api/user/delete_account',
+  '/api/articles/recommend'
 ];
 
 // 新用户免 token 天数（注册后 N 天内不传 token）

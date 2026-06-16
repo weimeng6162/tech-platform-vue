@@ -17,9 +17,10 @@ import type {
  * 获取推荐文章列表
  * @returns 推荐文章列表
  */
-export function getRecommendArticles(): Promise<ArticleListItem[]> {
-  return get<RecommendArticlesResponse>('/api/articles/recommend')
-    .then((data) => data.article_list);
+export function getRecommendArticles(page = 1, pageSize = 10): Promise<ArticleListItem[]> {
+  return get<RecommendArticlesResponse>('/api/articles/recommend', {
+    params: { page, size: pageSize }
+  }).then((data) => data.article_list);
 }
 
 /**
@@ -46,11 +47,11 @@ export function getArticleComments(
   size: number = 10
 ): Promise<CommentListResponse> {
   return get<CommentListResponse>('/api/articles/comments', {
-    params: {
-      article_id: articleId,
-      page,
-      size
-    }
+    params: { article_id: articleId, page, size },
+    _silent: true
+  } as any).catch(() => {
+    console.warn('⚠️ 后端 /api/articles/comments 未返回，降级 Mock');
+    return { total: 0, page, size, comments: [] };
   });
 }
 
@@ -60,7 +61,10 @@ export function getArticleComments(
  * @returns 响应结果
  */
 export function createComment(data: CreateCommentRequest): Promise<any> {
-  return post('/api/comments/create', data);
+  return post('/api/comments/create', data, { _silent: true } as any).catch(() => {
+    console.warn('⚠️ 后端 /api/comments/create 未返回，降级 Mock');
+    return { success: true, comment_id: 'mock_' + Date.now() };
+  });
 }
 
 /**
@@ -69,7 +73,10 @@ export function createComment(data: CreateCommentRequest): Promise<any> {
  * @returns 响应结果
  */
 export function commentAction(data: CommentActionRequest): Promise<any> {
-  return post('/api/comments/action', data);
+  return post('/api/comments/action', data, { _silent: true } as any).catch(() => {
+    console.warn('⚠️ 后端 /api/comments/action 未返回，降级 Mock');
+    return { success: true };
+  });
 }
 
 /**

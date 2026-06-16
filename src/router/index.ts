@@ -73,6 +73,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/UserProfile.vue'),
         meta: { transition: 'slide-fade' }
       },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('../views/Settings.vue'),
+        meta: { transition: 'slide-fade' }
+      },
     ],
   },
 ]

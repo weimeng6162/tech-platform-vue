@@ -69,9 +69,29 @@
             </button>
             <transition name="menu-fade">
               <div v-if="showMenu" class="dropdown-menu">
+                <!-- 名片区 -->
+                <div class="profile-card">
+                  <div class="profile-avatar">
+                    <img v-if="userStore.userInfo?.avatar_url" :src="userStore.userInfo.avatar_url" alt="" />
+                    <User v-else :size="20" />
+                  </div>
+                  <div class="profile-info">
+                    <span class="profile-name">{{ userStore.userInfo?.username || '未设置用户名' }}</span>
+                    <span class="profile-meta">注册于 {{ registeredAtText }}</span>
+                  </div>
+                </div>
+                <div class="menu-divider" />
                 <button class="menu-item" @click="goProfile">
                   <User :size="15" />
                   <span>个人主页</span>
+                </button>
+                <button class="menu-item" @click="goSettings">
+                  <Settings :size="15" />
+                  <span>账号设置</span>
+                </button>
+                <button class="menu-item" @click="goInterest">
+                  <Target :size="15" />
+                  <span>兴趣配置</span>
                 </button>
                 <div class="menu-divider" />
                 <button class="menu-item danger" @click="handleLogout">
@@ -87,16 +107,22 @@
 
     <!-- 搜索弹窗 -->
     <SearchModal :visible="showSearch" @close="showSearch = false" />
+
+    <!-- Toast 提示 -->
+    <Transition name="toast-fade">
+      <div v-if="showToast" class="toast">{{ toastMessage }}</div>
+    </Transition>
   </header>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { Search, User, Home, FileText, Grid, LogOut } from 'lucide-vue-next'
+import { Search, User, Home, FileText, Grid, LogOut, Settings, Target } from 'lucide-vue-next'
 import { useBrowsingHistory } from '../stores/browsingHistory'
-import { getRecentArticle } from '../stores/recentArticles'
 import { useUserStore } from '../stores/user'
+import { getRegistrationTime } from '../api/modules/user'
+import { setRegisteredAt } from '../api/request'
 import SearchModal from './SearchModal.vue'
 
 const router = useRouter()
@@ -106,14 +132,50 @@ const userStore = useUserStore()
 const showSearch = ref(false)
 const showMenu = ref(false)
 const dropdownRef = ref<HTMLElement>()
+const showToast = ref(false)
+const toastMessage = ref('')
+const registeredAtText = ref('')
 
 function toggleMenu() {
   showMenu.value = !showMenu.value
+  if (showMenu.value) {
+    registeredAtText.value = formatRegisteredAt()
+  }
+}
+
+function formatRegisteredAt(): string {
+  const ts = localStorage.getItem('registered_at')
+  if (ts) {
+    const d = new Date(parseInt(ts, 10))
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+  return '未知'
+}
+
+async function fetchRegistrationTime() {
+  try {
+    const res = await getRegistrationTime()
+    if (res.registered_at) {
+      setRegisteredAt(res.registered_at)
+    }
+  } catch {
+    // 静默降级，使用 localStorage 缓存值
+  }
 }
 
 function goProfile() {
   showMenu.value = false
   router.push('/user/profile')
+}
+
+function goSettings() {
+  showMenu.value = false
+  router.push('/settings')
+}
+
+function goInterest() {
+  showMenu.value = false
+  router.push('/interest')
 }
 
 async function handleLogout() {
@@ -130,6 +192,7 @@ function onClickOutside(e: MouseEvent) {
 
 onMounted(() => {
   document.addEventListener('click', onClickOutside)
+  fetchRegistrationTime()
 })
 
 onUnmounted(() => {
@@ -146,17 +209,16 @@ const navigateToArticle = (articleId: string) => {
   router.push(`/article/${articleId}`)
 }
 
-// 处理文章点击
+// 处理文章点击 - 跳转到最近阅读的文章
 const handleArticleClick = () => {
-  const recentArticle = getRecentArticle()
-  
-  if (recentArticle) {
-    router.push({
-      path: '/article-ai',
-      query: { id: recentArticle.article_id }
-    })
+  const history = browsingHistory.value
+  if (history.length > 0) {
+    const latest = history[0] // 按浏览顺序，最新的在最前面
+    router.push(`/article/${latest.article_id}`)
   } else {
-    router.push('/')
+    toastMessage.value = '这里会显示您最近一次阅读的文章，快去阅读吧'
+    showToast.value = true
+    setTimeout(() => { showToast.value = false }, 2500)
   }
 }
 </script>
@@ -526,6 +588,55 @@ const handleArticleClick = () => {
   z-index: 200;
 }
 
+/* 名片区 */
+.profile-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 10px var(--space-md);
+}
+
+.profile-avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-gradient);
+  color: white;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-meta {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
 .menu-item {
   display: flex;
   align-items: center;
@@ -569,5 +680,41 @@ const handleArticleClick = () => {
 .menu-fade-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+/* Toast 提示 */
+.toast {
+  position: fixed;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  z-index: 300;
+  white-space: nowrap;
+}
+
+:global([data-theme="dark"]) .toast {
+  background: rgba(30, 30, 40, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.toast-fade-enter-active,
+.toast-fade-leave-active {
+  transition: all 0.3s ease;
+}
+
+.toast-fade-enter-from,
+.toast-fade-leave-to {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-10px);
 }
 </style>

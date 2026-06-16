@@ -70,8 +70,10 @@ export interface AIAnalysis {
 // 用户侧写
 export interface UserProfile {
   user_id: string;
-  nickname: string;
+  username: string;
+  email: string;
   avatar_url: string;
+  created_at: string;
   ai_analysis: AIAnalysis;
 }
 
@@ -138,7 +140,7 @@ export interface ArticleActionRequest {
 
 export interface UserProfileResponse {
   user_id: string;
-  nickname: string;
+  username: string;
   avatar_url: string;
   is_configured: boolean;
   ai_analysis: AIAnalysis;
@@ -180,4 +182,28 @@ export interface CollectionsResponse {
   page: number;
   size: number;
   items: CollectionItem[];
+}
+
+// ========== 账号设置相关类型 ==========
+
+export interface UpdateProfileRequest {
+  username?: string;
+  email?: string;
+  avatar_url?: string;
+}
+
+export interface UpdateProfileResponse {
+  user_id: string;
+  username: string;
+  email: string;
+  avatar_url: string;
+}
+
+export interface ChangePasswordRequest {
+  old_password: string;
+  new_password: string;
+}
+
+export interface DeleteAccountRequest {
+  password: string;
 }

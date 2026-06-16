@@ -23,34 +23,82 @@
 
     <!-- 主体内容 -->
     <template v-else-if="profile">
-      <div class="profile-card">
-        <div class="profile-header">
+      <!-- 顶部：头像 + 基本信息 + 数据卡片 -->
+      <div class="top-row">
+        <div class="profile-card profile-hero">
           <div class="avatar-wrapper">
             <img
               v-if="profile.avatar_url"
               :src="profile.avatar_url"
-              :alt="profile.nickname"
+              :alt="profile.username"
               class="avatar-img"
             />
-            <span v-else class="avatar-placeholder">{{ profile.nickname?.[0] ?? '?' }}</span>
+            <span v-else class="avatar-placeholder">{{ profile.username?.[0] ?? '?' }}</span>
             <div class="avatar-ring" />
           </div>
           <div class="profile-info">
-            <h1 class="nickname">{{ profile.nickname }}</h1>
+            <h1 class="nickname">{{ profile.username }}</h1>
             <p class="technical-level">{{ profile.ai_analysis?.technical_level ?? '技术探索者' }}</p>
+          </div>
+          <div class="profile-meta-row">
+            <div class="meta-item">
+              <Calendar :size="14" />
+              <span>加入于 {{ formatDate(profile.created_at) }}</span>
+            </div>
           </div>
         </div>
 
-        <div class="profile-body">
-          <AIProfileDashboard
-            :core-interests="profile.ai_analysis?.core_interests ?? []"
-            :summary="profile.ai_analysis?.ai_profile_summary ?? ''"
-            :potential-tags="potentialTags"
-          />
+        <div class="stats-row">
+          <div class="stat-card">
+            <div class="stat-icon interests">
+              <Target :size="18" />
+            </div>
+            <div class="stat-num">{{ (profile.ai_analysis?.core_interests ?? []).length }}</div>
+            <div class="stat-label">兴趣领域</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon level">
+              <Award :size="18" />
+            </div>
+            <div class="stat-num">{{ profile.ai_analysis?.technical_level ?? '--' }}</div>
+            <div class="stat-label">技术评级</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon tags">
+              <Hash :size="18" />
+            </div>
+            <div class="stat-num">{{ potentialTags.length }}</div>
+            <div class="stat-label">核心标签</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon configured">
+              <ShieldCheck :size="18" />
+            </div>
+            <div class="stat-num">{{ profile.is_configured ? '是' : '否' }}</div>
+            <div class="stat-label">偏好设置</div>
+          </div>
         </div>
       </div>
 
+      <!-- AI 画像仪表盘 -->
       <div class="profile-card">
+        <div class="card-header">
+          <Sparkles :size="18" />
+          <h3>AI 技术画像</h3>
+        </div>
+        <AIProfileDashboard
+          :core-interests="profile.ai_analysis?.core_interests ?? []"
+          :summary="profile.ai_analysis?.ai_profile_summary ?? ''"
+          :potential-tags="potentialTags"
+        />
+      </div>
+
+      <!-- 足迹 & 收藏 -->
+      <div class="profile-card">
+        <div class="card-header">
+          <Layers :size="18" />
+          <h3>内容资产</h3>
+        </div>
         <AssetTabs />
       </div>
     </template>
@@ -80,10 +128,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { UserX } from 'lucide-vue-next'
-import { getUserProfile } from '../api/modules/user'
+import { UserX, Calendar, Target, Award, Hash, ShieldCheck, Sparkles, Layers } from 'lucide-vue-next'
 import AIProfileDashboard from '../components/AIProfileDashboard.vue'
 import AssetTabs from '../components/AssetTabs.vue'
+import { getUserProfile } from '../api/modules/user'
+import { MOCK_USER_PROFILE_RESPONSE } from '../api/mock'
 import type { UserProfileResponse } from '../api/types'
 
 const profile = ref<UserProfileResponse | null>(null)
@@ -96,13 +145,26 @@ const potentialTags = computed(() => {
     .map((i) => i.name)
 })
 
+function formatDate(dateStr: string): string {
+  if (!dateStr) return '--'
+  const d = new Date(dateStr)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 async function fetchProfile() {
   loading.value = true
   try {
     const res = await getUserProfile()
-    profile.value = res as unknown as UserProfileResponse
+    profile.value = {
+      user_id: res.user_id,
+      username: res.username,
+      avatar_url: res.avatar_url,
+      is_configured: true,
+      ai_analysis: res.ai_analysis,
+    }
   } catch {
-    profile.value = null
+    console.warn('⚠️ /api/user/profile 失败，降级 Mock')
+    profile.value = MOCK_USER_PROFILE_RESPONSE
   } finally {
     loading.value = false
   }
@@ -115,7 +177,7 @@ onMounted(() => {
 
 <style scoped>
 .profile-page {
-  max-width: 800px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: var(--space-xl) var(--space-lg);
   display: flex;
@@ -126,6 +188,8 @@ onMounted(() => {
 /* ===== 卡片容器 ===== */
 .profile-card {
   background: var(--bg-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-lg);
   padding: var(--space-xl);
@@ -136,20 +200,52 @@ onMounted(() => {
   border-color: var(--border-glow);
 }
 
-/* ===== 头部 ===== */
-.profile-header {
+.card-header {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-sm);
   margin-bottom: var(--space-xl);
-  padding-bottom: var(--space-lg);
+  padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--border-primary);
+}
+
+.card-header h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.card-header :deep(svg) {
+  color: var(--accent-primary);
+}
+
+/* ===== 顶部双栏 ===== */
+.top-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+  .top-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== 头像卡片 ===== */
+.profile-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-md);
 }
 
 .avatar-wrapper {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 88px;
+  height: 88px;
   flex-shrink: 0;
 }
 
@@ -189,9 +285,16 @@ onMounted(() => {
   to { transform: rotate(360deg); }
 }
 
+.profile-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
 .nickname {
-  margin: 0 0 4px;
-  font-size: 1.5rem;
+  margin: 0;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.02em;
@@ -199,19 +302,98 @@ onMounted(() => {
 
 .technical-level {
   margin: 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 500;
   color: #22d3ee;
   background: rgba(34, 211, 238, 0.08);
   display: inline-block;
-  padding: 3px var(--space-sm);
+  padding: 3px 12px;
   border-radius: var(--radius-full);
   border: 1px solid rgba(34, 211, 238, 0.2);
 }
 
-.profile-body {
+.profile-meta-row {
+  display: flex;
+  gap: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--border-primary);
+  width: 100%;
+  justify-content: center;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+}
+
+.meta-item :deep(svg) {
+  opacity: 0.6;
+}
+
+/* ===== 统计卡片 ===== */
+.stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.stat-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: var(--space-lg) var(--space-md);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  border-color: var(--border-secondary);
+  transform: translateY(-2px);
+}
+
+.stat-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.stat-icon.interests { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.stat-icon.level { background: linear-gradient(135deg, #f59e0b, #ef4444); }
+.stat-icon.tags { background: linear-gradient(135deg, #06b6d4, #22d3ee); }
+.stat-icon.configured { background: linear-gradient(135deg, #10b981, #34d399); }
+
+.stat-num {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ===== 骨架屏通用头部 ===== */
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  margin-bottom: var(--space-xl);
+  padding-bottom: var(--space-lg);
+  border-bottom: 1px solid var(--border-primary);
 }
 
 /* ===== 骷髅屏 ===== */

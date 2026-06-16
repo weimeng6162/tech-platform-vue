@@ -96,25 +96,26 @@ request.interceptors.response.use(
     return data;
   },
   (error) => {
-    // 网络错误、超时等
+    const silent = (error.config as any)?._silent;
     if (error.response) {
-      // 服务器返回了响应，但状态码不是2xx
       const status = error.response.status;
       const message = error.response.data?.msg || error.message;
-      console.error('[API Error Detail] 状态码:', status);
-      console.error('[API Error Detail] 响应体:', JSON.stringify(error.response.data, null, 2));
-      console.error('[API Error Detail] 请求URL:', error.config?.url);
-      console.error('[API Error Detail] 请求方法:', error.config?.method?.toUpperCase());
-      handleError(status, message);
+      if (!silent) {
+        console.error('[API Error Detail] 状态码:', status);
+        console.error('[API Error Detail] 响应体:', JSON.stringify(error.response.data, null, 2));
+        console.error('[API Error Detail] 请求URL:', error.config?.url);
+        console.error('[API Error Detail] 请求方法:', error.config?.method?.toUpperCase());
+        handleError(status, message);
+      } else {
+        console.warn(`[API Silent] ${error.config?.url} → ${status}, 降级使用 Mock`);
+      }
     } else if (error.request) {
-      // 请求已发出，但没有收到响应
       if (error.code === 'ECONNABORTED') {
         handleError(408, '请求超时，请稍后重试');
       } else {
         handleError(0, '网络连接失败，请检查网络设置');
       }
     } else {
-      // 请求配置出错
       handleError(0, '请求配置错误');
     }
 
@@ -168,6 +169,11 @@ export function get<T = any>(url: string, config?: AxiosRequestConfig): Promise<
 // 封装POST请求
 export function post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
   return request.post(url, data, config);
+}
+
+// 封装PUT请求
+export function put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+  return request.put(url, data, config);
 }
 
 export default request;
