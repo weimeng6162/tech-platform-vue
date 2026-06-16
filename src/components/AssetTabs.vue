@@ -122,13 +122,13 @@ async function fetchData(tab: TabKey, pageNum: number, append: boolean) {
   }
 
   try {
-    const res = await fetcher(pageNum, PAGE_SIZE) as { total: number; items: ListItem[] }
+    const res = await fetcher(pageNum, PAGE_SIZE) as { total: number; list: ListItem[] }
     total.value = res.total ?? 0
-    hasMore.value = res.items?.length === PAGE_SIZE
+    hasMore.value = res.list?.length === PAGE_SIZE
     if (append) {
-      items.value.push(...(res.items ?? []))
+      items.value.push(...(res.list ?? []))
     } else {
-      items.value = res.items ?? []
+      items.value = res.list ?? []
     }
   } catch {
     if (!append) items.value = []

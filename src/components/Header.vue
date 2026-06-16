@@ -121,7 +121,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { Search, User, Home, FileText, Grid, LogOut, Settings, Target } from 'lucide-vue-next'
 import { useBrowsingHistory } from '../stores/browsingHistory'
 import { useUserStore } from '../stores/user'
-import { getRegistrationTime } from '../api/modules/user'
+import { getUserInfo } from '../api/modules/user'
 import { setRegisteredAt } from '../api/request'
 import SearchModal from './SearchModal.vue'
 
@@ -154,9 +154,9 @@ function formatRegisteredAt(): string {
 
 async function fetchRegistrationTime() {
   try {
-    const res = await getRegistrationTime()
-    if (res.registered_at) {
-      setRegisteredAt(res.registered_at)
+    const info = await getUserInfo()
+    if (info.created_at) {
+      setRegisteredAt(info.created_at)
     }
   } catch {
     // 静默降级，使用 localStorage 缓存值

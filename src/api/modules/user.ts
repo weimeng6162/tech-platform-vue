@@ -2,23 +2,15 @@
  * 用户相关API
  */
 
-import { get, post, put } from '../request';
-import type { UserProfile, ArticleActionRequest, FootprintResponse, CollectionsResponse, UpdateProfileRequest, UpdateProfileResponse, ChangePasswordRequest, DeleteAccountRequest } from '../types';
+import { get, post } from '../request';
+import type { UserInfo, UserProfile, ArticleActionRequest, FootprintResponse, CollectionsResponse, UpdateProfileRequest, UpdateProfileResponse, ChangePasswordRequest, DeleteAccountRequest } from '../types';
 
 /**
- * 获取用户侧写信息
- * @returns 用户侧写
+ * 获取用户基础信息（替代原 /api/user/profile + /api/user/registration_time）
+ * @returns 用户基础信息（含 username/email/avatar/join_days/created_at）
  */
-export function getUserProfile(): Promise<UserProfile> {
-  return get<UserProfile>('/api/user/profile', { _silent: true } as any);
-}
-
-/**
- * 获取用户注册时间（需要登录）
- * @returns 注册时间字符串
- */
-export function getRegistrationTime(): Promise<{ registered_at: string }> {
-  return get<{ registered_at: string }>('/api/user/registration_time', { _silent: true } as any);
+export function getUserInfo(): Promise<UserInfo> {
+  return get<UserInfo>('/api/user/info', { _silent: true } as any);
 }
 
 /**
@@ -79,40 +71,50 @@ export function register(data: RegisterRequest): Promise<RegisterResponse> {
  * @param username 用户名
  * @returns 是否存在
  */
-export function checkUsername(username: string): Promise<{ exists: boolean; message?: string }> {
-  return get<{ exists: boolean; message?: string }>(`/api/user/check_username?username=${encodeURIComponent(username)}`);
+export function checkUsername(username: string): Promise<{ is_available: boolean }> {
+  return get<{ is_available: boolean }>(`/api/user/check_username?username=${encodeURIComponent(username)}`);
 }
 
 /**
  * 邮箱唯一性校验
  * @param email 邮箱
- * @returns 是否存在
+ * @returns 是否可用
  */
-export function checkEmail(email: string): Promise<{ exists: boolean; message?: string }> {
-  return get<{ exists: boolean; message?: string }>(`/api/user/check_email?email=${encodeURIComponent(email)}`);
+export function checkEmail(email: string): Promise<{ is_available: boolean }> {
+  return get<{ is_available: boolean }>(`/api/user/check_email?email=${encodeURIComponent(email)}`);
 }
 
 /**
  * 用户登出
  */
 export function logout(): Promise<void> {
-  return post<void>('/api/user/logout', undefined, { _silent: true } as any);
+  return post<void>('/api/user/logout');
 }
 
 /**
  * 获取用户足迹（浏览历史）
  */
 export function getFootprint(page?: number, size?: number): Promise<FootprintResponse> {
-  console.warn('⚠️ 接口 /api/user/footprint 未实现，使用 Mock 数据');
-  return Promise.resolve({ total: 0, page: page ?? 1, size: size ?? 10, items: [] });
+  return get<FootprintResponse>('/api/user/footprint', {
+    params: { page: page ?? 1, size: size ?? 10 },
+    _silent: true
+  } as any).catch(() => {
+    console.warn('⚠️ /api/user/footprint 失败，降级 Mock');
+    return { total: 0, page: page ?? 1, size: size ?? 10, list: [] };
+  });
 }
 
 /**
  * 获取用户收藏列表
  */
 export function getCollections(page?: number, size?: number): Promise<CollectionsResponse> {
-  console.warn('⚠️ 接口 /api/user/collections 未实现，使用 Mock 数据');
-  return Promise.resolve({ total: 0, page: page ?? 1, size: size ?? 10, items: [] });
+  return get<CollectionsResponse>('/api/user/collections', {
+    params: { page: page ?? 1, size: size ?? 10 },
+    _silent: true
+  } as any).catch(() => {
+    console.warn('⚠️ /api/user/collections 失败，降级 Mock');
+    return { total: 0, page: page ?? 1, size: size ?? 10, list: [] };
+  });
 }
 
 /**
@@ -169,8 +171,8 @@ export function articleAction(data: ArticleActionRequest): Promise<{
 }
 
 export function updateProfile(data: UpdateProfileRequest): Promise<UpdateProfileResponse> {
-  return put<UpdateProfileResponse>('/api/user/profile', data).catch(() => {
-    console.warn('⚠️ 后端 PUT /api/user/profile 未实现，降级 Mock');
+  return post<UpdateProfileResponse>('/api/user/profile/update', data).catch(() => {
+    console.warn('⚠️ 后端 POST /api/user/profile/update 未返回，降级 Mock');
     return {
       user_id: 'mock_user',
       username: data.username || '技术探索者',
@@ -181,14 +183,14 @@ export function updateProfile(data: UpdateProfileRequest): Promise<UpdateProfile
 }
 
 export function changePassword(data: ChangePasswordRequest): Promise<void> {
-  return post<void>('/api/user/change_password', data).catch(() => {
-    console.warn('⚠️ 后端 POST /api/user/change_password 未实现，降级 Mock');
+  return post<void>('/api/user/password/change', data).catch(() => {
+    console.warn('⚠️ 后端 POST /api/user/password/change 未返回，降级 Mock');
     return;
   });
 }
 
 export function deleteAccount(data: DeleteAccountRequest): Promise<void> {
-  return post<void>('/api/user/delete_account', data);
+  return post<void>('/api/user/delete', data);
 }
 
 export interface ColdStartRequest {

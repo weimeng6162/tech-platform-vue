@@ -31,25 +31,24 @@ export const AUTH_ENDPOINTS = [
   '/api/user/login',
   '/api/user/register',
   '/api/user/logout',
-  '/api/user/forgot_password',
-  '/api/user/reset_password',
   '/api/user/check_username',
   '/api/user/check_email',
-  '/api/user/profile',
+  '/api/user/info',
   '/api/user/footprint',
   '/api/user/collections'
 ];
 
 // 需要登录认证的接口（必须带 token）
 export const PRIVATE_ENDPOINTS = [
-  '/api/user/profile',
+  '/api/user/info',
   '/api/user/footprint',
   '/api/user/collections',
   '/api/user/action',
   '/api/user/logout',
-  '/api/user/registration_time',
-  '/api/user/change_password',
-  '/api/user/delete_account',
+  '/api/user/password/change',
+  '/api/user/profile/update',
+  '/api/user/delete',
+  '/api/user/cold_start',
   '/api/articles/recommend'
 ];
 

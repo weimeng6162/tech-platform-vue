@@ -192,7 +192,7 @@ import { useRouter } from 'vue-router'
 import { User, Upload, Pencil, Check, X, Sun, Moon, Monitor } from 'lucide-vue-next'
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
-import { getUserProfile, updateProfile, changePassword } from '../api/modules/user'
+import { getUserInfo, updateProfile, changePassword } from '../api/modules/user'
 import { MOCK_USER_PROFILE } from '../api/mock'
 
 const router = useRouter()
@@ -222,10 +222,16 @@ const emailInput = ref<HTMLInputElement>()
 
 async function loadProfile() {
   try {
-    const res = await getUserProfile()
-    Object.assign(profile, res)
+    const res = await getUserInfo()
+    Object.assign(profile, {
+      user_id: '',
+      username: res.username,
+      email: res.email,
+      avatar_url: res.avatar_url,
+      created_at: res.created_at,
+    })
   } catch {
-    console.warn('⚠️ /api/user/profile 失败，降级 Mock')
+    console.warn('⚠️ /api/user/info 失败，降级 Mock')
     Object.assign(profile, MOCK_USER_PROFILE)
   }
 }

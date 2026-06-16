@@ -131,7 +131,7 @@ import { ref, computed, onMounted } from 'vue'
 import { UserX, Calendar, Target, Award, Hash, ShieldCheck, Sparkles, Layers } from 'lucide-vue-next'
 import AIProfileDashboard from '../components/AIProfileDashboard.vue'
 import AssetTabs from '../components/AssetTabs.vue'
-import { getUserProfile } from '../api/modules/user'
+import { getUserInfo } from '../api/modules/user'
 import { MOCK_USER_PROFILE_RESPONSE } from '../api/mock'
 import type { UserProfileResponse } from '../api/types'
 
@@ -154,16 +154,16 @@ function formatDate(dateStr: string): string {
 async function fetchProfile() {
   loading.value = true
   try {
-    const res = await getUserProfile()
+    const info = await getUserInfo()
     profile.value = {
-      user_id: res.user_id,
-      username: res.username,
-      avatar_url: res.avatar_url,
+      user_id: '',
+      username: info.username,
+      avatar_url: info.avatar_url,
       is_configured: true,
-      ai_analysis: res.ai_analysis,
+      ai_analysis: MOCK_USER_PROFILE_RESPONSE.ai_analysis,
     }
   } catch {
-    console.warn('⚠️ /api/user/profile 失败，降级 Mock')
+    console.warn('⚠️ /api/user/info 失败，降级 Mock')
     profile.value = MOCK_USER_PROFILE_RESPONSE
   } finally {
     loading.value = false

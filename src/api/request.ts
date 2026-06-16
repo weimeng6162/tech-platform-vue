@@ -21,7 +21,7 @@ export function isNewUser(): boolean {
   return daysSince < NEW_USER_GRACE_DAYS;
 }
 
-/** 更新缓存的注册时间（供 getRegistrationTime 调用后使用） */
+/** 更新缓存的注册时间（供 getUserInfo 调用后使用） */
 export function setRegisteredAt(isoString: string) {
   cachedRegisteredAt = new Date(isoString).getTime();
   localStorage.setItem('registered_at', String(cachedRegisteredAt));
