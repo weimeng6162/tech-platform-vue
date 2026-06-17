@@ -40,12 +40,6 @@
             <h1 class="nickname">{{ profile.username }}</h1>
             <p class="technical-level">{{ profile.ai_analysis?.technical_level ?? '技术探索者' }}</p>
           </div>
-          <div class="profile-meta-row">
-            <div class="meta-item">
-              <Calendar :size="14" />
-              <span>加入于 {{ formatDate(profile.created_at) }}</span>
-            </div>
-          </div>
         </div>
 
         <div class="stats-row">
@@ -128,7 +122,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { UserX, Calendar, Target, Award, Hash, ShieldCheck, Sparkles, Layers } from 'lucide-vue-next'
+import { UserX, Target, Award, Hash, ShieldCheck, Sparkles, Layers } from 'lucide-vue-next'
 import AIProfileDashboard from '../components/AIProfileDashboard.vue'
 import AssetTabs from '../components/AssetTabs.vue'
 import { getUserInfo } from '../api/modules/user'
@@ -144,12 +138,6 @@ const potentialTags = computed(() => {
     .filter((i) => i.weight >= 60)
     .map((i) => i.name)
 })
-
-function formatDate(dateStr: string): string {
-  if (!dateStr) return '--'
-  const d = new Date(dateStr)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 async function fetchProfile() {
   loading.value = true

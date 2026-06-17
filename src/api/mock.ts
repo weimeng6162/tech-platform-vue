@@ -10,6 +10,7 @@ export const MOCK_USER_PROFILE: UserProfile = {
   email: 'dev@techflow.io',
   avatar_url: '',
   created_at: '2026-03-15T08:30:00Z',
+  join_days: 365,
   ai_analysis: {
     technical_level: '高级工程师',
     ai_profile_summary:
