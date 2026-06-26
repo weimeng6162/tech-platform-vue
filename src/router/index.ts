@@ -18,6 +18,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/InterestSetup.vue'),
   },
   {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: () => import('../views/ResetPassword.vue'),
+  },
+  {
     path: '/',
     component: () => import('../layouts/MainLayout.vue'),
     children: [
