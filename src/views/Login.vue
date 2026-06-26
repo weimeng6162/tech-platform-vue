@@ -232,90 +232,13 @@
 
       <!-- 底部链接 -->
       <div class="footer-links">
-        <a href="#" @click.prevent="showForgotPassword = true">忘记密码？</a>
+        <a href="#" @click.prevent="showForgotModal = true">忘记密码？</a>
         <span class="separator">|</span>
         <a href="#" @click.prevent="handleRegister">立即注册</a>
       </div>
     </div>
 
-    <!-- 找回密码弹窗 -->
-    <transition name="modal-fade">
-      <div v-if="showForgotPassword" class="modal-overlay" @click="closeForgotPassword">
-        <div class="modal-container" @click.stop>
-          <div class="modal-card">
-            <!-- 关闭按钮 -->
-            <button class="modal-close" @click="closeForgotPassword">
-              <X :size="20" />
-            </button>
-
-            <!-- 标题 -->
-            <div class="modal-header">
-              <div class="modal-icon">
-                <KeyRound :size="32" />
-              </div>
-              <h3>找回密码</h3>
-              <p>请输入您的注册邮箱，我们将发送重置密码链接</p>
-            </div>
-
-            <!-- 表单 -->
-            <form class="forgot-form" @submit.prevent="handleForgotPassword">
-              <div class="form-group" :class="{ 'has-error': forgotErrors.email, 'is-focused': focusedField === 'forgot-email' }">
-                <label for="forgot-email">
-                  <Mail :size="16" />
-                  <span>邮箱地址</span>
-                </label>
-                <div class="input-wrapper">
-                  <input
-                    id="forgot-email"
-                    v-model="forgotForm.email"
-                    type="email"
-                    placeholder="请输入注册邮箱"
-                    @focus="focusedField = 'forgot-email'"
-                    @blur="handleForgotBlur"
-                  />
-                  <div class="input-highlight"></div>
-                </div>
-                <transition name="error-fade">
-                  <span v-if="forgotErrors.email" class="error-message">
-                    <AlertCircle :size="14" />
-                    {{ forgotErrors.email }}
-                  </span>
-                </transition>
-              </div>
-
-              <button 
-                type="submit" 
-                class="submit-button"
-                :disabled="isForgotSubmitting"
-              >
-                <transition name="button-fade" mode="out-in">
-                  <template v-if="!isForgotSubmitting">
-                    <span key="normal" class="normal-state">
-                      <span>发送重置链接</span>
-                      <Send :size="18" />
-                    </span>
-                  </template>
-                  <template v-else>
-                    <span key="loading" class="loading-state">
-                      <Loader2 class="spinner" :size="18" />
-                      <span>发送中...</span>
-                    </span>
-                  </template>
-                </transition>
-              </button>
-            </form>
-
-            <!-- 成功提示 -->
-            <transition name="success-fade">
-              <div v-if="forgotSuccess" class="success-message">
-                <CheckCircle :size="20" />
-                <span>重置链接已发送到您的邮箱，请查收</span>
-              </div>
-            </transition>
-          </div>
-        </div>
-      </div>
-    </transition>
+    <ForgotPasswordModal v-model:visible="showForgotModal" />
 
     <!-- 装饰元素 -->
     <div class="decorations">
@@ -361,12 +284,13 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { 
-  Eye, EyeOff, Lock, User, ArrowRight, Loader2, 
-  AlertCircle, Github, Mail, X, KeyRound, Send, CheckCircle
+import {
+  Eye, EyeOff, Lock, User, ArrowRight, Loader2,
+  AlertCircle, Github, Mail
 } from 'lucide-vue-next'
 import { useUserStore } from '../stores/user'
 import { aesEncrypt } from '../utils/aes'
+import ForgotPasswordModal from '../components/forgot-password/ForgotPasswordModal.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -411,16 +335,7 @@ const isShaking = ref(false)
 const rememberMe = ref(false)
 const showTerminal = ref(false)
 
-// 找回密码相关
-const showForgotPassword = ref(false)
-const forgotForm = reactive({
-  email: ''
-})
-const forgotErrors = reactive({
-  email: ''
-})
-const isForgotSubmitting = ref(false)
-const forgotSuccess = ref(false)
+const showForgotModal = ref(false)
 
 // 切换密码显示
 const togglePassword = () => {
@@ -552,71 +467,6 @@ const handleLogin = async () => {
     shake()
   } finally {
     isSubmitting.value = false
-  }
-}
-
-// 处理忘记密码
-const handleForgotPassword = async () => {
-  // 验证邮箱
-  if (!forgotForm.email.trim()) {
-    forgotErrors.email = '邮箱不能为空'
-    return
-  }
-  
-  // 验证邮箱格式
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-  if (!emailRegex.test(forgotForm.email)) {
-    forgotErrors.email = '请输入有效的邮箱地址'
-    return
-  }
-  
-  forgotErrors.email = ''
-  isForgotSubmitting.value = true
-  forgotSuccess.value = false
-  
-  try {
-    // 调用找回密码接口
-    // TODO: 替换为实际的 API 调用
-    // await forgotPasswordApi({ email: forgotForm.email })
-    
-    // 模拟 API 调用
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // 显示成功消息
-    forgotSuccess.value = true
-    
-    // 3秒后关闭弹窗
-    setTimeout(() => {
-      closeForgotPassword()
-    }, 3000)
-  } catch (error: any) {
-    console.error('发送重置链接失败:', error)
-    forgotErrors.email = error.message || '发送失败，请重试'
-  } finally {
-    isForgotSubmitting.value = false
-  }
-}
-
-// 关闭找回密码弹窗
-const closeForgotPassword = () => {
-  showForgotPassword.value = false
-  forgotForm.email = ''
-  forgotErrors.email = ''
-  forgotSuccess.value = false
-}
-
-// 处理找回密码表单失焦
-const handleForgotBlur = () => {
-  focusedField.value = null
-  if (!forgotForm.email.trim()) {
-    forgotErrors.email = '邮箱不能为空'
-  } else {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(forgotForm.email)) {
-      forgotErrors.email = '请输入有效的邮箱地址'
-    } else {
-      forgotErrors.email = ''
-    }
   }
 }
 
@@ -1532,188 +1382,6 @@ onMounted(() => {
 /* 深色模式适配 */
 :global([data-theme="dark"]) .login-container {
   background: #000000;
-}
-
-/* 找回密码弹窗 */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-}
-
-.modal-container {
-  width: 100%;
-  max-width: 480px;
-  padding: 1rem;
-}
-
-.modal-card {
-  position: relative;
-  padding: 2.5rem;
-  background: rgba(15, 15, 25, 0.95);
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-radius: 20px;
-  backdrop-filter: blur(20px);
-  box-shadow: 
-    0 20px 60px rgba(0, 0, 0, 0.5),
-    0 0 100px rgba(99, 102, 241, 0.1);
-}
-
-.modal-close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  color: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s;
-  border-radius: 8px;
-}
-
-.modal-close:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.modal-header {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.modal-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(168, 85, 247, 0.2));
-  border-radius: 16px;
-  color: #818cf8;
-  animation: modalIconPulse 2s ease-in-out infinite;
-}
-
-@keyframes modalIconPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
-.modal-header h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  color: #ffffff;
-}
-
-.modal-header p {
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.6);
-  margin: 0;
-}
-
-.forgot-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.submit-button {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 1rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: white;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
-  border: none;
-  border-radius: 12px;
-  cursor: pointer;
-  overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.submit-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, #818cf8 0%, #a78bfa 50%, #c084fc 100%);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.submit-button:hover:not(:disabled)::before {
-  opacity: 1;
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 10px 30px rgba(99, 102, 241, 0.4),
-    0 0 40px rgba(99, 102, 241, 0.3);
-}
-
-.submit-button:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.success-message {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1.5rem;
-  padding: 1rem;
-  background: rgba(16, 185, 129, 0.1);
-  border: 1px solid rgba(16, 185, 129, 0.3);
-  border-radius: 12px;
-  color: #34d399;
-  font-size: 0.9rem;
-}
-
-.success-fade-enter-active,
-.success-fade-leave-active {
-  transition: all 0.3s;
-}
-
-.success-fade-enter-from,
-.success-fade-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
-/* 弹窗过渡动画 */
-.modal-fade-enter-active,
-.modal-fade-leave-active {
-  transition: all 0.3s;
-}
-
-.modal-fade-enter-from,
-.modal-fade-leave-to {
-  opacity: 0;
-}
-
-.modal-fade-enter-from .modal-card,
-.modal-fade-leave-to .modal-card {
-  transform: scale(0.95) translateY(20px);
-}
-
-.modal-fade-enter-active .modal-card,
-.modal-fade-leave-active .modal-card {
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* 记住我 */

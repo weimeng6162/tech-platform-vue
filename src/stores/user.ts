@@ -27,6 +27,8 @@ export const useUserStore = defineStore('user', () => {
       token.value = response.token
       userInfo.value = response.user
       localStorage.setItem('token', response.token)
+      localStorage.setItem('cached_username', response.user?.username || '')
+      localStorage.setItem('cached_email', response.user?.email || '')
       if (!localStorage.getItem('registered_at')) {
         setRegisteredAt(new Date().toISOString())
       }
@@ -44,15 +46,10 @@ export const useUserStore = defineStore('user', () => {
    * 登出
    */
   async function logout() {
-    try {
-      await logoutApi()
-    } catch (error) {
-      console.error('登出接口调用失败:', error)
-    } finally {
-      token.value = null
-      userInfo.value = null
-      localStorage.removeItem('token')
-    }
+    logoutApi().catch(() => {})
+    token.value = null
+    userInfo.value = null
+    localStorage.removeItem('token')
   }
 
   function setUserInfo(info: UserProfile) {

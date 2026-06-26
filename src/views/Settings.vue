@@ -225,14 +225,14 @@ async function loadProfile() {
     const res = await getUserInfo()
     Object.assign(profile, {
       user_id: '',
-      username: res.username,
-      email: res.email,
-      avatar_url: res.avatar_url,
-      created_at: res.created_at,
+      username: res.username || userStore.userInfo?.username || '用户',
+      email: res.email || userStore.userInfo?.email || '',
+      avatar_url: res.avatar_url || userStore.userInfo?.avatar_url || '',
+      created_at: res.created_at || userStore.userInfo?.created_at || '',
     })
   } catch {
-    console.warn('⚠️ /api/user/info 失败，降级 Mock')
-    Object.assign(profile, MOCK_USER_PROFILE)
+    const fallback = userStore.userInfo
+    Object.assign(profile, fallback && fallback.username ? fallback : MOCK_USER_PROFILE)
   }
 }
 

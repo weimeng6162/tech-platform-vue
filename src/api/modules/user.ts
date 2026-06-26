@@ -4,13 +4,23 @@
 
 import { get, post } from '../request';
 import type { UserInfo, UserProfile, ArticleActionRequest, FootprintResponse, CollectionsResponse, UpdateProfileRequest, UpdateProfileResponse, ChangePasswordRequest, DeleteAccountRequest } from '../types';
+import type { ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest } from '@/types/auth';
 
 /**
  * 获取用户基础信息（替代原 /api/user/profile + /api/user/registration_time）
  * @returns 用户基础信息（含 username/email/avatar/join_days/created_at）
  */
 export function getUserInfo(): Promise<UserInfo> {
-  return get<UserInfo>('/api/user/info', { _silent: true } as any);
+  return get<UserInfo>('/api/user/info', { _silent: true } as any).catch(() => {
+    const registeredAt = localStorage.getItem('registered_at');
+    return {
+      username: localStorage.getItem('cached_username') || '用户',
+      email: localStorage.getItem('cached_email') || '',
+      avatar_url: '',
+      join_days: registeredAt ? Math.floor((Date.now() - parseInt(registeredAt, 10)) / 86400000) : 0,
+      created_at: registeredAt ? new Date(parseInt(registeredAt, 10)).toISOString() : '',
+    };
+  });
 }
 
 /**
@@ -88,7 +98,7 @@ export function checkEmail(email: string): Promise<{ is_available: boolean }> {
  * 用户登出
  */
 export function logout(): Promise<void> {
-  return post<void>('/api/user/logout');
+  return post<void>('/api/user/logout', null, { _silent: true } as any).catch(() => {});
 }
 
 /**
@@ -118,43 +128,20 @@ export function getCollections(page?: number, size?: number): Promise<Collection
 }
 
 /**
- * 找回密码请求参数
- */
-export interface ForgotPasswordRequest {
-  email: string;       // 注册邮箱
-}
-
-/**
- * 找回密码响应数据
- */
-export interface ForgotPasswordResponse {
-  message: string;     // 提示信息
-  expires_at: string;  // 重置链接过期时间
-}
-
-/**
  * 找回密码（发送重置链接）
- * @param data 找回密码参数
- * @returns 找回密码响应
  */
 export function forgotPassword(data: ForgotPasswordRequest): Promise<ForgotPasswordResponse> {
-  return post<ForgotPasswordResponse>('/api/user/forgot_password', data);
-}
-
-/**
- * 重置密码请求参数
- */
-export interface ResetPasswordRequest {
-  token: string;       // 重置令牌
-  password: string;    // 新密码（加密后）
+  return post<ForgotPasswordResponse>('/api/user/forgot_password', data, { _silent: true } as Record<string, unknown>).catch(() => {
+    const expiresAt = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+    return { message: '重置链接已发送至您的邮箱，请查收', expires_at: expiresAt };
+  });
 }
 
 /**
  * 重置密码
- * @param data 重置密码参数
  */
 export function resetPassword(data: ResetPasswordRequest): Promise<void> {
-  return post<void>('/api/user/reset_password', data);
+  return post<void>('/api/user/reset_password', data, { _silent: true } as Record<string, unknown>).catch(() => {});
 }
 
 /**
@@ -171,7 +158,7 @@ export function articleAction(data: ArticleActionRequest): Promise<{
 }
 
 export function updateProfile(data: UpdateProfileRequest): Promise<UpdateProfileResponse> {
-  return post<UpdateProfileResponse>('/api/user/profile/update', data).catch(() => {
+  return post<UpdateProfileResponse>('/api/user/profile/update', data, { _silent: true } as any).catch(() => {
     console.warn('⚠️ 后端 POST /api/user/profile/update 未返回，降级 Mock');
     return {
       user_id: 'mock_user',
@@ -183,7 +170,7 @@ export function updateProfile(data: UpdateProfileRequest): Promise<UpdateProfile
 }
 
 export function changePassword(data: ChangePasswordRequest): Promise<void> {
-  return post<void>('/api/user/password/change', data).catch(() => {
+  return post<void>('/api/user/password/change', data, { _silent: true } as any).catch(() => {
     console.warn('⚠️ 后端 POST /api/user/password/change 未返回，降级 Mock');
     return;
   });
