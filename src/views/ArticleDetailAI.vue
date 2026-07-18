@@ -1,6 +1,49 @@
 <template>
   <div class="article-detail-page">
-    <div class="container">
+    <!-- 加载中 -->
+    <div v-if="pageLoading" class="loading-container">
+      <div class="loading-skeleton">
+        <div class="skeleton-line skeleton-category" />
+        <div class="skeleton-line skeleton-title" />
+        <div class="skeleton-line skeleton-meta" />
+        <div class="skeleton-spacer" />
+        <div class="skeleton-card">
+          <div class="skeleton-line" />
+          <div class="skeleton-line" />
+          <div class="skeleton-line w-60" />
+        </div>
+        <div class="skeleton-spacer" />
+        <div class="skeleton-line w-90" />
+        <div class="skeleton-line" />
+        <div class="skeleton-line" />
+        <div class="skeleton-line w-80" />
+      </div>
+    </div>
+    <!-- 加载失败 -->
+    <div v-else-if="pageError" class="state-container">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="state-icon">
+        <circle cx="12" cy="12" r="10" stroke-width="2" />
+        <line x1="12" y1="8" x2="12" y2="12" stroke-width="2" stroke-linecap="round" />
+        <line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <h3>加载失败</h3>
+      <p>{{ pageError }}</p>
+      <button class="retry-btn" @click="retryLoad">重新加载</button>
+    </div>
+    <!-- 文章不存在 -->
+    <div v-else-if="!article.article_id" class="state-container">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="state-icon">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <polyline points="14 2 14 8 20 8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        <line x1="9" y1="13" x2="15" y2="13" stroke-width="2" stroke-linecap="round" />
+        <line x1="9" y1="17" x2="13" y2="17" stroke-width="2" stroke-linecap="round" />
+      </svg>
+      <h3>文章不存在</h3>
+      <p>您访问的文章未找到或已被删除</p>
+      <button class="retry-btn" @click="router.push('/')">返回首页</button>
+    </div>
+    <!-- 正文内容 -->
+    <div v-else class="container">
       <!-- 文章头部 -->
       <header class="article-header">
         <div class="category-badge">{{ article.category }}</div>
@@ -438,6 +481,7 @@ import { useRoute, useRouter } from 'vue-router'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import SecurityWarning from '../components/SecurityWarning.vue'
 import ArticleOutline from '../components/ArticleOutline.vue'
+import { useNotification } from '../composables/useNotification'
 import { recommendArticlesData } from '../data/mockData'
 import { hasCommercialContent } from '../types/api'
 import { addRecentArticle } from '../stores/recentArticles'
@@ -452,6 +496,10 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+const notify = useNotification()
+
+const pageLoading = ref(true)
+const pageError = ref('')
 
 // 获取文章 ID
 const articleId = computed(() => route.params.id as string || route.query.id as string || 'wx_9527')
@@ -676,32 +724,49 @@ watch(() => [route.params.id, route.query.id], () => {
   recordReading()
 })
 
+// 加载文章详情
+const loadArticle = async () => {
+  pageLoading.value = true
+  pageError.value = ''
+  try {
+    const detail = await getArticleDetail(articleId.value)
+    article.value = {
+      article_id: detail.article_id,
+      title: detail.title,
+      author: detail.author,
+      publish_time: detail.publish_time,
+      category: detail.category,
+      ai_summary: detail.ai_summary || '',
+      tags: detail.tags || [],
+      content: detail.content || '',
+      metrics: {
+        view_count: detail.metrics?.view_count || 0,
+        like_count: detail.metrics?.like_count || 0,
+        collect_count: detail.metrics?.collect_count || 0,
+      },
+      interaction_status: {
+        is_liked: detail.interaction_status?.is_liked || false,
+        is_collected: isArticleCollected(articleId.value),
+      },
+    }
+  } catch (e: any) {
+    pageError.value = e?.message || '网络异常，请检查连接后重试'
+    notify.error('加载失败', pageError.value)
+  } finally {
+    pageLoading.value = false
+  }
+}
+
+const retryLoad = () => {
+  loadArticle()
+}
+
 // 组件挂载时
 onMounted(async () => {
   scrollToTop()
   recordReading()
   loadComments()
-
-  const detail = await getArticleDetail(articleId.value)
-  article.value = {
-    article_id: detail.article_id,
-    title: detail.title,
-    author: detail.author,
-    publish_time: detail.publish_time,
-    category: detail.category,
-    ai_summary: detail.ai_summary || '',
-    tags: detail.tags || [],
-    content: detail.content || '',
-    metrics: {
-      view_count: detail.metrics?.view_count || 0,
-      like_count: detail.metrics?.like_count || 0,
-      collect_count: detail.metrics?.collect_count || 0,
-    },
-    interaction_status: {
-      is_liked: detail.interaction_status?.is_liked || false,
-      is_collected: isArticleCollected(articleId.value),
-    },
-  }
+  loadArticle()
 })
 
 // 格式化时间
@@ -786,7 +851,7 @@ const handleShare = () => {
     })
   } else {
     navigator.clipboard.writeText(window.location.href)
-    alert('链接已复制到剪贴板')
+    notify.success('链接已复制到剪贴板')
   }
 }
 
@@ -844,7 +909,7 @@ const submitComment = async () => {
     isPreview.value = false
   } catch (error) {
     console.error('发表评论失败:', error)
-    alert('发表评论失败，请稍后重试')
+    notify.error('发表评论失败，请稍后重试')
   }
 }
 
@@ -934,7 +999,7 @@ const submitReply = async (comment: Comment) => {
     replyText.value = ''
   } catch (error) {
     console.error('发表回复失败:', error)
-    alert('发表回复失败，请稍后重试')
+    notify.error('发表回复失败，请稍后重试')
   }
 }
 
@@ -1991,5 +2056,109 @@ const toggleReplyLike = async (reply: CommentReply) => {
   .submit-btn {
     width: 100%;
   }
+}
+
+/* ========== 加载骨架屏 ========== */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--spacing-2xl);
+}
+
+.loading-skeleton {
+  width: 100%;
+  max-width: 800px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.skeleton-line {
+  height: 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--bg-glass) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.skeleton-category {
+  width: 80px;
+  height: 28px;
+}
+
+.skeleton-title {
+  width: 60%;
+  height: 28px;
+}
+
+.skeleton-meta {
+  width: 40%;
+  height: 14px;
+}
+
+.w-60 { width: 60%; }
+.w-80 { width: 80%; }
+.w-90 { width: 90%; }
+
+.skeleton-spacer {
+  height: var(--spacing-lg);
+}
+
+.skeleton-card {
+  padding: var(--spacing-xl);
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========== 错误 / 空状态 ========== */
+.state-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3xl) var(--spacing-xl);
+  text-align: center;
+  min-height: 50vh;
+}
+
+.state-icon {
+  color: var(--color-text-tertiary);
+  margin-bottom: var(--spacing-lg);
+  opacity: 0.6;
+}
+
+.state-container h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--text-primary);
+}
+
+.state-container p {
+  color: var(--text-secondary);
+  margin: 0 0 var(--spacing-xl) 0;
+}
+
+.retry-btn {
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.retry-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
 }
 </style>
