@@ -125,7 +125,7 @@
 import { ref, computed, h } from 'vue'
 import { useRouter } from 'vue-router'
 import { Check, ChevronRight, Sparkles, Target, Zap, Code, Database, Cloud, Cpu, Smartphone, Wrench } from 'lucide-vue-next'
-import { techTags } from '../data/mockData'
+import { techTags } from '../constants/techTags'
 import { coldStart } from '../api/modules/user'
 import ParticleBackground from '../components/ParticleBackground.vue'
 

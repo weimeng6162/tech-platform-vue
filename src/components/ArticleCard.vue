@@ -63,7 +63,7 @@
 
 <script setup lang="ts">
 import { Eye, Heart, Clock, Star } from 'lucide-vue-next'
-import { techTags } from '../data/mockData'
+import { techTags } from '../../constants/techTags'
 
 interface Article {
   id: string
