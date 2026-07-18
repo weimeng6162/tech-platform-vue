@@ -227,6 +227,7 @@ async function loadArticles() {
   error.value = ''
   try {
     let allArticles: ArticleItem[] = []
+    const seen = new Set<string>()
     for (let page = 1; page <= 3; page++) {
       const list = await getRecommendArticles(page, 10)
       const normalized = list.map(a => ({
@@ -235,7 +236,12 @@ async function loadArticles() {
           ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
           : a.tags
       })) as unknown as ArticleItem[]
-      allArticles = [...allArticles, ...normalized]
+      const fresh = normalized.filter(a => {
+        if (seen.has(a.article_id)) return false
+        seen.add(a.article_id)
+        return true
+      })
+      allArticles = [...allArticles, ...fresh]
       if (list.length < 10) break
     }
     articles.value = allArticles
