@@ -173,18 +173,30 @@ const getCategoryTags = (categoryId: string) => {
 }
 
 const currentArticles = computed(() => {
-  let articles = filteredArticles
+  let articles = filteredArticles.value
 
   if (activeCategory.value !== 'all') {
-    const categoryTagIds = getCategoryTags(activeCategory.value).map(t => t.id)
-    articles = articles.filter(article => 
-      article.tags.some(tag => categoryTagIds.includes(tag))
+    const categoryTags = getCategoryTags(activeCategory.value)
+    articles = articles.filter(article =>
+      article.tags.some(tag => {
+        const lower = tag.toLowerCase()
+        return categoryTags.some(ct =>
+          lower.includes(ct.name.toLowerCase()) || lower.includes(ct.id.toLowerCase())
+        )
+      })
     )
   }
 
   if (activeTags.value.length > 0) {
-    articles = articles.filter(article => 
-      activeTags.value.some(tag => article.tags.includes(tag))
+    articles = articles.filter(article =>
+      activeTags.value.some(activeId => {
+        const tag = techTags.find(t => t.id === activeId)
+        if (!tag) return article.tags.includes(activeId)
+        return article.tags.some(at => {
+          const lower = at.toLowerCase()
+          return lower.includes(tag.name.toLowerCase()) || lower.includes(activeId.toLowerCase())
+        })
+      })
     )
   }
 
@@ -239,18 +251,30 @@ onMounted(() => {
 })
 
 const hasMore = computed(() => {
-  let articles = filteredArticles
+  let articles = filteredArticles.value
   
   if (activeCategory.value !== 'all') {
-    const categoryTagIds = getCategoryTags(activeCategory.value).map(t => t.id)
-    articles = articles.filter(article => 
-      article.tags.some(tag => categoryTagIds.includes(tag))
+    const categoryTags = getCategoryTags(activeCategory.value)
+    articles = articles.filter(article =>
+      article.tags.some(tag => {
+        const lower = tag.toLowerCase()
+        return categoryTags.some(ct =>
+          lower.includes(ct.name.toLowerCase()) || lower.includes(ct.id.toLowerCase())
+        )
+      })
     )
   }
 
   if (activeTags.value.length > 0) {
-    articles = articles.filter(article => 
-      activeTags.value.some(tag => article.tags.includes(tag))
+    articles = articles.filter(article =>
+      activeTags.value.some(activeId => {
+        const tag = techTags.find(t => t.id === activeId)
+        if (!tag) return article.tags.includes(activeId)
+        return article.tags.some(at => {
+          const lower = at.toLowerCase()
+          return lower.includes(tag.name.toLowerCase()) || lower.includes(activeId.toLowerCase())
+        })
+      })
     )
   }
 
