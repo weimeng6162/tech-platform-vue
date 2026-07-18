@@ -144,6 +144,9 @@ import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { categories } from '../constants/techTags'
 import { useHomeArticles } from '../composables/useHomeArticles'
 
+const activeCategory = ref('all')
+const activeSection = ref<'featured' | 'recommend'>('featured')
+
 const {
   loading,
   error,
@@ -159,10 +162,7 @@ const {
   handleArticleClick,
   formatNumber,
   formatDate,
-} = useHomeArticles()
-
-const activeCategory = ref('all')
-const activeSection = ref<'featured' | 'recommend'>('featured')
+} = useHomeArticles(activeSection)
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),

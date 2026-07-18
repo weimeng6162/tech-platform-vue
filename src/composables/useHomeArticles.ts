@@ -1,4 +1,4 @@
-import { ref, computed, watch, nextTick, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onUnmounted, type Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getRecommendArticles } from '../api/modules/article'
 import { processArticles } from '../utils/articleFilter'
@@ -10,7 +10,7 @@ import type { ArticleListItem } from '../api/types'
 
 const PAGE_SIZE = 10
 
-export function useHomeArticles() {
+export function useHomeArticles(activeSection: Ref<string>) {
   const router = useRouter()
 
   const loading = ref(false)
@@ -31,15 +31,24 @@ export function useHomeArticles() {
 
   const filteredArticles = computed(() => {
     const processed = processArticles(articles.value)
-    if (userInterests.value.length === 0) return processed
+    if (activeSection.value === 'recommend' && userInterests.value.length > 0) {
+      return processed
+        .map(a => {
+          const matchCount = a.tags.filter(t => {
+            const lower = t.toLowerCase()
+            return userInterests.value.some(id => {
+              const tag = techTags.find(tt => tt.id === id)
+              if (!tag) return lower === id.toLowerCase()
+              return lower.includes(tag.name.toLowerCase()) || lower.includes(id.toLowerCase())
+            })
+          }).length
+          return { article: a, matchCount }
+        })
+        .filter(({ matchCount }) => matchCount > 0)
+        .sort((a, b) => b.matchCount - a.matchCount)
+        .map(({ article }) => article)
+    }
     return processed
-      .map(a => {
-        const matchCount = a.tags.filter(t => userInterests.value.includes(t)).length
-        return { article: a, matchCount }
-      })
-      .filter(({ matchCount }) => matchCount > 0)
-      .sort((a, b) => b.matchCount - a.matchCount)
-      .map(({ article }) => article)
   })
 
   function normalizeArticles(list: ArticleListItem[]): ArticleItem[] {
@@ -56,7 +65,12 @@ export function useHomeArticles() {
     error.value = null
     try {
       const list = await getRecommendArticles(1, PAGE_SIZE)
-      articles.value = normalizeArticles(list)
+      const seen = new Set<string>()
+      articles.value = normalizeArticles(list).filter(a => {
+        if (seen.has(a.article_id)) return false
+        seen.add(a.article_id)
+        return true
+      })
       currentPage.value = 1
       hasMore.value = list.length >= PAGE_SIZE
     } catch (err: any) {
@@ -72,9 +86,15 @@ export function useHomeArticles() {
     const nextPage = currentPage.value + 1
     try {
       const list = await getRecommendArticles(nextPage, PAGE_SIZE)
-      articles.value = [...articles.value, ...normalizeArticles(list)]
+      const existing = new Set(articles.value.map(a => a.article_id))
+      const fresh = normalizeArticles(list).filter(a => !existing.has(a.article_id))
+      articles.value = [...articles.value, ...fresh]
       currentPage.value = nextPage
       hasMore.value = list.length >= PAGE_SIZE
+      // 防止兴趣过滤导致无限循环：已加载 50+ 篇但无匹配时停止
+      if (articles.value.length >= 50 && filteredArticles.value.length === 0) {
+        hasMore.value = false
+      }
     } catch {
       // 静默失败
     } finally {
