@@ -21,6 +21,31 @@
         <div v-if="activeSection === 'profile'" class="section-card">
           <h3 class="section-title">基础信息</h3>
 
+          <!-- 加载骨架 -->
+          <div v-if="pageLoading" class="profile-skeleton">
+            <div class="sk-avatar-row">
+              <div class="sk-avatar" />
+              <div class="sk-btn" />
+            </div>
+            <div class="sk-field"><div class="sk-label" /><div class="sk-value" /></div>
+            <div class="sk-field"><div class="sk-label" /><div class="sk-value" /></div>
+            <div class="sk-field"><div class="sk-label" /><div class="sk-value w-60" /></div>
+          </div>
+
+          <!-- 加载失败 -->
+          <div v-else-if="pageError" class="profile-error">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <circle cx="12" cy="12" r="10" stroke-width="2" />
+              <line x1="12" y1="8" x2="12" y2="12" stroke-width="2" stroke-linecap="round" />
+              <line x1="12" y1="16" x2="12.01" y2="16" stroke-width="2" stroke-linecap="round" />
+            </svg>
+            <p>{{ pageError }}</p>
+            <button class="retry-btn" @click="loadProfile">重试</button>
+          </div>
+
+          <!-- 正常内容 -->
+          <template v-else>
+
           <div class="profile-avatar-row">
             <div class="avatar-preview">
               <img v-if="profile.avatar_url" :src="profile.avatar_url" alt="" />
@@ -48,7 +73,7 @@
                 <Pencil :size="14" /> 编辑
               </button>
               <template v-if="editingUsername">
-                <button class="btn-text primary" @click="saveUsername">保存</button>
+                <button class="btn-text primary" :disabled="savingProfile" @click="saveUsername">保存</button>
                 <button class="btn-text" @click="editingUsername = false">取消</button>
               </template>
             </div>
@@ -70,7 +95,7 @@
                 <Pencil :size="14" /> 修改
               </button>
               <template v-if="editingEmail">
-                <button class="btn-text primary" @click="saveEmail">保存</button>
+                <button class="btn-text primary" :disabled="savingProfile" @click="saveEmail">保存</button>
                 <button class="btn-text" @click="editingEmail = false">取消</button>
               </template>
             </div>
@@ -83,6 +108,7 @@
           </div>
 
           <div v-if="profileMsg" class="msg" :class="profileMsgType">{{ profileMsg }}</div>
+          </template>
         </div>
 
         <!-- 账号安全 -->
@@ -114,8 +140,9 @@
             </span>
           </div>
 
-          <button class="btn-primary" :disabled="!canChangePassword" @click="onChangePassword">
-            修改密码
+          <button class="btn-primary" :disabled="!canChangePassword || changingPassword" @click="onChangePassword">
+            <template v-if="changingPassword">修改中...</template>
+            <template v-else>修改密码</template>
           </button>
           <span v-if="pwMsg" class="msg" :class="pwMsgType">{{ pwMsg }}</span>
         </div>
@@ -219,8 +246,13 @@ const profileMsg = ref('')
 const profileMsgType = ref<'success' | 'error'>('success')
 const usernameInput = ref<HTMLInputElement>()
 const emailInput = ref<HTMLInputElement>()
+const pageLoading = ref(true)
+const pageError = ref('')
+const savingProfile = ref(false)
 
 async function loadProfile() {
+  pageLoading.value = true
+  pageError.value = ''
   try {
     const res = await getUserInfo()
     Object.assign(profile, {
@@ -232,7 +264,13 @@ async function loadProfile() {
     })
   } catch {
     const fallback = userStore.userInfo
-    Object.assign(profile, fallback && fallback.username ? fallback : MOCK_USER_PROFILE)
+    if (fallback && fallback.username) {
+      Object.assign(profile, fallback)
+    } else {
+      pageError.value = '用户信息加载失败，请检查网络后重试'
+    }
+  } finally {
+    pageLoading.value = false
   }
 }
 
@@ -244,7 +282,8 @@ function startEditUsername() {
 
 async function saveUsername() {
   const name = editForm.username.trim()
-  if (!name) return
+  if (!name || savingProfile.value) return
+  savingProfile.value = true
   try {
     const res = await updateProfile({ username: name })
     Object.assign(profile, res)
@@ -254,6 +293,8 @@ async function saveUsername() {
   } catch (e: any) {
     profileMsg.value = e.message || '更新失败'
     profileMsgType.value = 'error'
+  } finally {
+    savingProfile.value = false
   }
 }
 
@@ -272,7 +313,8 @@ function validateEmail(email: string): boolean {
 }
 
 async function saveEmail() {
-  if (!validateEmail(editForm.email.trim())) return
+  if (!validateEmail(editForm.email.trim()) || savingProfile.value) return
+  savingProfile.value = true
   try {
     const res = await updateProfile({ email: editForm.email.trim() })
     Object.assign(profile, res)
@@ -282,6 +324,8 @@ async function saveEmail() {
   } catch (e: any) {
     profileMsg.value = e.message || '更新失败'
     profileMsgType.value = 'error'
+  } finally {
+    savingProfile.value = false
   }
 }
 
@@ -315,10 +359,13 @@ const canChangePassword = computed(() =>
   pwForm.oldPassword && isPasswordStrong.value && passwordsMatch.value
 )
 
+const changingPassword = ref(false)
+
 function updatePasswordRules() { /* reactive, computed handles it */ }
 
 async function onChangePassword() {
-  if (!canChangePassword.value) return
+  if (!canChangePassword.value || changingPassword.value) return
+  changingPassword.value = true
   try {
     await changePassword({ old_password: pwForm.oldPassword, new_password: pwForm.newPassword })
     pwForm.oldPassword = ''
@@ -329,6 +376,8 @@ async function onChangePassword() {
   } catch (e: any) {
     pwMsg.value = e.message || '修改密码失败'
     pwMsgType.value = 'error'
+  } finally {
+    changingPassword.value = false
   }
 }
 
@@ -793,5 +842,103 @@ onMounted(() => { loadProfile() })
 
 .modal-card .input {
   width: 100%;
+}
+
+/* ========== 加载骨架屏 ========== */
+.profile-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.sk-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.sk-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  animation: shimmer-settings 1.5s infinite;
+}
+
+.sk-btn {
+  width: 80px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  animation: shimmer-settings 1.5s infinite;
+}
+
+.sk-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.sk-label {
+  width: 60px;
+  height: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  animation: shimmer-settings 1.5s infinite;
+}
+
+.sk-value {
+  width: 200px;
+  height: 20px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary);
+  animation: shimmer-settings 1.5s infinite;
+}
+
+.sk-value.w-60 {
+  width: 120px;
+}
+
+@keyframes shimmer-settings {
+  0% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.4; }
+}
+
+/* ========== 错误状态 ========== */
+.profile-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+  gap: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+.profile-error svg {
+  opacity: 0.5;
+}
+
+.profile-error p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.retry-btn {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-size: 0.85rem;
+}
+
+.retry-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
 }
 </style>

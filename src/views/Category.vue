@@ -85,8 +85,18 @@
           </div>
           <span class="article-count">{{ currentArticles.length }} 篇文章</span>
         </div>
-        
-        <div v-if="currentArticles.length > 0" class="article-list">
+
+        <div v-if="loading" class="loading-state">
+          <Loader2 :size="24" class="spin" />
+          <span>加载分类文章...</span>
+        </div>
+
+        <div v-else-if="error" class="loading-state">
+          <p>{{ error }}</p>
+          <button class="retry-btn" @click="loadArticles">重试</button>
+        </div>
+
+        <div v-else-if="currentArticles.length > 0" class="article-list">
           <ArticleCardAI
             v-for="article in currentArticles"
             :key="article.article_id"
@@ -119,19 +129,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h, watch } from 'vue'
+import { ref, computed, h, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Grid, Code, Layout, Server, Database, Cpu, Brain, Shield, Wrench, Search } from 'lucide-vue-next'
+import { Grid, Code, Layout, Server, Database, Cpu, Brain, Shield, Wrench, Search, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
-import { recommendArticlesData, techCategories, techTags } from '../data/mockData'
+import { techCategories, techTags } from '../constants/techTags'
 import { processArticles } from '../utils/articleFilter'
+import { getRecommendArticles } from '../api/modules/article'
 import type { ArticleItem } from '../types/api'
+import type { ArticleListItem } from '../api/types'
 
 const router = useRouter()
 const activeCategory = ref('all')
 const activeTags = ref<string[]>([])
 const sortBy = ref('recommend')
 const displayCount = ref(20)
+
+const loading = ref(true)
+const error = ref('')
+const articles = ref<ArticleItem[]>([])
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -145,8 +161,7 @@ const iconMap: Record<string, any> = {
   Wrench: (props: any) => h(Wrench, props),
 }
 
-const allArticles = recommendArticlesData.data.article_list
-const filteredArticles = processArticles(allArticles)
+const filteredArticles = computed(() => processArticles(articles.value))
 
 const currentCategory = computed(() => {
   return techCategories.find(cat => cat.id === activeCategory.value)
@@ -158,18 +173,30 @@ const getCategoryTags = (categoryId: string) => {
 }
 
 const currentArticles = computed(() => {
-  let articles = filteredArticles
+  let articles = filteredArticles.value
 
   if (activeCategory.value !== 'all') {
-    const categoryTagIds = getCategoryTags(activeCategory.value).map(t => t.id)
-    articles = articles.filter(article => 
-      article.tags.some(tag => categoryTagIds.includes(tag))
+    const categoryTags = getCategoryTags(activeCategory.value)
+    articles = articles.filter(article =>
+      article.tags.some(tag => {
+        const lower = tag.toLowerCase()
+        return categoryTags.some(ct =>
+          lower.includes(ct.name.toLowerCase()) || lower.includes(ct.id.toLowerCase())
+        )
+      })
     )
   }
 
   if (activeTags.value.length > 0) {
-    articles = articles.filter(article => 
-      activeTags.value.some(tag => article.tags.includes(tag))
+    articles = articles.filter(article =>
+      activeTags.value.some(activeId => {
+        const tag = techTags.find(t => t.id === activeId)
+        if (!tag) return article.tags.includes(activeId)
+        return article.tags.some(at => {
+          const lower = at.toLowerCase()
+          return lower.includes(tag.name.toLowerCase()) || lower.includes(activeId.toLowerCase())
+        })
+      })
     )
   }
 
@@ -195,19 +222,65 @@ const currentArticles = computed(() => {
   return articles.slice(0, displayCount.value)
 })
 
+async function loadArticles() {
+  loading.value = true
+  error.value = ''
+  try {
+    let allArticles: ArticleItem[] = []
+    const seen = new Set<string>()
+    for (let page = 1; page <= 3; page++) {
+      const list = await getRecommendArticles(page, 10)
+      const normalized = list.map(a => ({
+        ...a,
+        tags: typeof a.tags === 'string'
+          ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
+          : a.tags
+      })) as unknown as ArticleItem[]
+      const fresh = normalized.filter(a => {
+        if (seen.has(a.article_id)) return false
+        seen.add(a.article_id)
+        return true
+      })
+      allArticles = [...allArticles, ...fresh]
+      if (list.length < 10) break
+    }
+    articles.value = allArticles
+  } catch (e: any) {
+    error.value = e.message || '加载失败'
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadArticles()
+})
+
 const hasMore = computed(() => {
-  let articles = filteredArticles
+  let articles = filteredArticles.value
   
   if (activeCategory.value !== 'all') {
-    const categoryTagIds = getCategoryTags(activeCategory.value).map(t => t.id)
-    articles = articles.filter(article => 
-      article.tags.some(tag => categoryTagIds.includes(tag))
+    const categoryTags = getCategoryTags(activeCategory.value)
+    articles = articles.filter(article =>
+      article.tags.some(tag => {
+        const lower = tag.toLowerCase()
+        return categoryTags.some(ct =>
+          lower.includes(ct.name.toLowerCase()) || lower.includes(ct.id.toLowerCase())
+        )
+      })
     )
   }
 
   if (activeTags.value.length > 0) {
-    articles = articles.filter(article => 
-      activeTags.value.some(tag => article.tags.includes(tag))
+    articles = articles.filter(article =>
+      activeTags.value.some(activeId => {
+        const tag = techTags.find(t => t.id === activeId)
+        if (!tag) return article.tags.includes(activeId)
+        return article.tags.some(at => {
+          const lower = at.toLowerCase()
+          return lower.includes(tag.name.toLowerCase()) || lower.includes(activeId.toLowerCase())
+        })
+      })
     )
   }
 
@@ -496,4 +569,39 @@ watch([activeCategory, activeTags, sortBy], () => {
   border-color: var(--accent-primary);
 }
 
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-2xl);
+  color: var(--text-secondary);
+}
+
+.loading-state p {
+  margin: 0;
+}
+
+.retry-btn {
+  padding: var(--spacing-xs) var(--spacing-lg);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-md);
+  background: var(--bg-glass);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.retry-btn:hover {
+  background: var(--color-primary);
+  color: #fff;
+  border-color: var(--color-primary);
+}
+
+.spin {
+  animation: spin-cat 0.8s linear infinite;
+}
+
+@keyframes spin-cat {
+  to { transform: rotate(360deg); }
+}
 </style>

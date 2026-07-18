@@ -88,7 +88,7 @@
 import { useRoute, useRouter } from 'vue-router'
 import { Home, FileText, Footprints, Bookmark, Settings, Hash, Users } from 'lucide-vue-next'
 import { getRecentArticle } from '../stores/recentArticles'
-import { techTags } from '../data/mockData'
+import { techTags } from '../../constants/techTags'
 
 const route = useRoute()
 const router = useRouter()
