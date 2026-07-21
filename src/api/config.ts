@@ -20,11 +20,11 @@ export interface ApiConfig {
  */
 export const USE_REAL_BACKEND_FOR_AUTH = true;
 
-// 真实后端地址（用于登录/注册）
-export const REAL_BACKEND_URL = 'http://8.156.93.58:8080';
+// 真实后端地址（用于登录/注册），优先读取环境变量 VITE_API_BASE_URL
+export const REAL_BACKEND_URL = import.meta.env.VITE_API_BASE_URL || 'http://8.156.93.58:8080';
 
 // Mock服务器地址（用于其他功能）
-export const MOCK_SERVER_URL = 'http://localhost:3000';
+export const MOCK_SERVER_URL = import.meta.env.VITE_MOCK_SERVER_URL || 'http://localhost:3000';
 
 // 需要路由判定的接口列表
 export const AUTH_ENDPOINTS = [

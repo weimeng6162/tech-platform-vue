@@ -1,8 +1,5 @@
 <template>
   <div class="container">
-    <!-- 粒子背景 -->
-    <ParticleBackground :particle-count="45" />
-    
     <!-- 背景装饰 -->
     <div class="background">
       <div class="gradient-orb-1" />
@@ -127,7 +124,6 @@ import { useRouter } from 'vue-router'
 import { Check, ChevronRight, Sparkles, Target, Zap, Code, Database, Cloud, Cpu, Smartphone, Wrench } from 'lucide-vue-next'
 import { techTags } from '../constants/techTags'
 import { coldStart } from '../api/modules/user'
-import ParticleBackground from '../components/ParticleBackground.vue'
 
 const router = useRouter()
 const currentStep = ref(0)

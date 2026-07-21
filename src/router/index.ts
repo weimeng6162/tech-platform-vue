@@ -97,11 +97,33 @@ const router = createRouter({
 })
 
 // 路由预加载策略：在空闲时预加载可能访问的页面
-router.beforeEach((to) => {
+router.beforeEach((to, _from, next) => {
+  const token = localStorage.getItem('token')
+  const userInterests = localStorage.getItem('user_interests')
+  const hasCompletedInterest = userInterests && JSON.parse(userInterests).length > 0
+  const isPublicPage = ['/login', '/register', '/reset-password', '/interest'].includes(to.path)
+
+  if (!isPublicPage && !token) {
+    next('/login')
+    return
+  }
+
+  if (!isPublicPage && !hasCompletedInterest) {
+    next('/interest')
+    return
+  }
+
+  if (to.path === '/interest' && hasCompletedInterest) {
+    next('/')
+    return
+  }
+
   // 文章详情页需要 highlight.js，提前预加载
   if (to.path.startsWith('/article')) {
     import('../utils/markdown').then((m) => m.preloadHighlight?.())
   }
+
+  next()
 })
 
 export default router

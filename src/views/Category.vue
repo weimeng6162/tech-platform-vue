@@ -137,7 +137,6 @@ import { techCategories, techTags } from '../constants/techTags'
 import { processArticles } from '../utils/articleFilter'
 import { getRecommendArticles } from '../api/modules/article'
 import type { ArticleItem } from '../types/api'
-import type { ArticleListItem } from '../api/types'
 
 const router = useRouter()
 const activeCategory = ref('all')

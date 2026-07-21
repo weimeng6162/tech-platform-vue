@@ -34,7 +34,7 @@
         </div>
         <div v-if="form.password" class="password-rules">
           <div
-            v-for="rule in passwordRules.value"
+            v-for="rule in passwordRules"
             :key="rule.key"
             class="rule-line"
             :class="{ met: rule.met }"

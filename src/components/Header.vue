@@ -153,6 +153,8 @@ function formatRegisteredAt(): string {
 }
 
 async function fetchRegistrationTime() {
+  const token = localStorage.getItem('token')
+  if (!token) return
   try {
     const info = await getUserInfo()
     if (info.created_at) {

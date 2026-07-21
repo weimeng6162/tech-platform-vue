@@ -454,9 +454,14 @@ const handleLogin = async () => {
     const result = await userStore.login(form.account, encryptedPassword)
     
     if (result.success) {
-      // 登录成功，跳转到 redirect 页面或首页
-      const redirect = route.query.redirect as string | undefined
-      router.push(redirect || '/')
+      const userInterests = localStorage.getItem('user_interests')
+      const hasCompletedInterest = userInterests && JSON.parse(userInterests).length > 0
+      if (!hasCompletedInterest) {
+        router.push('/interest')
+      } else {
+        const redirect = route.query.redirect as string | undefined
+        router.push(redirect || '/')
+      }
     } else {
       // 登录失败，显示错误
       errors.password = result.message

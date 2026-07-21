@@ -81,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, reactive } from 'vue'
+import { ref, watch } from 'vue'
 import { X, KeyRound } from 'lucide-vue-next'
 import SendCodeStep from './SendCodeStep.vue'
 import ResetPasswordStep from './ResetPasswordStep.vue'
