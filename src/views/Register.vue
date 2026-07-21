@@ -503,22 +503,24 @@ const handleRegister = async () => {
 
   try {
     const encryptedPassword = aesEncrypt(form.password)
-    
+
     const result = await register({
       username: form.username,
       email: form.email,
       password: encryptedPassword
     })
-    
+
     // 注册成功，保存token并跳转
     if (result.token) {
       const userStore = useUserStore()
       userStore.setToken(result.token)
+      localStorage.removeItem('user_interests')
       router.push('/interest')
     } else {
       // 兼容Mock服务器，需要手动登录
       const userStore = useUserStore()
       await userStore.login(form.username, encryptedPassword)
+      localStorage.removeItem('user_interests')
       router.push('/interest')
     }
   } catch (error: any) {
