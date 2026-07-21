@@ -144,6 +144,8 @@ import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { categories } from '../constants/techTags'
 import { useHomeArticles } from '../composables/useHomeArticles'
 
+defineOptions({ name: 'Home' })
+
 const activeCategory = ref('all')
 const activeSection = ref<'featured' | 'recommend'>('featured')
 

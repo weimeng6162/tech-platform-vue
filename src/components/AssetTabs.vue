@@ -34,6 +34,7 @@
           :key="item.article_id"
           class="list-card"
           :style="{ animationDelay: `${idx * 0.06}s` }"
+          @click="goToArticle(item.article_id)"
         >
           <div class="list-card-body">
             <div class="list-card-main">
@@ -71,9 +72,12 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Footprints, Bookmark, Eye, Inbox } from 'lucide-vue-next'
 import { getFootprint, getCollections } from '../api/modules/user'
 import type { HistoryItem, CollectionItem } from '../api/types'
+
+const props = defineProps<{ linkFrom?: string }>()
 
 type TabKey = 'footprint' | 'collections'
 
@@ -99,6 +103,16 @@ const page = ref(1)
 const total = ref(0)
 const hasMore = ref(false)
 const loadMoreRef = ref<HTMLElement>()
+const router = useRouter()
+
+function goToArticle(articleId: string) {
+  const path = `/article/${articleId}`
+  if (props.linkFrom) {
+    router.push({ path, query: { from: props.linkFrom } })
+  } else {
+    router.push(path)
+  }
+}
 
 const PAGE_SIZE = 10
 

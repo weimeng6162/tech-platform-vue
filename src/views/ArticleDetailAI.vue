@@ -471,6 +471,14 @@
         </div>
       </div>
     </div>
+
+    <!-- 从个人主页进入时显示返回按钮 -->
+    <div v-if="showBackToProfile" class="back-to-profile" @click="goBackToProfile">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+        <polyline points="15 18 9 12 15 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <span class="back-tooltip">返回个人主页</span>
+    </div>
   </div>
 </template>
 
@@ -496,6 +504,11 @@ import {
 const route = useRoute()
 const router = useRouter()
 const notify = useNotification()
+
+const showBackToProfile = computed(() => route.query.from === 'userProfile')
+function goBackToProfile() {
+  router.push('/user/profile')
+}
 
 const pageLoading = ref(true)
 const pageError = ref('')
@@ -721,6 +734,7 @@ const recordReading = () => {
 watch(() => [route.params.id, route.query.id], () => {
   scrollToTop()
   recordReading()
+  loadArticle()
 })
 
 // 加载文章详情
@@ -2182,5 +2196,50 @@ const toggleReplyLike = async (reply: CommentReply) => {
   background: var(--color-primary);
   color: #fff;
   border-color: var(--color-primary);
+}
+
+.back-to-profile {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  z-index: 100;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-primary);
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.back-to-profile:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.back-to-profile .back-tooltip {
+  position: absolute;
+  right: 56px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 6px 14px;
+  background: var(--text-primary);
+  color: var(--bg-primary);
+  font-size: 13px;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.back-to-profile:hover .back-tooltip {
+  opacity: 1;
 }
 </style>

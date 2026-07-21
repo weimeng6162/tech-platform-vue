@@ -30,6 +30,7 @@ const routes: RouteRecordRaw[] = [
         path: '',
         name: 'Home',
         component: () => import('../views/Home.vue'),
+        meta: { keepAlive: true },
       },
       {
         path: 'article/:id',

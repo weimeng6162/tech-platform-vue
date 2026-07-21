@@ -10,9 +10,9 @@
             mode="out-in"
             appear
           >
-            <div :key="childRoute.path" class="page-wrapper">
+            <keep-alive>
               <component :is="Component" />
-            </div>
+            </keep-alive>
           </transition>
         </router-view>
       </main>
@@ -108,11 +108,6 @@ onUnmounted(() => {
   position: relative;
   z-index: 2;
   background: var(--bg-primary);
-}
-
-.page-wrapper {
-  width: 100%;
-  min-height: 100%;
 }
 
 /* 页面内容淡入动画 */
