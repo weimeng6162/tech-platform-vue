@@ -6,6 +6,7 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios';
 import { apiConfig, USE_REAL_BACKEND_FOR_AUTH, REAL_BACKEND_URL, MOCK_SERVER_URL, PRIVATE_ENDPOINTS, NEW_USER_GRACE_DAYS } from './config';
 import router from '../router';
+import { useNotification } from '../composables/useNotification';
 
 // 缓存用户注册时间（毫秒时间戳），0 表示未知/新用户
 let cachedRegisteredAt = 0;
@@ -154,11 +155,10 @@ function handleError(code: number, message: string) {
   }
 }
 
-// 显示错误消息（可替换为UI组件库的Message）
+// 显示错误消息（使用全局通知组件 NotificationContainer）
 function showMessage(message: string) {
-  // 简单实现：使用alert
-  // 后续可替换为Naive UI的useMessage
-  alert(message);
+  const { error } = useNotification();
+  error('请求异常', message);
 }
 
 // 封装GET请求

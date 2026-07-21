@@ -24,6 +24,8 @@ export default defineConfig({
         manualChunks(id: string) {
           // 将 highlight.js 单独分包（体积大且可按需加载）
           if (id.includes('highlight.js')) return 'vendor-highlight'
+          // 将 echarts / vue-echarts 单独分包（避免混入页面 chunk）
+          if (id.includes('echarts') || id.includes('zrender')) return 'vendor-echarts'
           // 将 marked 单独分包
           if (id.includes('marked')) return 'vendor-marked'
           // 将 crypto-js 单独分包
@@ -41,11 +43,8 @@ export default defineConfig({
   server: {
     port: 5173,
     proxy: {
-      '/api': {              // ← 改这里，从 /api/user 改成 /api
-        target: 'http://8.156.93.58:8080',
-        changeOrigin: true,
-      },
-      '/api/articles': {
+      // 统一代理 /api 到后端（含 /api/articles 等子路径）
+      '/api': {
         target: 'http://8.156.93.58:8080',
         changeOrigin: true,
       },

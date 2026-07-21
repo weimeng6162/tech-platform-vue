@@ -220,7 +220,6 @@ import { User, Upload, Pencil, Check, X, Sun, Moon, Monitor } from 'lucide-vue-n
 import { useUserStore } from '../stores/user'
 import { useThemeStore } from '../stores/theme'
 import { getUserInfo, updateProfile, changePassword } from '../api/modules/user'
-import { MOCK_USER_PROFILE } from '../api/mock'
 
 const router = useRouter()
 const userStore = useUserStore()

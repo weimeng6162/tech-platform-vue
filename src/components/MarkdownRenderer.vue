@@ -17,16 +17,16 @@ let highlightReady = false
 
 /** 异步应用高亮渲染器 */
 async function applyHighlight() {
-  const hljs = await import('highlight.js')
+  const hljs = (await import('../utils/hljs')).default
   await import('highlight.js/styles/github-dark.css')
 
   const renderer = new marked.Renderer()
   renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
     const language = lang || ''
     try {
-      const code = language && hljs.default.getLanguage(language)
-        ? hljs.default.highlight(text, { language }).value
-        : hljs.default.highlightAuto(text).value
+      const code = language && hljs.getLanguage(language)
+        ? hljs.highlight(text, { language }).value
+        : hljs.highlightAuto(text).value
       return `<pre><code class="hljs ${language}">${code}</code></pre>`
     } catch {
       return `<pre><code class="hljs ${language}">${text}</code></pre>`

@@ -138,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
+import { ref, h } from 'vue'
 import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Eye, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { categories } from '../constants/techTags'
@@ -163,6 +163,9 @@ const {
   formatNumber,
   formatDate,
 } = useHomeArticles(activeSection)
+
+// loadMoreTrigger 通过模板 string ref 使用（vue-tsc 无法识别 composable 解构的 string ref），此处显式引用以通过类型检查
+void loadMoreTrigger
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),

@@ -1,11 +1,31 @@
-feat: 完成冷启动(Onboarding)接口实现
+chore: 合并 fix/build-typecheck-and-perf 分支的 TS 类型修复、打包性能优化、工程化改进
 
-- 新增 POST /api/user/cold_start API 调用
-- 重构 InterestSetup.vue 为 5 步向导（欢迎→身份→领域→标签→完成）
-- 添加身份选择（identity_tag）、宏观领域（selected_domains）、微观标签（selected_tags）选择
-- 步骤校验：身份必选、领域至少1个、标签至少3个
-- 步骤3→4 时自动调用 submitColdStart() API
-- 新增 mock-server.cjs 中冷启动端点
-- ArticleDetail.vue 已集成 getArticleDetail() API
-- 修复 BackToTop.vue 按钮位置（0.25rem 靠近边缘）
-- 修复 MainLayout.vue 首页按钮位置与分类页一致
+1. 打包体积优化
+   highlight.js 全量 912KB→按需注册 23 种语言 105KB（新增 src/utils/hljs.ts）
+   echarts/zrender 独立拆包，不混入页面 chunk（vite.config.ts）
+
+2. 后端地址抽成环境变量
+   config.ts 的 REAL_BACKEND_URL / MOCK_SERVER_URL 改为读 .env，部署换地址不用改代码
+   .env.development / .env.production 新增 VITE_MOCK_SERVER_URL
+
+3. alert 改通知组件
+   request.ts 的 showMessage 从 alert() 改为 useNotification()，错误统一走 NotificationContainer
+   App.vue 挂载该组件
+
+4. 路由守卫补了两个检查
+   没登录访问主页→跳 /login；登录了没选兴趣→跳 /interest；补了之前缺失的 next() 回调
+   Login.vue 登录后自动检查兴趣状态，未选则引导去 /interest
+
+5. Header 修 401
+   fetchRegistrationTime 加 token 判断，没登录就不调 /api/user/info，刷新页面不再爆 401
+
+6. 清 TS 类型告警
+   ResetPassword.vue passwordRules.value→passwordRules（computed 非 ref）
+   Home.vue 删未用 computed + void loadMoreTrigger
+   Category.vue 删未用 ArticleListItem
+   Settings.vue 删未用 MOCK_USER_PROFILE
+   InterestSetup.vue 删未用 ParticleBackground
+   ForgotPasswordModal.vue 删未用 reactive
+   LeftSidebar.vue 修正 ../../constants→../constants
+   markdown.ts / MarkdownRenderer.vue 改用 ./hljs 替代 import('highlight.js')
+   vite.config.ts 删除重复的 /api/articles 代理

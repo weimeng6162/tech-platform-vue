@@ -27,7 +27,7 @@ async function loadHljs() {
     });
   }
   hljsLoading = true;
-  hljsModule = await import('highlight.js');
+  hljsModule = (await import('./hljs')).default;
   // 动态注入样式
   await import('highlight.js/styles/github-dark.css');
   hljsLoading = false;
