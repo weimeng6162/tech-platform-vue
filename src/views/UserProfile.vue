@@ -93,7 +93,7 @@
           <Layers :size="18" />
           <h3>内容资产</h3>
         </div>
-        <AssetTabs />
+        <AssetTabs link-from="userProfile" />
       </div>
     </template>
 
