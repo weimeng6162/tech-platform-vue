@@ -301,120 +301,119 @@
 
           <!-- 评论列表 -->
           <div class="comments-list">
-          <div v-for="comment in displayedComments" :key="comment.comment_id" class="comment-item">
-            <!-- 主评论 -->
-            <div class="comment-main">
-              <img :src="comment.avatar_url" class="comment-avatar" alt="avatar" />
-              <div class="comment-content-wrapper">
-                <div class="comment-meta">
-                  <span class="comment-author">{{ comment.username }}</span>
-                  <span v-if="comment.username === 'Go夜读(作者)'" class="author-badge">作者</span>
-                  <span class="comment-time">{{ formatCommentTime(comment.created_at) }}</span>
-                </div>
-                <div class="comment-body">
-                  <MarkdownRenderer :content="comment.content" />
-                </div>
-                <div class="comment-actions">
-                  <button 
-                    class="action-link" 
-                    :class="{ active: comment.is_liked }"
-                    @click="toggleCommentLike(comment)"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    {{ comment.like_count }}
-                  </button>
-                  <button class="action-link" @click="startReply(comment)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="9 17 4 12 9 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M20 18v-2a4 4 0 0 0-4-4H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    回复
-                  </button>
-                  <button v-if="comment.username === '你'" class="action-link delete-btn" @click="deleteComment(comment)">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                      <polyline points="3 6 5 6 21 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                    删除
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 回复输入框 -->
-            <div v-if="replyingTo === comment.comment_id" class="reply-input-wrapper">
-              <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=you" class="reply-avatar" alt="avatar" />
-              <div class="reply-input-container">
-                <div class="reply-quote">
-                  @{{ comment.username }}：{{ comment.content.substring(0, 50) }}{{ comment.content.length > 50 ? '...' : '' }}
-                </div>
-                <textarea
-                  v-model="replyText"
-                  class="reply-textarea"
-                  placeholder="回复 @{{ comment.username }}"
-                  rows="2"
-                ></textarea>
-                <div class="reply-actions">
-                  <button class="cancel-btn" @click="cancelReply">取消</button>
-                  <button class="submit-reply-btn" @click="submitReply(comment)" :disabled="!replyText.trim()">
-                    发送
-                  </button>
+            <div v-for="comment in displayedComments" :key="comment.comment_id" class="comment-item">
+              <!-- 主评论 -->
+              <div class="comment-main">
+                <img :src="comment.avatar_url" class="comment-avatar" alt="avatar" />
+                <div class="comment-content-wrapper">
+                  <div class="comment-meta">
+                    <span class="comment-author">{{ comment.username }}</span>
+                    <span v-if="comment.username === 'Go夜读(作者)'" class="author-badge">作者</span>
+                    <span class="comment-time">{{ formatCommentTime(comment.created_at) }}</span>
+                  </div>
+                  <div class="comment-body">
+                    <MarkdownRenderer :content="comment.content" />
+                  </div>
+                  <div class="comment-actions">
+                    <button 
+                      class="action-link" 
+                      :class="{ active: comment.is_liked }"
+                      @click="toggleCommentLike(comment)"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      {{ comment.like_count }}
+                    </button>
+                    <button class="action-link" @click="startReply(comment)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polyline points="9 17 4 12 9 7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M20 18v-2a4 4 0 0 0-4-4H4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      回复
+                    </button>
+                    <button v-if="comment.username === '你'" class="action-link delete-btn" @click="deleteComment(comment)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <polyline points="3 6 5 6 21 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                      删除
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <!-- 回复列表 -->
-            <div v-if="comment.replies && comment.replies.length > 0" class="replies-wrapper">
-              <div class="thread-line"></div>
-              <div class="replies-list">
-                <div v-for="reply in comment.replies" :key="reply.comment_id" class="reply-item">
-                  <img :src="reply.avatar_url" class="reply-avatar-small" alt="avatar" />
-                  <div class="reply-content-wrapper">
-                    <div class="reply-meta">
-                      <span class="reply-author">{{ reply.username }}</span>
-                      <span v-if="reply.username === 'Go夜读(作者)'" class="author-badge">作者</span>
-                      <span class="reply-time">{{ formatCommentTime(reply.created_at) }}</span>
-                    </div>
-                    <div class="reply-body">
-                      <template v-if="reply.reply_to_username">
-                        <span class="mention">@{{ reply.reply_to_username }}</span>
-                        <MarkdownRenderer :content="reply.content" />
-                      </template>
-                      <template v-else>
-                        <MarkdownRenderer :content="reply.content" />
-                      </template>
-                    </div>
-                    <div class="reply-actions-bottom">
-                      <button 
-                        class="action-link" 
-                        :class="{ active: reply.is_liked }"
-                        @click="toggleReplyLike(reply)"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        {{ reply.like_count }}
-                      </button>
-                      <button class="action-link" @click="startReply(comment, reply)">
-                        回复
-                      </button>
-                      <button v-if="reply.username === '你'" class="action-link delete-btn" @click="deleteReply(comment, reply)">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                          <polyline points="3 6 5 6 21 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        </svg>
-                        删除
-                      </button>
+              <!-- 回复输入框 -->
+              <div v-if="replyingTo === comment.comment_id" class="reply-input-wrapper">
+                <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=you" class="reply-avatar" alt="avatar" />
+                <div class="reply-input-container">
+                  <div class="reply-quote">
+                    @{{ comment.username }}：{{ comment.content.substring(0, 50) }}{{ comment.content.length > 50 ? '...' : '' }}
+                  </div>
+                  <textarea
+                    v-model="replyText"
+                    class="reply-textarea"
+                    placeholder="回复 @{{ comment.username }}"
+                    rows="2"
+                  ></textarea>
+                  <div class="reply-actions">
+                    <button class="cancel-btn" @click="cancelReply">取消</button>
+                    <button class="submit-reply-btn" @click="submitReply(comment)" :disabled="!replyText.trim()">
+                      发送
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 回复列表 -->
+              <div v-if="comment.replies && comment.replies.length > 0" class="replies-wrapper">
+                <div class="thread-line"></div>
+                <div class="replies-list">
+                  <div v-for="reply in comment.replies" :key="reply.comment_id" class="reply-item">
+                    <img :src="reply.avatar_url" class="reply-avatar-small" alt="avatar" />
+                    <div class="reply-content-wrapper">
+                      <div class="reply-meta">
+                        <span class="reply-author">{{ reply.username }}</span>
+                        <span v-if="reply.username === 'Go夜读(作者)'" class="author-badge">作者</span>
+                        <span class="reply-time">{{ formatCommentTime(reply.created_at) }}</span>
+                      </div>
+                      <div class="reply-body">
+                        <template v-if="reply.reply_to_username">
+                          <span class="mention">@{{ reply.reply_to_username }}</span>
+                          <MarkdownRenderer :content="reply.content" />
+                        </template>
+                        <template v-else>
+                          <MarkdownRenderer :content="reply.content" />
+                        </template>
+                      </div>
+                      <div class="reply-actions-bottom">
+                        <button 
+                          class="action-link" 
+                          :class="{ active: reply.is_liked }"
+                          @click="toggleReplyLike(reply)"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                          {{ reply.like_count }}
+                        </button>
+                        <button class="action-link" @click="startReply(comment, reply)">
+                          回复
+                        </button>
+                        <button v-if="reply.username === '你'" class="action-link delete-btn" @click="deleteReply(comment, reply)">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="3 6 5 6 21 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                          </svg>
+                          删除
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <!-- 关闭 comments-content -->
         </div>
       </section>
 
@@ -483,7 +482,7 @@ import SecurityWarning from '../components/SecurityWarning.vue'
 import ArticleOutline from '../components/ArticleOutline.vue'
 import { useNotification } from '../composables/useNotification'
 import { recommendArticlesData } from '../data/mockData'
-import { hasCommercialContent } from '../types/api'
+import { hasCommercialContent, isBlockedArticle } from '../types/api'
 import { addRecentArticle } from '../stores/recentArticles'
 import { toggleCollectedArticle, isArticleCollected } from '../stores/collectedArticles'
 import {
@@ -730,6 +729,13 @@ const loadArticle = async () => {
   pageError.value = ''
   try {
     const detail = await getArticleDetail(articleId.value)
+    
+    // 安全拦截检查
+    if (isBlockedArticle(detail.tags || [])) {
+      pageError.value = '该文章内容不符合规范，已被安全拦截'
+      return
+    }
+    
     article.value = {
       article_id: detail.article_id,
       title: detail.title,
@@ -879,6 +885,14 @@ const togglePreview = () => {
 const submitComment = async () => {
   if (!newComment.value.trim()) return
   
+  // 检查登录状态
+  const token = localStorage.getItem('token')
+  if (!token) {
+    notify.error('请先登录', '登录后才能发表评论')
+    router.push('/login')
+    return
+  }
+  
   // 构建评论数据
   const commentData = {
     article_id: articleId.value,
@@ -954,6 +968,14 @@ const deleteReply = (comment: Comment, reply: CommentReply) => {
 // 提交回复
 const submitReply = async (comment: Comment) => {
   if (!replyText.value.trim()) return
+
+  // 检查登录状态
+  const token = localStorage.getItem('token')
+  if (!token) {
+    notify.error('请先登录', '登录后才能发表回复')
+    router.push('/login')
+    return
+  }
 
   const targetReply = replyingToReply.value
   const replyToUserId = targetReply ? targetReply.user_id : comment.user_id
