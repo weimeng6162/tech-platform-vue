@@ -81,8 +81,9 @@ export function register(data: RegisterRequest): Promise<RegisterResponse> {
  * @param username 用户名
  * @returns 是否存在
  */
-export function checkUsername(username: string): Promise<{ is_available: boolean }> {
-  return get<{ is_available: boolean }>(`/api/user/check_username?username=${encodeURIComponent(username)}`);
+export async function checkUsername(username: string): Promise<{ is_available: boolean }> {
+  const res = await get<{ exists?: boolean; is_available?: boolean }>(`/api/user/check_username?username=${encodeURIComponent(username)}`);
+  return { is_available: res.is_available ?? !res.exists };
 }
 
 /**
@@ -90,8 +91,9 @@ export function checkUsername(username: string): Promise<{ is_available: boolean
  * @param email 邮箱
  * @returns 是否可用
  */
-export function checkEmail(email: string): Promise<{ is_available: boolean }> {
-  return get<{ is_available: boolean }>(`/api/user/check_email?email=${encodeURIComponent(email)}`);
+export async function checkEmail(email: string): Promise<{ is_available: boolean }> {
+  const res = await get<{ exists?: boolean; is_available?: boolean }>(`/api/user/check_email?email=${encodeURIComponent(email)}`);
+  return { is_available: res.is_available ?? !res.exists };
 }
 
 /**
