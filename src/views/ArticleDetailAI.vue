@@ -1003,7 +1003,7 @@ const submitReply = async (comment: Comment) => {
   const replyData = {
     article_id: articleId.value,
     content: content,
-    parent_id: comment.comment_id,
+    parent_id: targetReply ? targetReply.comment_id : comment.comment_id,
     reply_to_user_id: replyToUserId
   }
 
