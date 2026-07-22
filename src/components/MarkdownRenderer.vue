@@ -5,6 +5,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { marked } from 'marked'
+import 'highlight.js/styles/github-dark.css'
 
 const props = defineProps<{
   content: string
@@ -18,7 +19,6 @@ let highlightReady = false
 /** 异步应用高亮渲染器 */
 async function applyHighlight() {
   const hljs = (await import('../utils/hljs')).default
-  await import('highlight.js/styles/github-dark.css')
 
   const renderer = new marked.Renderer()
   renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
