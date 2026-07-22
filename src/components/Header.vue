@@ -76,7 +76,7 @@
                     <User v-else :size="20" />
                   </div>
                   <div class="profile-info">
-                    <span class="profile-name">{{ userStore.userInfo?.username || '未设置用户名' }}</span>
+                    <span class="profile-name">{{ displayName }}</span>
                     <span class="profile-meta">注册于 {{ registeredAtText }}</span>
                   </div>
                 </div>
@@ -135,6 +135,7 @@ const dropdownRef = ref<HTMLElement>()
 const showToast = ref(false)
 const toastMessage = ref('')
 const registeredAtText = ref('')
+const displayName = ref(localStorage.getItem('cached_username') || '未设置用户名')
 
 function toggleMenu() {
   showMenu.value = !showMenu.value
@@ -159,6 +160,10 @@ async function fetchRegistrationTime() {
     const info = await getUserInfo()
     if (info.created_at) {
       setRegisteredAt(info.created_at)
+    }
+    if (info.username) {
+      displayName.value = info.username
+      localStorage.setItem('cached_username', info.username)
     }
   } catch {
     // 静默降级，使用 localStorage 缓存值
