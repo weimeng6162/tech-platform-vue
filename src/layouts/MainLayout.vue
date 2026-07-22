@@ -42,9 +42,11 @@ const isScrolled = ref(false)
 const { triggerRefresh } = useRefresh()
 
 const showRefreshButton = computed(() => {
-  return !route.path.includes('/article-ai') && 
-         !route.path.includes('/article/') && 
-         !route.path.includes('/footprint')
+  return !route.path.includes('/article-ai') &&
+         !route.path.includes('/article/') &&
+         !route.path.includes('/footprint') &&
+         !route.path.includes('/user/profile') &&
+         !route.path.includes('/settings')
 })
 
 const buttonPosition = computed(() => {

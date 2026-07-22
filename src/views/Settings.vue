@@ -444,8 +444,14 @@ onMounted(() => { loadProfile() })
 .settings-container {
   display: flex;
   gap: var(--space-lg);
-  width: 100%;
-  max-width: 900px;
+  width: 80%;
+  max-width: 1200px;
+}
+
+@media (max-width: 768px) {
+  .settings-container {
+    width: 100%;
+  }
 }
 
 /* 左侧导航 */
