@@ -489,12 +489,13 @@ import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import SecurityWarning from '../components/SecurityWarning.vue'
 import ArticleOutline from '../components/ArticleOutline.vue'
 import { useNotification } from '../composables/useNotification'
-import { recommendArticlesData } from '../data/mockData'
 import { hasCommercialContent, isBlockedArticle } from '../types/api'
+import type { ArticleListItem } from '../api/types'
 import { addRecentArticle } from '../stores/recentArticles'
 import { toggleCollectedArticle, isArticleCollected } from '../stores/collectedArticles'
 import {
   getArticleDetail,
+  getRecommendArticles,
   getArticleComments,
   createComment,
   commentAction,
@@ -516,9 +517,12 @@ const pageError = ref('')
 // 获取文章 ID
 const articleId = computed(() => route.params.id as string || route.query.id as string || 'wx_9527')
 
+// 推荐列表数据（从后端获取，用于相关文章推荐）
+const recommendList = ref<ArticleListItem[]>([])
+
 // 从推荐列表中查找文章
 const articleFromList = computed(() => {
-  return recommendArticlesData.data.article_list.find(a => a.article_id === articleId.value)
+  return recommendList.value.find(a => a.article_id === articleId.value)
 })
 
 // 使用 ref 存储文章数据，避免每次访问都重新计算
@@ -623,7 +627,7 @@ const relatedArticles = computed(() => {
   const currentTags = currentArticle.tags || []
   
   // 从推荐列表中筛选相关文章（有相同标签的优先）
-  const allArticles = recommendArticlesData.data.article_list
+  const allArticles = recommendList.value
     .filter(a => a.article_id !== currentId)
     .map(a => {
       // 计算与当前文章的标签匹配度
@@ -781,12 +785,20 @@ const retryLoad = () => {
   loadArticle()
 }
 
+async function loadRecommendList() {
+  try {
+    const list = await getRecommendArticles(1, 20)
+    recommendList.value = list
+  } catch { /* 静默 */ }
+}
+
 // 组件挂载时
 onMounted(async () => {
   scrollToTop()
   recordReading()
   loadComments()
   loadArticle()
+  loadRecommendList()
 })
 
 // 格式化时间
@@ -1003,7 +1015,7 @@ const submitReply = async (comment: Comment) => {
   const replyData = {
     article_id: articleId.value,
     content: content,
-    parent_id: targetReply ? targetReply.comment_id : comment.comment_id,
+    parent_id: comment.comment_id,
     reply_to_user_id: replyToUserId
   }
 
