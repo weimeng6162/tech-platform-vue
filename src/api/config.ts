@@ -49,7 +49,10 @@ export const PRIVATE_ENDPOINTS = [
   '/api/user/profile/update',
   '/api/user/delete',
   '/api/user/cold_start',
-  '/api/articles/recommend'
+  '/api/articles/recommend',
+  '/api/articles/comments',
+  '/api/comments/create',
+  '/api/comments/action'
 ];
 
 // 新用户免 token 天数（注册后 N 天内不传 token）
