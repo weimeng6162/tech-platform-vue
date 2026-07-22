@@ -729,16 +729,23 @@ const scrollToTop = () => {
 
 // 记录阅读历史
 const recordReading = () => {
-  if (articleFromList.value) {
-    addRecentArticle(articleFromList.value)
-  }
+  const articleItem = articleFromList.value || (article.value ? {
+    article_id: article.value.article_id,
+    title: article.value.title,
+    author: article.value.author?.name || '',
+    publish_time: article.value.createdAt || new Date().toISOString(),
+    category: article.value.category || '',
+    tags: article.value.tags || [],
+    view_count: article.value.metrics?.view_count || 0,
+  } as any : null)
+  if (articleItem) addRecentArticle(articleItem)
 }
 
 // 监听路由变化
-watch(() => [route.params.id, route.query.id], () => {
+watch(() => [route.params.id, route.query.id], async () => {
   scrollToTop()
+  await loadArticle()
   recordReading()
-  loadArticle()
 })
 
 // 加载文章详情
@@ -795,9 +802,9 @@ async function loadRecommendList() {
 // 组件挂载时
 onMounted(async () => {
   scrollToTop()
-  recordReading()
   loadComments()
-  loadArticle()
+  await loadArticle()
+  recordReading()
   loadRecommendList()
 })
 

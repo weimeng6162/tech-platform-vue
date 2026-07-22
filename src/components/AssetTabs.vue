@@ -127,6 +127,25 @@ function formatTime(dateStr: string): string {
   return dateStr.slice(0, 10)
 }
 
+function getLocalFootprint(): ListItem[] {
+  try {
+    const raw = localStorage.getItem('recent-articles')
+    if (!raw) return []
+    const articles = JSON.parse(raw)
+    return (articles as any[]).slice(0, 10).map((a: any) => ({
+      article_id: a.article_id,
+      title: a.title,
+      author: a.author,
+      publish_time: a.publish_time || a.createdAt || new Date().toISOString(),
+      category: a.category || '',
+      tags: Array.isArray(a.tags) ? a.tags : [],
+      view_count: a.view_count || a.readCount || 0,
+    })) as ListItem[]
+  } catch {
+    return []
+  }
+}
+
 async function fetchData(tab: TabKey, pageNum: number, append: boolean) {
   const fetcher = tab === 'footprint' ? getFootprint : getCollections
   if (append) {
@@ -137,16 +156,24 @@ async function fetchData(tab: TabKey, pageNum: number, append: boolean) {
 
   try {
     const res = await fetcher(pageNum, PAGE_SIZE) as { total: number; list: ListItem[] }
-    total.value = res.total ?? 0
-    hasMore.value = res.list?.length === PAGE_SIZE
-    if (append) {
-      items.value.push(...(res.list ?? []))
+    const list = res.list ?? []
+    if (list.length > 0) {
+      total.value = res.total ?? 0
+      hasMore.value = list.length === PAGE_SIZE
+      if (append) { items.value.push(...list) } else { items.value = list }
+    } else if (tab === 'footprint' && !append) {
+      const local = getLocalFootprint()
+      items.value = local
+      total.value = local.length
+      hasMore.value = false
     } else {
-      items.value = res.list ?? []
+      if (!append) items.value = []
+      hasMore.value = false
     }
   } catch {
-    if (!append) items.value = []
-    hasMore.value = false
+    const localFoot = tab === 'footprint' && !append ? getLocalFootprint() : []
+    if (localFoot.length) { items.value = localFoot; total.value = localFoot.length }
+    else { if (!append) items.value = []; hasMore.value = false }
   } finally {
     loading.value = false
     loadingMore.value = false

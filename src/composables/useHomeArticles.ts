@@ -66,11 +66,17 @@ export function useHomeArticles(activeSection: Ref<string>) {
     try {
       const list = await getRecommendArticles(1, PAGE_SIZE)
       const seen = new Set<string>()
-      articles.value = normalizeArticles(list).filter(a => {
+      const deduped = normalizeArticles(list).filter(a => {
         if (seen.has(a.article_id)) return false
         seen.add(a.article_id)
         return true
       })
+      // 随机打乱首页文章顺序
+      for (let i = deduped.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [deduped[i], deduped[j]] = [deduped[j], deduped[i]]
+      }
+      articles.value = deduped
       currentPage.value = 1
       hasMore.value = list.length >= PAGE_SIZE
     } catch (err: any) {
@@ -90,7 +96,7 @@ export function useHomeArticles(activeSection: Ref<string>) {
       const fresh = normalizeArticles(list).filter(a => !existing.has(a.article_id))
       articles.value = [...articles.value, ...fresh]
       currentPage.value = nextPage
-      hasMore.value = list.length >= PAGE_SIZE
+      hasMore.value = fresh.length > 0 && list.length >= PAGE_SIZE
       // 防止兴趣过滤导致无限循环：已加载 50+ 篇但无匹配时停止
       if (articles.value.length >= 50 && filteredArticles.value.length === 0) {
         hasMore.value = false
