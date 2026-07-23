@@ -14,13 +14,15 @@ import type {
 } from '../types';
 
 /**
- * 获取推荐文章列表
- * @returns 推荐文章列表
+ * 获取推荐文章列表（cursor 分页）
+ * @param cursor 分页游标，首次传空
+ * @param limit 每页数量
+ * @returns 推荐文章列表响应（含 next_cursor / has_more）
  */
-export function getRecommendArticles(page = 1, pageSize = 10): Promise<ArticleListItem[]> {
-  return get<RecommendArticlesResponse>('/api/articles/recommend', {
-    params: { page, size: pageSize }
-  }).then((data) => data.article_list);
+export function getRecommendArticles(cursor?: string, limit = 10): Promise<RecommendArticlesResponse> {
+  const params: Record<string, string | number> = { limit }
+  if (cursor) params.cursor = cursor
+  return get<RecommendArticlesResponse>('/api/articles/recommend', { params })
 }
 
 /**

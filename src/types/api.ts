@@ -12,6 +12,8 @@ export interface ApiResponse<T> {
 // 文章推荐列表响应
 export interface RecommendArticlesData {
   article_list: ArticleItem[]
+  next_cursor: string
+  has_more: boolean
 }
 
 export interface ArticleItem {

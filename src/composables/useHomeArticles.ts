@@ -16,7 +16,7 @@ export function useHomeArticles(activeSection: Ref<string>) {
   const loading = ref(false)
   const error = ref<string | null>(null)
   const articles = ref<ArticleItem[]>([])
-  const currentPage = ref(0)
+  const cursor = ref('')
   const hasMore = ref(true)
   const loadingMore = ref(false)
   const loadMoreTrigger = ref<HTMLElement>()
@@ -64,9 +64,9 @@ export function useHomeArticles(activeSection: Ref<string>) {
     loading.value = true
     error.value = null
     try {
-      const list = await getRecommendArticles(1, PAGE_SIZE)
+      const data = await getRecommendArticles(undefined, PAGE_SIZE)
       const seen = new Set<string>()
-      const deduped = normalizeArticles(list).filter(a => {
+      const deduped = normalizeArticles(data.article_list).filter(a => {
         if (seen.has(a.article_id)) return false
         seen.add(a.article_id)
         return true
@@ -77,8 +77,8 @@ export function useHomeArticles(activeSection: Ref<string>) {
         [deduped[i], deduped[j]] = [deduped[j], deduped[i]]
       }
       articles.value = deduped
-      currentPage.value = 1
-      hasMore.value = list.length >= PAGE_SIZE
+      cursor.value = data.next_cursor
+      hasMore.value = data.has_more
     } catch (err: any) {
       error.value = err.message || '加载失败，请稍后重试'
     } finally {
@@ -89,14 +89,13 @@ export function useHomeArticles(activeSection: Ref<string>) {
   async function loadMore() {
     if (loadingMore.value || !hasMore.value) return
     loadingMore.value = true
-    const nextPage = currentPage.value + 1
     try {
-      const list = await getRecommendArticles(nextPage, PAGE_SIZE)
+      const data = await getRecommendArticles(cursor.value || undefined, PAGE_SIZE)
       const existing = new Set(articles.value.map(a => a.article_id))
-      const fresh = normalizeArticles(list).filter(a => !existing.has(a.article_id))
+      const fresh = normalizeArticles(data.article_list).filter(a => !existing.has(a.article_id))
       articles.value = [...articles.value, ...fresh]
-      currentPage.value = nextPage
-      hasMore.value = fresh.length > 0 && list.length >= PAGE_SIZE
+      cursor.value = data.next_cursor
+      hasMore.value = data.has_more
       // 防止兴趣过滤导致无限循环：已加载 50+ 篇但无匹配时停止
       if (articles.value.length >= 50 && filteredArticles.value.length === 0) {
         hasMore.value = false
@@ -187,7 +186,7 @@ export function useHomeArticles(activeSection: Ref<string>) {
     loading,
     error,
     articles,
-    currentPage,
+    cursor,
     hasMore,
     loadingMore,
     loadMoreTrigger,

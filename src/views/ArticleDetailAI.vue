@@ -794,8 +794,8 @@ const retryLoad = () => {
 
 async function loadRecommendList() {
   try {
-    const list = await getRecommendArticles(1, 20)
-    recommendList.value = list
+    const data = await getRecommendArticles(undefined, 20)
+    recommendList.value = data.article_list
   } catch { /* 静默 */ }
 }
 

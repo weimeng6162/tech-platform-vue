@@ -30,6 +30,8 @@ export interface ArticleListItem {
 // 推荐文章列表响应
 export interface RecommendArticlesResponse {
   article_list: ArticleListItem[];
+  next_cursor: string;
+  has_more: boolean;
 }
 
 // 文章详情
