@@ -2,9 +2,10 @@
  * 用户相关API
  */
 
-import { get, post } from '../request';
-import type { UserInfo, UserProfile, ArticleActionRequest, FootprintResponse, CollectionsResponse, UpdateProfileRequest, UpdateProfileResponse, ChangePasswordRequest, DeleteAccountRequest } from '../types';
-import type { ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest } from '@/types/auth';
+import { get, post } from '../request'
+import type { UserInfo, UserProfile, UserProfileResponse, ArticleActionRequest, FootprintResponse, CollectionsResponse, UpdateProfileRequest, UpdateProfileResponse, ChangePasswordRequest, DeleteAccountRequest } from '../types'
+import type { ForgotPasswordRequest, ForgotPasswordResponse, ResetPasswordRequest } from '@/types/auth'
+import { MOCK_USER_PROFILE_RESPONSE } from '../mock'
 
 /**
  * 获取用户基础信息（替代原 /api/user/profile + /api/user/registration_time）
@@ -21,6 +22,17 @@ export function getUserInfo(): Promise<UserInfo> {
       created_at: registeredAt ? new Date(parseInt(registeredAt, 10)).toISOString() : '',
     };
   });
+}
+
+/**
+ * 获取用户数字画像（含 AI 分析 / 雷达图数据）
+ * @returns 用户完整画像（user_id, username, avatar_url, ai_analysis 等）
+ */
+export function getProfile(): Promise<UserProfileResponse> {
+  return get<UserProfileResponse>('/api/user/profile', { _silent: true } as any).catch(() => {
+    console.warn('⚠️ /api/user/profile 失败，降级 Mock')
+    return MOCK_USER_PROFILE_RESPONSE
+  })
 }
 
 /**

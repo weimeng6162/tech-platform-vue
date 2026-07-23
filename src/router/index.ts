@@ -101,7 +101,7 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   const token = localStorage.getItem('token')
   const userInterests = localStorage.getItem('user_interests')
-  const hasCompletedInterest = userInterests && JSON.parse(userInterests).length > 0
+  const hasVisitedInterest = userInterests !== null
   const isPublicPage = ['/login', '/register', '/reset-password', '/interest'].includes(to.path)
 
   if (!isPublicPage && !token) {
@@ -109,13 +109,8 @@ router.beforeEach((to, _from, next) => {
     return
   }
 
-  if (!isPublicPage && !hasCompletedInterest) {
+  if (!isPublicPage && !hasVisitedInterest) {
     next('/interest')
-    return
-  }
-
-  if (to.path === '/interest' && hasCompletedInterest) {
-    next('/')
     return
   }
 

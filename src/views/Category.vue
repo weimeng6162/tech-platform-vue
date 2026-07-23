@@ -227,9 +227,10 @@ async function loadArticles() {
   try {
     let allArticles: ArticleItem[] = []
     const seen = new Set<string>()
-    for (let page = 1; page <= 3; page++) {
-      const list = await getRecommendArticles(page, 10)
-      const normalized = list.map(a => ({
+    let cursor = ''
+    for (let i = 0; i < 3; i++) {
+      const data = await getRecommendArticles(cursor || undefined, 10)
+      const normalized = data.article_list.map(a => ({
         ...a,
         tags: typeof a.tags === 'string'
           ? (a.tags as string).split(/[\s,，]+/).filter(Boolean)
@@ -241,7 +242,8 @@ async function loadArticles() {
         return true
       })
       allArticles = [...allArticles, ...fresh]
-      if (list.length < 10) break
+      if (!data.has_more) break
+      cursor = data.next_cursor
     }
     articles.value = allArticles
   } catch (e: any) {
