@@ -106,7 +106,7 @@
           <div class="analysis-section">
             <blockquote class="ai-summary">
               <Sparkles :size="14" class="summary-icon" />
-              <p>{{ profile.ai_analysis?.ai_profile_summary || '暂无分析' }}</p>
+              <p>{{ profile.ai_analysis?.ai_profile_summary || (profile.is_configured ? 'AI 分析生成中，明早来看看吧' : '完成兴趣配置后，AI 将为你生成专属技术画像') }}</p>
             </blockquote>
             <div v-if="potentialTags.length" class="potential-area">
               <span class="potential-label">潜能方向</span>
@@ -156,20 +156,31 @@ import { ref, computed, onMounted } from 'vue'
 import { UserX, Sparkles, Layers, Tag, Mail, Calendar } from 'lucide-vue-next'
 import RadarChart from '../components/RadarChart.vue'
 import AssetTabs from '../components/AssetTabs.vue'
-import { getUserInfo } from '../api/modules/user'
-import { MOCK_USER_PROFILE_RESPONSE } from '../api/mock'
+import { getProfile, getUserInfo } from '../api/modules/user'
 import type { UserProfileResponse, CoreInterest } from '../api/types'
 
 const profile = ref<UserProfileResponse | null>(null)
 const loading = ref(true)
 const tagCloudRef = ref<HTMLElement>()
 
-const coreInterests = computed<CoreInterest[]>(() =>
-  profile.value?.ai_analysis?.core_interests ?? []
-)
+const coreInterests = computed<CoreInterest[]>(() => {
+  const backendInterests = profile.value?.ai_analysis?.core_interests
+  if (backendInterests && backendInterests.length > 0) {
+    return backendInterests
+  }
+  const raw = localStorage.getItem('user_interests')
+  if (!raw) return []
+  try {
+    const tags: string[] = JSON.parse(raw)
+    if (!tags.length) return []
+    return tags.map(name => ({ name, weight: 60 }))
+  } catch {
+    return []
+  }
+})
 
 const technicalLevel = computed(() =>
-  profile.value?.ai_analysis?.technical_level ?? profile.value?.technical_level ?? '技术探索者'
+  profile.value?.ai_analysis?.technical_level || profile.value?.technical_level || '技术探索者'
 )
 
 const joinDays = computed(() => {
@@ -236,20 +247,21 @@ function tagStyle(weight: number) {
 async function fetchProfile() {
   loading.value = true
   try {
-    const info = await getUserInfo()
+    const [profileData, infoData] = await Promise.all([getProfile(), getUserInfo()])
+    const raw = localStorage.getItem('user_interests')
+    const interestTags = raw ? JSON.parse(raw) : []
     profile.value = {
-      user_id: '',
-      username: info.username,
-      avatar_url: info.avatar_url,
-      is_configured: true,
-      technical_level: '',
-      ai_analysis: MOCK_USER_PROFILE_RESPONSE.ai_analysis,
-      ...('email' in info ? { email: (info as any).email } : {}),
-      ...('created_at' in info ? { created_at: (info as any).created_at } : {}),
-    } as UserProfileResponse
+      user_id: profileData.user_id || '',
+      username: profileData.username || infoData.username || '用户',
+      avatar_url: profileData.avatar_url || infoData.avatar_url || '',
+      is_configured: Array.isArray(interestTags) && interestTags.length > 0,
+      technical_level: profileData.ai_analysis?.technical_level || '',
+      ai_analysis: profileData.ai_analysis,
+      email: (profileData as any).email || infoData.email || '',
+      created_at: (profileData as any).created_at || infoData.created_at || '',
+    }
   } catch {
-    console.warn('⚠️ /api/user/info 失败，降级 Mock')
-    profile.value = MOCK_USER_PROFILE_RESPONSE
+    profile.value = null
   } finally {
     loading.value = false
   }

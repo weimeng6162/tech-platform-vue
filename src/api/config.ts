@@ -41,6 +41,7 @@ export const AUTH_ENDPOINTS = [
 // 需要登录认证的接口（必须带 token）
 export const PRIVATE_ENDPOINTS = [
   '/api/user/info',
+  '/api/user/profile',
   '/api/user/footprint',
   '/api/user/collections',
   '/api/user/action',

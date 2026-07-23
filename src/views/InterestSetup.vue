@@ -108,7 +108,7 @@
 
     <!-- 底部操作 -->
     <div class="actions">
-      <button class="skip-btn" @click="router.push('/')">跳过</button>
+      <button class="skip-btn" @click="handleSkip">跳过</button>
       <button v-if="currentStep > 0" class="back-btn" @click="currentStep--">上一步</button>
       <button class="next-btn" @click="handleNext">
         <span>{{ currentStep === steps.length - 1 ? '开始探索' : '下一步' }}</span>
@@ -183,6 +183,11 @@ const toggleTag = (tagId: string, isPrimary: boolean = false) => {
 }
 
 const showMinError = ref(false)
+
+function handleSkip() {
+  localStorage.setItem('user_interests', '[]')
+  router.push('/')
+}
 
 const handleNext = async () => {
   if (currentStep.value === 1 && primaryTags.value.length < 3) {
