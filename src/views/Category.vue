@@ -16,7 +16,7 @@
           <div class="sidebar-header">技术方向</div>
           <div class="category-list">
             <button
-              v-for="cat in techCategories"
+              v-for="cat in sidebarCategories"
               :key="cat.id"
               class="category-item"
               :class="{ active: activeCategory === cat.id }"
@@ -190,17 +190,15 @@ const iconMap: Record<string, any> = {
   Wrench: (props: any) => h(Wrench, props),
 }
 
+// 侧边栏一级分类列表（包含「全部」选项）
+const sidebarCategories = [
+  { id: 'all', name: '全部', icon: 'Grid' as const },
+  ...techCategories.filter(c => c.id !== 'all'),
+]
+
 const filteredArticles = computed(() => processArticles(articles.value))
 
-const currentCategory = computed(() => {
-  return techCategories.find(cat => cat.id === activeCategory.value)
-})
 
-const categoryTags = computed(() => {
-  // 当前选中一级分类对应的标签（如果选中了具体分类）
-  if (activeCategory.value === 'all') return techTags
-  return techTags.filter(tag => tag.category === activeCategory.value)
-})
 
 // 当前展示的标签源（受左侧一级分类影响）
 const allDisplayedTags = computed(() => {

@@ -53,24 +53,40 @@
 
         <!-- 内容区域 -->
         <main class="main">
-          <!-- 热门精选 / 猜你喜欢 切换 -->
-          <div class="section-tabs">
-            <button
-              class="section-tab"
-              :class="{ active: activeSection === 'featured' }"
-              @click="activeSection = 'featured'"
-            >
-              <TrendingUp :size="18" />
-              <span>热门精选</span>
-            </button>
-            <button
-              class="section-tab"
-              :class="{ active: activeSection === 'recommend' }"
-              @click="activeSection = 'recommend'"
-            >
-              <Sparkles :size="18" />
-              <span>猜你喜欢</span>
-            </button>
+          <!-- 筛选状态指示 + 热门精选 / 猜你喜欢 切换 -->
+          <div class="toolbar-row">
+            <div class="filter-status">
+              <span v-if="activeCategory !== 'all' || activeTags.length > 0" class="status-chips">
+                <span v-if="activeCategory !== 'all'" class="status-chip category-chip">
+                  {{ currentCategoryName }}
+                  <button class="clear-chip" @click="activeCategory = 'all'">×</button>
+                </span>
+                <span v-for="tagId in activeTags" :key="tagId" class="status-chip tag-chip-item">
+                  {{ getTagName(tagId) }}
+                  <button class="clear-chip" @click="removeTag(tagId)">×</button>
+                </span>
+                <button class="clear-all-btn" @click="clearAllFilters">清除全部</button>
+              </span>
+              <span v-else class="no-filter-hint">浏览全部文章</span>
+            </div>
+            <div class="section-tabs">
+              <button
+                class="section-tab"
+                :class="{ active: activeSection === 'featured' }"
+                @click="activeSection = 'featured'"
+              >
+                <TrendingUp :size="18" />
+                <span>热门精选</span>
+              </button>
+              <button
+                class="section-tab"
+                :class="{ active: activeSection === 'recommend' }"
+                @click="activeSection = 'recommend'"
+              >
+                <Sparkles :size="18" />
+                <span>猜你喜欢</span>
+              </button>
+            </div>
           </div>
 
           <!-- 加载状态 -->
@@ -88,7 +104,7 @@
           <!-- 文章列表 -->
           <div v-else class="article-grid">
             <ArticleCardAI
-              v-for="article in filteredArticles"
+              v-for="article in finalFilteredArticles"
               :key="article.article_id"
               :article="article"
               @click="handleArticleClick"
@@ -96,13 +112,13 @@
           </div>
 
           <!-- 加载更多指示器 -->
-          <div ref="loadMoreTrigger" class="load-more">
+          <div v-if="finalFilteredArticles.length > 0" ref="loadMoreTrigger" class="load-more">
             <template v-if="loadingMore">
               <Loader2 :size="20" class="spin" />
               <span>加载更多文章...</span>
             </template>
-            <template v-else-if="!hasMore">
-              <span class="no-more">— 已加载全部 {{ filteredArticles.length }} 篇文章 —</span>
+            <template v-else-if="!localHasMore">
+              <span class="no-more">— 已加载全部 {{ finalFilteredArticles.length }} 篇文章 —</span>
             </template>
           </div>
         </main>
@@ -138,11 +154,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, h } from 'vue'
+import { ref, computed, h } from 'vue'
 import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Eye, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
-import { categories } from '../constants/techTags'
+import { categories, techTags } from '../constants/techTags'
 import { useHomeArticles } from '../composables/useHomeArticles'
+import { processArticles } from '../utils/articleFilter'
+import type { ArticleItem } from '../types/api'
 
 defineOptions({ name: 'Home' })
 
@@ -152,7 +170,7 @@ const activeSection = ref<'featured' | 'recommend'>('featured')
 const {
   loading,
   error,
-  filteredArticles,
+  articles,
   loadingMore,
   loadMoreTrigger,
   hasMore,
@@ -166,8 +184,80 @@ const {
   formatDate,
 } = useHomeArticles(activeSection)
 
+// 加载更多是否还有内容（基于本地过滤后的结果）
+const localHasMore = computed(() => {
+  return articles.value.length > finalFilteredArticles.value.length
+    || (articles.value.length >= finalFilteredArticles.value.length && hasMore.value)
+})
+
 // loadMoreTrigger 通过模板 string ref 使用（vue-tsc 无法识别 composable 解构的 string ref），此处显式引用以通过类型检查
 void loadMoreTrigger
+
+// ---- 本地新增：分类 + 标签筛选逻辑 ----
+
+// 根据分类对应的标签过滤
+const getCategoryTagIds = (catId: string): string[] => {
+  if (catId === 'all') return []
+  return techTags
+    .filter(t => t.category === catId)
+    .map(t => t.id)
+}
+
+// 最终展示的文章（叠加分类筛选 + 标签筛选）
+const finalFilteredArticles = computed(() => {
+  let result = processArticles(articles.value)
+
+  // 分类筛选
+  if (activeCategory.value !== 'all') {
+    const catTagIds = getCategoryTagIds(activeCategory.value)
+    result = result.filter(article =>
+      article.tags.some(tagId => {
+        const lower = tagId.toLowerCase()
+        return catTagIds.some(ctId =>
+          lower.includes(ctId.toLowerCase()) || lower.includes(techTags.find(t => t.id === ctId)?.name.toLowerCase() || '')
+        )
+      })
+    )
+  }
+
+  // 标签筛选
+  if (activeTags.value.length > 0) {
+    result = result.filter(article =>
+      activeTags.value.some(tagId => {
+        const tag = techTags.find(t => t.id === tagId)
+        if (!tag) return article.tags.includes(tagId)
+        return article.tags.some(at => {
+          const lower = at.toLowerCase()
+          return lower.includes(tag.name.toLowerCase()) || lower.includes(tagId.toLowerCase())
+        })
+      })
+    )
+  }
+
+  return result
+})
+
+// 当前选中分类名称
+const currentCategoryName = computed(() => {
+  return categories.find(c => c.id === activeCategory.value)?.name ?? ''
+})
+
+// 根据标签ID获取标签名称
+const getTagName = (tagId: string) => {
+  return techTags.find(t => t.id === tagId)?.name ?? tagId
+}
+
+// 移除单个标签
+const removeTag = (tagId: string) => {
+  const index = activeTags.value.indexOf(tagId)
+  if (index > -1) activeTags.value.splice(index, 1)
+}
+
+// 清除所有筛选
+const clearAllFilters = () => {
+  activeCategory.value = 'all'
+  activeTags.value = []
+}
 
 const iconMap: Record<string, any> = {
   Grid: (props: any) => h(Grid, props),
@@ -463,11 +553,103 @@ const iconMap: Record<string, any> = {
   gap: var(--space-lg);
 }
 
+.toolbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-bottom: var(--space-md);
+  border-bottom: 1px solid var(--border-primary);
+  flex-wrap: wrap;
+}
+
+/* 筛选状态指示器 */
+.filter-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.no-filter-hint {
+  font-size: 0.8rem;
+  color: var(--text-tertiary);
+}
+
+.status-chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.status-chip.category-chip {
+  background: var(--accent-glow);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+}
+
+.status-chip.tag-chip-item {
+  background: color-mix(in srgb, var(--accent-secondary, #a78bfa) 15%, transparent);
+  color: var(--accent-secondary, #a78bfa);
+  border: 1px solid var(--accent-secondary, #a78bfa);
+}
+
+.clear-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 12px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 0;
+  border-radius: 50%;
+  color: inherit;
+}
+
+.clear-chip:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.clear-all-btn {
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  background: transparent;
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-all-btn:hover {
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+/* 热门精选 / 猜你喜欢 tabs */
 .section-tabs {
   display: flex;
   gap: var(--space-sm);
-  padding-bottom: var(--space-md);
-  border-bottom: 1px solid var(--border-primary);
+  flex-shrink: 0;
 }
 
 .section-tab {

@@ -157,6 +157,8 @@ export interface UserProfileResponse {
   is_configured: boolean;
   ai_analysis: AIAnalysis;
   technical_level?: string;
+  email?: string;
+  created_at?: string;
 }
 
 export interface HistoryItem {

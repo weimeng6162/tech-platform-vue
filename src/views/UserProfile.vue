@@ -161,7 +161,6 @@ import type { UserProfileResponse, CoreInterest } from '../api/types'
 
 const profile = ref<UserProfileResponse | null>(null)
 const loading = ref(true)
-const tagCloudRef = ref<HTMLElement>()
 
 const coreInterests = computed<CoreInterest[]>(() => {
   const backendInterests = profile.value?.ai_analysis?.core_interests
@@ -257,8 +256,8 @@ async function fetchProfile() {
       is_configured: Array.isArray(interestTags) && interestTags.length > 0,
       technical_level: profileData.ai_analysis?.technical_level || '',
       ai_analysis: profileData.ai_analysis,
-      email: (profileData as any).email || infoData.email || '',
-      created_at: (profileData as any).created_at || infoData.created_at || '',
+      email: infoData.email || '',
+      created_at: infoData.created_at || '',
     }
   } catch {
     profile.value = null

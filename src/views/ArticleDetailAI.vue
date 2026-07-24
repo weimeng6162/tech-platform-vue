@@ -732,8 +732,8 @@ const recordReading = () => {
   const articleItem = articleFromList.value || (article.value ? {
     article_id: article.value.article_id,
     title: article.value.title,
-    author: article.value.author?.name || '',
-    publish_time: article.value.createdAt || new Date().toISOString(),
+    author: article.value.author || '',
+    publish_time: article.value.publish_time || new Date().toISOString(),
     category: article.value.category || '',
     tags: article.value.tags || [],
     view_count: article.value.metrics?.view_count || 0,

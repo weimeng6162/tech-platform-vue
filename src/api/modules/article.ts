@@ -4,7 +4,6 @@
 
 import { get, post } from '../request';
 import type { 
-  ArticleListItem, 
   ArticleDetail, 
   RecommendArticlesResponse,
   CommentListResponse,
