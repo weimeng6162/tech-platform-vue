@@ -76,7 +76,7 @@
                   已选 {{ activeTags.length }} 项
                 </span>
                 <button
-                  v-if="allDisplayedTags.length > visibleTagCount"
+                  v-if="activeCategory === 'all' && allDisplayedTags.length > visibleTagCount"
                   class="expand-btn"
                   @click="tagsExpanded = !tagsExpanded"
                 >
@@ -208,9 +208,9 @@ const allDisplayedTags = computed(() => {
 
 const displayedTags = computed(() => {
   const source = allDisplayedTags.value
-  if (tagsExpanded.value || source.length <= visibleTagCount.value) {
-    return source
-  }
+  // 仅在「全部」分类下应用折叠逻辑，其他分类全显
+  if (activeCategory.value !== 'all') return source
+  if (tagsExpanded.value || source.length <= visibleTagCount.value) return source
   return source.slice(0, visibleTagCount.value)
 })
 
