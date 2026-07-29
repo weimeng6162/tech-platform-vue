@@ -5,10 +5,10 @@
 function parseDate(dateStr: string): Date {
   if (!dateStr) return new Date(0)
   const n = Number(dateStr)
-  // 是纯数字（Unix 时间戳）
   if (!isNaN(n)) {
-    // 秒级时间戳（10位）转毫秒
-    return new Date(n < 1e12 ? n * 1000 : n)
+    // Unix 秒级时间戳（< 1e10 → 2001年以前）→ 转毫秒
+    // Unix 毫秒级时间戳（≥ 1e10）→ 直接使用
+    return new Date(n < 1e10 ? n * 1000 : n)
   }
   const d = new Date(dateStr)
   return isNaN(d.getTime()) ? new Date() : d
