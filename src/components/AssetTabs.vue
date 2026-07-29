@@ -44,7 +44,7 @@
                 <span class="meta-sep">·</span>
                 <span>{{ item.category }}</span>
                 <span class="meta-sep">·</span>
-                <span>{{ formatTime(item.publish_time) }}</span>
+                <span>{{ formatRelativeTime(item.publish_time) }}</span>
               </p>
               <div class="list-card-tags">
                 <span
@@ -71,6 +71,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatRelativeTime } from '../utils/formatTime'
 import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Footprints, Bookmark, Eye, Inbox } from 'lucide-vue-next'
@@ -116,16 +117,6 @@ function goToArticle(articleId: string) {
 
 const PAGE_SIZE = 10
 
-function formatTime(dateStr: string): string {
-  if (!dateStr) return ''
-  const d = new Date(dateStr)
-  const now = Date.now()
-  const diff = Math.floor((now - d.getTime()) / 86400000)
-  if (diff === 0) return '今天'
-  if (diff === 1) return '昨天'
-  if (diff < 7) return `${diff}天前`
-  return dateStr.slice(0, 10)
-}
 
 function getLocalFootprint(): ListItem[] {
   try {

@@ -61,7 +61,7 @@
             </svg>
             {{ article.author }}
           </span>
-          <span class="time">{{ formatTime(article.publish_time) }}</span>
+          <span class="time">{{ formatRelativeTime(article.publish_time) }}</span>
           <span class="views">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path
@@ -485,6 +485,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { formatRelativeTime } from '../utils/formatTime'
 import MarkdownRenderer from '../components/MarkdownRenderer.vue'
 import SecurityWarning from '../components/SecurityWarning.vue'
 import ArticleOutline from '../components/ArticleOutline.vue'
@@ -808,15 +809,6 @@ onMounted(async () => {
   loadRecommendList()
 })
 
-// 格式化时间
-const formatTime = (time: string) => {
-  const date = new Date(time)
-  return date.toLocaleDateString('zh-CN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
 
 // 处理点赞（乐观UI）
 const handleLike = async () => {
