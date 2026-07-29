@@ -65,42 +65,44 @@
             </div>
           </div>
 
-          <!-- 二级标签云（支持跨一级分类选择） -->
-          <section class="filter-section">
-            <div class="filter-header">
-              <span class="filter-label">
-                <span class="filter-hint">选择标签筛选内容（支持跨分类多选）</span>
-              </span>
-              <div class="filter-actions">
-                <span v-if="activeTags.length > 0" class="selected-count">
-                  已选 {{ activeTags.length }} 项
-                </span>
-                <button
-                  v-if="activeCategory === 'all' && allDisplayedTags.length > visibleTagCount"
-                  class="expand-btn"
-                  @click="tagsExpanded = !tagsExpanded"
-                >
-                  {{ tagsExpanded ? '收起' : '全部' }}
-                </button>
-              </div>
-            </div>
-            <div class="tags-wrapper">
-              <span
-                v-for="tag in displayedTags"
-                :key="tag.id"
-                class="tag-chip"
-                :class="{ active: activeTags.includes(tag.id) }"
-                :style="{ '--tag-color': tag.color }"
-                @click="handleTagClick(tag.id)"
+          <!-- 内容类型分类 tabs（常驻子标签，每个一级分类下均可选） -->
+          <section class="content-category-tabs">
+            <div class="tabs-wrapper">
+              <button
+                v-for="cat in contentCategories"
+                :key="cat.id"
+                class="content-cat-btn"
+                :class="{ active: activeContentCategory === cat.id }"
+                @click="activeContentCategory = cat.id"
               >
-                {{ tag.name }}
-              </span>
+                <component :is="contentIconMap[cat.icon]" :size="14" />
+                <span>{{ cat.name }}</span>
+              </button>
             </div>
           </section>
 
-          <!-- 文章数量 -->
+          <!-- 文章数量 & 筛选状态 -->
           <div class="article-count-bar">
-            <span class="article-count">{{ currentArticles.length }} 篇文章</span>
+            <div class="count-left">
+              <span class="article-count">{{ currentArticles.length }} 篇文章</span>
+              <div class="filter-chips">
+                <span v-if="activeContentCategory !== 'all'" class="filter-chip content-chip">
+                  {{ contentCategories.find(c => c.id === activeContentCategory)?.name }}
+                  <button class="clear-chip" @click="activeContentCategory = 'all'">×</button>
+                </span>
+                <span v-for="tagId in activeTags" :key="tagId" class="filter-chip tag-chip">
+                  {{ techTags.find(t => t.id === tagId)?.name || tagId }}
+                  <button class="clear-chip" @click="handleTagClick(tagId)">×</button>
+                </span>
+                <button
+                  v-if="activeContentCategory !== 'all' || activeTags.length > 0"
+                  class="clear-all-btn"
+                  @click="resetAllFilters"
+                >
+                  清除全部
+                </button>
+              </div>
+            </div>
             <button
               v-if="activeTags.length > 0"
               class="clear-tags-btn"
@@ -159,20 +161,30 @@
 <script setup lang="ts">
 import { ref, computed, h, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { Grid, Code, Layout, Server, Database, Cpu, Brain, Shield, Wrench, Search, Loader2 } from 'lucide-vue-next'
+import { Grid, Code, Layout, Server, Database, Cpu, Brain, Shield, Wrench, BookOpen, Lightbulb, Award, TrendingUp, MessageCircle, Search, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
-import { techCategories, techTags } from '../constants/techTags'
+import { techCategories, techTags, categories as contentCategories } from '../constants/techTags'
 import { processArticles } from '../utils/articleFilter'
 import { getRecommendArticles } from '../api/modules/article'
 import type { ArticleItem } from '../types/api'
 
 const router = useRouter()
 const activeCategory = ref('all')
+const activeContentCategory = ref('all')  // 内容类型分类：教程/原理/实践...
 const activeTags = ref<string[]>([])
 const sortBy = ref('recommend')
 const displayCount = ref(20)
-const tagsExpanded = ref(false)
-const visibleTagCount = ref(10)
+
+
+// 内容类型分类图标映射
+const contentIconMap: Record<string, any> = {
+  BookOpen: (props: any) => h(BookOpen, props),
+  Lightbulb: (props: any) => h(Lightbulb, props),
+  Award: (props: any) => h(Award, props),
+  Wrench: (props: any) => h(Wrench, props),
+  TrendingUp: (props: any) => h(TrendingUp, props),
+  MessageCircle: (props: any) => h(MessageCircle, props),
+}
 
 const loading = ref(true)
 const error = ref('')
@@ -197,23 +209,6 @@ const sidebarCategories = [
 ]
 
 const filteredArticles = computed(() => processArticles(articles.value))
-
-
-
-// 当前展示的标签源（受左侧一级分类影响）
-const allDisplayedTags = computed(() => {
-  if (activeCategory.value === 'all') return techTags
-  return techTags.filter(tag => tag.category === activeCategory.value)
-})
-
-const displayedTags = computed(() => {
-  const source = allDisplayedTags.value
-  // 仅在「全部」分类下应用折叠逻辑，其他分类全显
-  if (activeCategory.value !== 'all') return source
-  if (tagsExpanded.value || source.length <= visibleTagCount.value) return source
-  return source.slice(0, visibleTagCount.value)
-})
-
 const getCategoryTags = (categoryId: string) => {
   if (categoryId === 'all') return techTags
   return techTags.filter(tag => tag.category === categoryId)
@@ -221,6 +216,11 @@ const getCategoryTags = (categoryId: string) => {
 
 const currentArticles = computed(() => {
   let arts = filteredArticles.value
+
+  // 内容类型分类筛选
+  if (activeContentCategory.value !== 'all') {
+    arts = arts.filter(article => article.category === activeContentCategory.value)
+  }
 
   if (activeCategory.value !== 'all') {
     const categoryTagsList = getCategoryTags(activeCategory.value)
@@ -308,6 +308,10 @@ onMounted(() => {
 const hasMore = computed(() => {
   let arts = filteredArticles.value
 
+  if (activeContentCategory.value !== 'all') {
+    arts = arts.filter(article => article.category === activeContentCategory.value)
+  }
+
   if (activeCategory.value !== 'all') {
     const categoryTagsList = getCategoryTags(activeCategory.value)
     arts = arts.filter(article =>
@@ -338,7 +342,6 @@ const hasMore = computed(() => {
 
 const handleCategoryClick = (catId: string) => {
   activeCategory.value = catId
-  tagsExpanded.value = false
 }
 
 const handleTagClick = (tagId: string) => {
@@ -361,14 +364,18 @@ const resetFilters = () => {
   activeCategory.value = 'all'
   activeTags.value = []
   sortBy.value = 'latest'
-  tagsExpanded.value = false
+}
+
+const resetAllFilters = () => {
+  activeContentCategory.value = 'all'
+  activeTags.value = []
 }
 
 const loadMore = () => {
   displayCount.value += 20
 }
 
-watch([activeCategory, activeTags, sortBy], () => {
+watch([activeCategory, activeTags, sortBy, activeContentCategory], () => {
   displayCount.value = 20
 })
 </script>
@@ -471,47 +478,13 @@ watch([activeCategory, activeTags, sortBy], () => {
   min-width: 0;
 }
 
-/* 顶部工具栏：一级分类横向 + 排序 */
+/* 顶部工具栏：排序 */
 .top-toolbar {
   display: flex;
   align-items: center;
   gap: var(--space-md);
   margin-bottom: var(--space-md);
   flex-wrap: wrap;
-}
-
-.category-chips {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  flex: 1;
-}
-
-.category-chip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-primary);
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.25s;
-}
-
-.category-chip:hover {
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  border-color: var(--border-secondary);
-}
-
-.category-chip.active {
-  background: var(--accent-gradient);
-  color: white;
-  border-color: transparent;
 }
 
 /* 排序 tabs */
@@ -546,93 +519,46 @@ watch([activeCategory, activeTags, sortBy], () => {
   background: var(--accent-gradient);
 }
 
-/* 二级标签 */
-.filter-section {
+/* 内容类型分类 tabs */
+.content-category-tabs {
   margin-bottom: var(--space-md);
-  padding: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: 12px;
 }
 
-.filter-header {
+.tabs-wrapper {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--space-sm);
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.filter-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.filter-hint {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--text-tertiary);
-}
-
-.filter-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.selected-count {
-  font-size: 0.75rem;
-  color: var(--accent-primary);
-  padding: 3px 10px;
-  background: var(--accent-glow);
-  border-radius: 12px;
-}
-
-.expand-btn {
-  font-size: 0.75rem;
-  padding: 3px 10px;
-  background: var(--bg-tertiary);
-  color: var(--accent-primary);
-  border: 1px solid var(--accent-primary);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.expand-btn:hover {
-  background: var(--accent-primary);
-  color: white;
-}
-
-.tags-wrapper {
-  display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
-.tag-chip {
+.content-cat-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
   padding: 5px 12px;
-  border-radius: 6px;
-  font-size: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-primary);
   background: var(--bg-tertiary);
+  font-size: 0.8rem;
+  font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.tag-chip:hover {
-  background: var(--bg-elevated);
-  color: var(--text-primary);
+.content-cat-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: var(--accent-glow);
 }
 
-.tag-chip.active {
-  background: var(--tag-color);
-  color: white;
+.content-cat-btn.active {
+  border-color: var(--accent-primary);
+  background: var(--accent-primary);
+  color: #fff;
 }
 
 /* 文章数量栏 */
@@ -641,11 +567,82 @@ watch([activeCategory, activeTags, sortBy], () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-md);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.count-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  flex: 1;
 }
 
 .article-count {
   font-size: 0.8rem;
   color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.filter-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.content-chip {
+  background: var(--accent-glow);
+  color: var(--accent-primary);
+  border: 1px solid var(--accent-primary);
+}
+
+.tag-chip {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-primary);
+}
+
+.clear-chip {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  padding: 0;
+  opacity: 0.7;
+}
+
+.clear-chip:hover {
+  opacity: 1;
+}
+
+.clear-all-btn {
+  font-size: 0.72rem;
+  padding: 3px 8px;
+  background: var(--bg-tertiary);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.clear-all-btn:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
 }
 
 .clear-tags-btn {
@@ -657,6 +654,7 @@ watch([activeCategory, activeTags, sortBy], () => {
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .clear-tags-btn:hover {
@@ -746,8 +744,8 @@ watch([activeCategory, activeTags, sortBy], () => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-md, 12px);
-  padding: var(--spacing-2xl, 48px);
+  gap: 12px;
+  padding: 48px;
   color: var(--text-secondary);
 }
 
@@ -756,9 +754,9 @@ watch([activeCategory, activeTags, sortBy], () => {
 }
 
 .retry-btn {
-  padding: var(--spacing-xs, 4px) var(--spacing-lg, 24px);
+  padding: 4px 24px;
   border: 1px solid var(--border-primary);
-  border-radius: var(--radius-md, 6px);
+  border-radius: 6px;
   background: var(--bg-glass);
   color: var(--text-primary);
   cursor: pointer;

@@ -35,22 +35,6 @@
           </div>
         </section>
 
-        <!-- 分类导航 -->
-        <section class="categories">
-          <div class="categories-wrapper">
-            <button
-              v-for="cat in categories"
-              :key="cat.id"
-              class="category-btn"
-              :class="{ active: activeCategory === cat.id }"
-              @click="activeCategory = cat.id"
-            >
-              <component :is="iconMap[cat.icon]" :size="18" />
-              <span>{{ cat.name }}</span>
-            </button>
-          </div>
-        </section>
-
         <!-- 内容区域 -->
         <main class="main">
           <!-- 筛选状态指示 + 热门精选 / 猜你喜欢 切换 -->
@@ -154,8 +138,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, h } from 'vue'
-import { Grid, BookOpen, Lightbulb, Award, Wrench, TrendingUp, MessageCircle, Sparkles, Eye, Loader2 } from 'lucide-vue-next'
+import { ref, computed } from 'vue'
+import { TrendingUp, Sparkles, Eye, Loader2 } from 'lucide-vue-next'
 import ArticleCardAI from '../components/ArticleCardAI.vue'
 import { categories, techTags } from '../constants/techTags'
 import { useHomeArticles } from '../composables/useHomeArticles'
@@ -259,15 +243,7 @@ const clearAllFilters = () => {
   activeTags.value = []
 }
 
-const iconMap: Record<string, any> = {
-  Grid: (props: any) => h(Grid, props),
-  BookOpen: (props: any) => h(BookOpen, props),
-  Lightbulb: (props: any) => h(Lightbulb, props),
-  Award: (props: any) => h(Award, props),
-  Wrench: (props: any) => h(Wrench, props),
-  TrendingUp: (props: any) => h(TrendingUp, props),
-  MessageCircle: (props: any) => h(MessageCircle, props),
-}
+
 </script>
 
 <style scoped>
