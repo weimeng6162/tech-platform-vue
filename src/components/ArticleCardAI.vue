@@ -43,7 +43,7 @@
           </svg>
           <span class="ai-label">AI</span>
         </div>
-        <p class="summary-text">{{ article.ai_summary }}</p>
+        <p class="summary-text">{{ truncatedSummary }}</p>
       </div>
 
       <!-- 元信息 -->
@@ -58,7 +58,7 @@
             />
             <circle cx="12" cy="7" r="4" stroke-width="2" />
           </svg>
-          {{ article.author }}
+          {{ article.author || '未知作者' }}
         </span>
         <span class="category">{{ article.category }}</span>
         <span class="views">
@@ -73,7 +73,7 @@
           </svg>
           {{ formatViewCount(article.view_count) }}
         </span>
-        <span class="time">{{ formatRelativeTime(article.publish_time) }}</span>
+        <span v-if="formattedTime" class="time">{{ formattedTime }}</span>
       </div>
     </div>
   </div>
@@ -90,6 +90,18 @@ const props = defineProps<{
 const emit = defineEmits<{
   click: [article: ArticleItem]
 }>()
+
+// 文章时间格式化，空值不渲染
+const formattedTime = computed(() => {
+  const t = formatRelativeTime(props.article.publish_time)
+  return t || null
+})
+
+// AI 摘要截断 50 字
+const truncatedSummary = computed(() => {
+  const text = props.article.ai_summary || ''
+  return text.length <= 50 ? text : text.slice(0, 50) + '...'
+})
 
 // 过滤掉安全标签，只显示技术标签，但保留"含商业推广"
 const displayTags = computed(() => {

@@ -61,7 +61,7 @@
             </svg>
             {{ article.author }}
           </span>
-          <span class="time">{{ formatDate(article.publish_time) }}</span>
+          <span v-if="formattedDetailTime" class="time">{{ formattedDetailTime }}</span>
           <span class="views">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path
@@ -549,6 +549,12 @@ const article = ref({
 
 // 检查是否包含商业推广
 const hasWarning = computed(() => hasCommercialContent(article.value.tags))
+
+// 文章时间格式化，空值不渲染
+const formattedDetailTime = computed(() => {
+  const t = formatDate(article.value.publish_time)
+  return t || null
+})
 
 // 评论状态
 const newComment = ref('')

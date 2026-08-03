@@ -81,6 +81,36 @@
             </div>
           </section>
 
+          <!-- 动态 Tag 云（统计所有已加载文章 tags 频次，取前 10） -->
+          <section class="dynamic-tag-cloud">
+            <div class="cloud-wrapper">
+              <button
+                class="cloud-tag"
+                :class="{ active: activeTags.length === 0 }"
+                @click="activeTags = []"
+              >
+                全部
+              </button>
+              <button
+                v-for="tag in dynamicTopTags"
+                :key="tag.name"
+                class="cloud-tag"
+                :class="{ active: activeTags.includes(tag.name) }"
+                @click="handleTagClick(tag.name)"
+              >
+                {{ tag.name }}
+                <span class="tag-count">{{ tag.count }}</span>
+              </button>
+            </div>
+            <button
+              v-if="activeTags.length > 0"
+              class="cloud-clear-btn"
+              @click="activeTags = []"
+            >
+              清除
+            </button>
+          </section>
+
           <!-- 文章数量 & 筛选状态 -->
           <div class="article-count-bar">
             <div class="count-left">
@@ -175,6 +205,20 @@ const activeTags = ref<string[]>([])
 const sortBy = ref('recommend')
 const displayCount = ref(20)
 
+// 动态 Tag 云：统计所有已加载文章的 tags 频次，取前 10
+const dynamicTopTags = computed(() => {
+  const freq: Record<string, number> = {}
+  for (const article of articles.value) {
+    for (const tag of article.tags) {
+      freq[tag] = (freq[tag] || 0) + 1
+    }
+  }
+  return Object.entries(freq)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }))
+})
+
 
 // 内容类型分类图标映射
 const contentIconMap: Record<string, any> = {
@@ -236,13 +280,9 @@ const currentArticles = computed(() => {
 
   if (activeTags.value.length > 0) {
     arts = arts.filter(article =>
-      activeTags.value.some(activeId => {
-        const tag = techTags.find(t => t.id === activeId)
-        if (!tag) return article.tags.includes(activeId)
-        return article.tags.some(at => {
-          const lower = at.toLowerCase()
-          return lower.includes(tag.name.toLowerCase()) || lower.includes(activeId.toLowerCase())
-        })
+      activeTags.value.some(activeTag => {
+        const normalized = activeTag.trim().toLowerCase()
+        return article.tags.some(at => at.trim().toLowerCase().includes(normalized))
       })
     )
   }
@@ -276,7 +316,8 @@ async function loadArticles() {
     let allArticles: ArticleItem[] = []
     const seen = new Set<string>()
     let cursor = ''
-    for (let i = 0; i < 3; i++) {
+    // 预取 10 页共 100 篇，供动态 tag 统计用
+    for (let i = 0; i < 10; i++) {
       const data = await getRecommendArticles(cursor || undefined, 10)
       const normalized = data.article_list.map(a => ({
         ...a,
@@ -326,13 +367,9 @@ const hasMore = computed(() => {
 
   if (activeTags.value.length > 0) {
     arts = arts.filter(article =>
-      activeTags.value.some(activeId => {
-        const tag = techTags.find(t => t.id === activeId)
-        if (!tag) return article.tags.includes(activeId)
-        return article.tags.some(at => {
-          const lower = at.toLowerCase()
-          return lower.includes(tag.name.toLowerCase()) || lower.includes(activeId.toLowerCase())
-        })
+      activeTags.value.some(activeTag => {
+        const normalized = activeTag.trim().toLowerCase()
+        return article.tags.some(at => at.trim().toLowerCase().includes(normalized))
       })
     )
   }
@@ -342,6 +379,7 @@ const hasMore = computed(() => {
 
 const handleCategoryClick = (catId: string) => {
   activeCategory.value = catId
+  activeTags.value = []  // 切换一级分类时清除已选 tag
 }
 
 const handleTagClick = (tagId: string) => {
@@ -559,6 +597,81 @@ watch([activeCategory, activeTags, sortBy, activeContentCategory], () => {
   border-color: var(--accent-primary);
   background: var(--accent-primary);
   color: #fff;
+}
+
+/* 动态 Tag 云 */
+.dynamic-tag-cloud {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+
+.cloud-wrapper {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.cloud-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cloud-tag:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: var(--accent-glow);
+}
+
+.cloud-tag.active {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: #fff;
+}
+
+.cloud-tag.active .tag-count {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.tag-count {
+  font-size: 0.7rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.cloud-clear-btn {
+  padding: 4px 10px;
+  border-radius: 16px;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.cloud-clear-btn:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
 }
 
 /* 文章数量栏 */
